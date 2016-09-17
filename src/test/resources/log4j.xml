@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
+<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+	<appender name="console" class="org.apache.log4j.ConsoleAppender">  
+		<layout class="org.apache.log4j.PatternLayout">  
+			<param name="ConversionPattern" value="%m%n" />
+		</layout>  
+	</appender>  
+	<appender name="file" class="org.apache.log4j.RollingFileAppender">          
+        <param name="File" value="similarity-test.log" />       
+        <!-- 设置是否在重新启动服务时，在原有日志的基础添加新日志 -->       
+        <param name="Append" value="true" />       
+        <param name="MaxBackupIndex" value="10" />       
+        <layout class="org.apache.log4j.PatternLayout">       
+            <param name="ConversionPattern" value="%m%n" />       
+        </layout>       
+    </appender>  
+    <appender name="sql" class="org.apache.log4j.RollingFileAppender">
+        <param name="File" value="address-sql.log" />
+        <param name="Append" value="true" />
+        <param name="MaxBackupIndex" value="10" />
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%m%n" />
+        </layout>
+    </appender>
+ 
+	<root>
+		<level value="WARN" />
+		<appender-ref ref="console" />
+	</root>
+    <logger name="com.rrs.research.similarity.test" additivity="false">  
+        <level value="INFO"/>  
+        <appender-ref ref="console"/>
+        <!-- <appender-ref ref="file"/> -->    
+    </logger> 
+	<logger name="com.rrs.research.similarity.dao" additivity="false">
+        <level value="NONE"/>  
+        <appender-ref ref="sql"/>
+    </logger> 
+</log4j:configuration>

@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rrs.research.similarity.dao.RegionDao">
+	<resultMap id="RegionEntityResult" type="com.rrs.research.similarity.address.RegionEntity">
+		<result property="id" column="id" />
+		<result property="parentId" column="parent_id" />
+		<result property="type" column="type" />
+		<result property="name" column="name" />
+		<result property="alias" column="alias" />
+		<result property="zip" column="zip" />
+	</resultMap>
+	<select id="findRoot" resultMap="RegionEntityResult">
+select `id`,`parent_id`,`name`,`alias`,`type`,`zip` from `bas_region` where id=1
+	</select>
+	<select id="findByParent" parameterType="Integer" resultMap="RegionEntityResult">
+select `id`,`parent_id`,`name`,`alias`,`type`,`zip`
+from `bas_region`
+where parent_id=#{pid}
+order by id
+	</select>
+	<insert id="create" parameterType="com.rrs.research.similarity.address.RegionEntity">
+insert into `bas_region`(`id`,`parent_id`,`name`,`type`,`zip`,`alias`)
+values(#{id},#{parentId},#{name},#{type},#{zip},#{alias})
+	</insert>
+	<update id="update" parameterType="com.rrs.research.similarity.address.RegionEntity">
+update bas_region set parent_id=#{parentId}, `name`=#{name}, `type`=#{type}
+where `id`=#{id}
+	</update>
+
+	<select id="get" parameterType="Integer" resultMap="RegionEntityResult">
+select `id`,`parent_id`,`name`,`alias`,`type`,`zip`
+from `bas_region`
+where id=#{id}
+	</select>
+	<delete id="delete">
+delete from bas_region where id=#{id}
+	</delete>
+</mapper>

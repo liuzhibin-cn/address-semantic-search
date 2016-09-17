@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.rrs.research.similarity.dao.AddressDao">
+	<resultMap id="AddressEntityResult" type="com.rrs.research.similarity.address.AddressEntity">
+		<result property="id" column="id" />
+		<result property="province" column="province_id" typeHandler="com.rrs.research.similarity.dao.RegionPropertyTypeHandler" />
+		<result property="city" column="city_id" typeHandler="com.rrs.research.similarity.dao.RegionPropertyTypeHandler" />
+		<result property="county" column="county_id" typeHandler="com.rrs.research.similarity.dao.RegionPropertyTypeHandler" />
+		<result property="text" column="text" />
+		<result property="towns" column="town" />
+		<result property="village" column="village" />
+		<result property="road" column="road" />
+		<result property="roadNum" column="road_num" />
+		<result property="buildingNum" column="building_num" />
+		<result property="hash" column="hash" />
+		<result property="rawText" column="raw_text" />
+	</resultMap>
+	<insert id="create" parameterType="com.rrs.research.similarity.address.AddressEntity">
+		<selectKey keyProperty="id" resultType="Integer">select last_insert_id()</selectKey>
+insert into addr_address(province_id,city_id,county_id,`text`,town,village,road,road_num,building_num,`hash`,raw_text)
+values(#{province, typeHandler=com.rrs.research.similarity.dao.RegionPropertyTypeHandler}
+    ,#{city, typeHandler=com.rrs.research.similarity.dao.RegionPropertyTypeHandler}
+    ,#{county, typeHandler=com.rrs.research.similarity.dao.RegionPropertyTypeHandler},#{text},#{towns},#{village},#{road},#{roadNum},#{buildingNum},#{hash}, #{rawText})
+	</insert>
+	<insert id="batchCreate">
+insert into addr_address(province_id,city_id,county_id,`text`,town,village,road,road_num,building_num,`hash`,raw_text) values
+		<foreach collection="addresses" item="addr" separator=",">
+(#{addr.province, typeHandler=com.rrs.research.similarity.dao.RegionPropertyTypeHandler},#{addr.city, typeHandler=com.rrs.research.similarity.dao.RegionPropertyTypeHandler},#{addr.county, typeHandler=com.rrs.research.similarity.dao.RegionPropertyTypeHandler}
+  ,#{addr.text},#{addr.towns},#{addr.village},#{addr.road},#{addr.roadNum},#{addr.buildingNum},#{addr.hash}, #{addr.rawText})
+		</foreach>
+	</insert>
+	<select id="findAll" resultMap="AddressEntityResult">
+select `id`,`province_id`,`city_id`,`county_id`,`text`,`town`,`village`,`road`,`road_num`,`building_num`,`hash`
+from `addr_address`
+	</select>
+	<select id="find" resultMap="AddressEntityResult">
+select `id`,`province_id`,`city_id`,`county_id`,`text`,`town`,`village`,`road`,`road_num`,`building_num`,`hash`
+from `addr_address` where province_id=#{pid} and city_id=#{cid}
+	</select>
+	
+	<select id="get" parameterType="Integer" resultMap="AddressEntityResult">
+select `id`,`province_id`,`city_id`,`county_id`,`text`,`town`,`village`,`road`,`road_num`,`building_num`,`hash`
+from `addr_address`
+where id=#{id}
+	</select>
+	<delete id="delete" parameterType="Integer">
+delete from addr_address where id=#{id}
+	</delete>
+</mapper>

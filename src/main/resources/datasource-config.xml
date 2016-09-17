@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!DOCTYPE beans PUBLIC "-//SPRING//DTD BEAN//EN" "http://www.springframework.org/dtd/spring-beans.dtd">
+<beans default-autowire="no">
+	<!-- <bean id="propertyConfigurer" class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>classpath:service.properties</value>
+			</list>
+		</property>
+	</bean> -->
+	
+	<bean id="datasource" class="org.apache.tomcat.jdbc.pool.DataSource" destroy-method="close">
+		<!-- jdbc properties -->
+		<property name="driverClassName" value="com.mysql.cj.jdbc.Driver" />
+		<!-- zeroDateTimeBehavior: 
+			 mysql supports value 0 for date columns, however these values can not be represented by jdbc.sql.Date,
+			 parameter zeroDateTimeBehavior can tell mysql jdbc driver to convert such values to java null.
+			 see: http://dev.mysql.com/doc/refman/5.0/en/connector-j-reference-configuration-properties.html
+		-->
+ 		<property name="url" value="jdbc:mysql://127.0.0.1:3306/my_research?characterEncoding=utf8&amp;zeroDateTimeBehavior=convertToNull&amp;useSSL=false" /> 
+ 		<property name="username" value="root" /> 
+ 		<property name="password" value="dev" /> 
+		<!-- transaction properties, this is necessary because the default isolation level in some db is repeatable read! -->
+		<property name="defaultAutoCommit" value="true" />
+		<!-- READ_COMMITTED -->
+		<property name="defaultTransactionIsolation" value="2" />
+		
+		<!-- sizing the connection pool -->
+		<property name="initialSize" value="1" />
+		<property name="minIdle" value="1" />
+		<property name="maxIdle" value="4" />
+		<property name="maxActive" value="10" />
+		<!-- in milliseconds -->
+		<property name="maxWait" value="2000" />
+		
+		<!-- connection validation properties -->
+		<!-- transaction is not encouraged in our situation, in most cases we use defaultAutoCommit=true,
+		     testOnBorrow=true will result in the connection returning to the pool after a dao invocation and re-requesting a 
+		     connection from the pool before each dao invocation, an additional validation query for every dao 
+		     invocation, so the following "validationInterval" settings is important for reducing the validation queries.
+		     see: spring jdbc abstraction and transaction management. 
+		-->
+		<property name="testOnBorrow" value="true" />
+		<!-- the best performance validation query for mysql jdbc driver -->
+		<!-- see: http://dev.mysql.com/doc/refman/5.0/en/connector-j-usagenotes-j2ee.html -->
+		<property name="validationQuery" value="/* ping */ select 1" />
+		<!-- in milliseconds, to ensure only one validation query is performed every 30 seconds -->
+		<property name="validationInterval" value="30000" />
+		
+		<!-- sweeping idle connections -->
+		<!-- set testWhileIdle true and timeBetweenEvictionRunsMillis greater than 0 to enable pool sweeper -->
+		<!-- when pool sweeper disabled:  
+		     if the idle pool is larger than maxIdle, the connection will be closed when returned to the pool, but
+		     will never be shrunken down to minIdle -->
+		<!-- when pool sweeper enabled:
+		     number of idle connections can grow beyond maxIdle but can shrink down to minIdle if the connection has 
+		     been idle for longer than minEvictableIdleTimeMillis. -->
+		<property name="testWhileIdle" value="true" />
+		<!-- in milliseconds, the sweeper runs every 60 seconds -->
+		<property name="timeBetweenEvictionRunsMillis" value="60000" />
+		<!-- in milliseconds, the connection will be closed if the idle time is larger than 5 minutes -->
+		<property name="minEvictableIdleTimeMillis" value="300000" />
+	</bean>
+</beans>

@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8"?>
+<beans 
+	xmlns="http://www.springframework.org/schema/beans"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-2.0.xsd
+        http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-4.0.xsd"
+	default-autowire="byName">
+	
+	<import resource="datasource-config.xml" />
+	
+	<context:component-scan base-package="com.rrs.research.similarity.address" />
+
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="mapperLocations" value="classpath:sql-mapper/*Mapper.xml" />
+		<property name="dataSource" ref="datasource" />
+		<property name="typeHandlers">
+			<array>
+				<bean class="com.rrs.common.dao.ListOnSimicolonSeparatedStringColumnTypeHandler" />
+				<bean class="com.rrs.research.similarity.dao.RegionTypeTypeHandler" />
+			</array>
+		</property>
+	</bean>
+	<!-- bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
+	    <constructor-arg index="0" ref="sqlSessionFactory" />
+	    <constructor-arg index="1" value="BATCH" />
+	</bean>
+	
+	<tx:annotation-driven transaction-manager="txManager"/>
+	<bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="datasource"/>
+	</bean -->
+
+	<bean id="addressService" class="com.rrs.research.similarity.address.AddressService">
+		<property name="addressDao" ref="addressDao" />
+		<property name="regionDao" ref="regionDao" />
+		<property name="cacheFolder" value="/Users/richie/Documents/workspace_eclipse/cache-folder" />
+		<property name="forbiddenFollowingChars">
+			<list>
+				<value>路</value>
+				<value>街道</value>
+				<value>大道</value>
+				<value>大街</value>
+				<!--value>县</value>
+				<value>镇</value>
+				<value>乡</value>
+				<value>村</value>
+				<value>街</value>
+				<value>经济开发区</value>
+				<value>开发区</value>
+				<value>高新区</value-->
+			</list>
+		</property>
+		<property name="invalidRegionNames">
+			<list>
+				<value>省直辖市县</value>
+				<value>省直辖县级行政区划</value>
+				<value>市辖区</value>
+				<value>县级直管村级单位（特殊镇）</value>
+				<value>县级直管村级单位</value>
+				<value>区直辖村</value>
+				<value>县区直属镇</value>
+			</list>
+		</property>
+	</bean>
+
+	<bean id="addressDao" class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="com.rrs.research.similarity.dao.AddressDao" />
+		<!-- property name="sqlSessionTemplate" ref="sqlSession" / -->
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+	<bean id="regionDao"  class="org.mybatis.spring.mapper.MapperFactoryBean">
+		<property name="mapperInterface" value="com.rrs.research.similarity.dao.RegionDao" />
+		<!-- property name="sqlSessionTemplate" ref="sqlSession" / -->
+		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
+	</bean>
+</beans>
