@@ -1,12 +1,12 @@
-<?xml version="1.0"?>
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
-         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	
-	<artifactId>similarity</artifactId>
+	<artifactId>address-similarity</artifactId>
 	<groupId>com.rrs.research</groupId>
-	<version>1.0.0-SNAPSHOT</version>
+	<version>1.0.0</version>
 	<packaging>jar</packaging>
+	<name>address-similarity</name>
 	
 	<properties>
 		<skip_maven_deploy>true</skip_maven_deploy>
@@ -15,11 +15,25 @@
 	</properties>
 	
 	<build>
+		<finalName>address-similarity</finalName>
+		
         <resources>
             <resource>
             	<directory>src/main/resources</directory>
+            	<includes>
+            		<include>sql-mapper/*.xml</include>
+            		<include>datasource-config.xml</include>
+					<include>IKAnalyzer.cfg.xml</include>
+					<include>log4j.xml</include>
+					<include>region.dic</include>
+					<include>spring-config.xml</include>
+					<include>stop.dic</include>
+					<include>dubbo.xsd</include>
+            	</includes>
+            	<filtering>false</filtering>
             </resource>
         </resources>
+        
 	    <plugins> 
 	         <plugin> 
 	            <groupId>org.apache.maven.plugins</groupId> 
@@ -29,22 +43,125 @@
 	                <source>1.8</source> 
 	                <target>1.8</target> 
 	                <encoding>UTF8</encoding> 
+	                <skip>true</skip>
 	            </configuration> 
 	         </plugin> 
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<version>3.0.1</version>
+				<executions>
+					<execution>
+						<id>bundle-sources</id>
+						<phase>package</phase>
+						<goals>
+							<goal>jar-no-fork</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<version>2.19.1</version>
+				<configuration>
+					<skip>true</skip>
+				</configuration>
+			</plugin>
+			
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<version>3.0.2</version>
+				<configuration>
+					<archive>
+						<manifest>
+							<addClasspath>true</addClasspath>
+							<classpathPrefix>../lib/</classpathPrefix>
+							<mainClass>com.alibaba.dubbo.container.Main</mainClass>
+						</manifest>
+						<manifestEntries>
+							<Class-Path>./ ../conf/ ../lib/</Class-Path>
+						</manifestEntries>
+					</archive>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>2.6</version>
+				<configuration>
+					<appendAssemblyId>false</appendAssemblyId>
+					<descriptor>src/main/resources/assembly-descriptor.xml</descriptor>
+					<finalName>address-similarity</finalName>
+				</configuration>
+				<executions>
+					<execution>
+						<id>make-binary-pacakge</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 	    </plugins>
 	</build>
 	
 	<dependencies>
+		<!-- Dubbox REST -->
+		<dependency>
+			<groupId>com.alibaba</groupId>
+			<artifactId>dubbo</artifactId>
+			<version>2.8.4</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.jboss.resteasy</groupId>
+		    <artifactId>resteasy-jaxrs</artifactId>
+		    <version>3.0.19.Final</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.jboss.resteasy</groupId>
+		    <artifactId>resteasy-client</artifactId>
+		    <version>3.0.19.Final</version>
+		</dependency>
+		<dependency>
+		    <groupId>javax.validation</groupId>
+		    <artifactId>validation-api</artifactId>
+		    <version>1.0.0.GA</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.jboss.resteasy</groupId>
+		    <artifactId>resteasy-netty</artifactId>
+		    <version>3.0.19.Final</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.jboss.resteasy</groupId>
+		    <artifactId>resteasy-jackson-provider</artifactId>
+		    <version>3.0.19.Final</version>
+		</dependency>
+		<dependency>
+			<groupId>org.javassist</groupId>
+			<artifactId>javassist</artifactId>
+			<version>3.20.0-GA</version>
+		</dependency>
+		
+		<!-- <dependency>
+			<groupId>io.netty</groupId>
+		    <artifactId>netty</artifactId>
+		    <version>3.10.6.Final</version>
+		</dependency> -->
+		<dependency>
+		    <groupId>org.mortbay.jetty</groupId>
+		    <artifactId>jetty</artifactId>
+		    <version>7.0.0.pre5</version>
+		</dependency>
+		
 		<!-- Spring components -->
 		<dependency>
 			<groupId>org.springframework</groupId>
 			<artifactId>spring-core</artifactId>
 			<version>4.3.2.RELEASE</version>
-		</dependency>
-		<dependency>
-		    <groupId>org.springframework</groupId>
-		    <artifactId>spring-tx</artifactId>
-		    <version>4.3.2.RELEASE</version>
 		</dependency>
 		<dependency>
 			<groupId>org.springframework</groupId>
@@ -56,6 +173,39 @@
 			<artifactId>spring-jdbc</artifactId>
 			<version>4.3.2.RELEASE</version>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-web</artifactId>
+			<version>4.3.2.RELEASE</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.springframework</groupId>
+		    <artifactId>spring-remoting</artifactId>
+		    <version>2.0.8</version>
+		    <exclusions>
+		    	<exclusion>
+		    		<groupId>org.springframework</groupId>
+					<artifactId>spring-aop</artifactId>
+		    	</exclusion>
+		    	<exclusion>
+		    		<groupId>org.springframework</groupId>
+					<artifactId>spring-beans</artifactId>
+		    	</exclusion>
+		    	<exclusion>
+		    		<groupId>org.springframework</groupId>
+					<artifactId>spring-context</artifactId>
+		    	</exclusion>
+		    	<exclusion>
+		    		<groupId>org.springframework</groupId>
+					<artifactId>spring-core</artifactId>
+		    	</exclusion>
+		    	<exclusion>
+		    		<groupId>org.springframework</groupId>
+					<artifactId>spring-web</artifactId>
+		    	</exclusion>
+		    </exclusions>
+		</dependency>
+		
 		<!-- Database components -->
 		<dependency>
 			<groupId>org.mybatis</groupId>
@@ -77,6 +227,7 @@
 			<artifactId>tomcat-jdbc</artifactId>
 			<version>9.0.0.M9</version>
 		</dependency>
+		
 		<!-- Chinese Analyzers -->
 		<dependency>
 		    <groupId>org.apache.lucene</groupId>
@@ -87,7 +238,26 @@
 		    <groupId>com.janeluo</groupId>
 		    <artifactId>ikanalyzer</artifactId>
 		    <version>2012_u6</version>
+		    <exclusions>
+		    	<exclusion>
+		    		<groupId>org.apache.lucene</groupId>
+            		<artifactId>lucene-core</artifactId>
+		    	</exclusion>
+		    	<exclusion>
+		    		<groupId>org.apache.lucene</groupId>
+            		<artifactId>lucene-queryparser</artifactId>
+		    	</exclusion>
+		    	<exclusion>
+		    		<groupId>org.apache.lucene</groupId>
+            		<artifactId>lucene-analyzers-common</artifactId>
+		    	</exclusion>
+		    </exclusions>
 		</dependency>
+        <dependency>
+            <groupId>org.apache.lucene</groupId>
+            <artifactId>lucene-queryparser</artifactId>
+            <version>6.2.0</version>
+        </dependency>
 		
 		<!-- Logging components -->
 		<dependency>
@@ -115,4 +285,11 @@
 		    <scope>test</scope>
 		</dependency>
 	</dependencies>
+
+    <repositories>
+        <repository>
+            <id>lib_id</id>
+            <url>file://${project.basedir}/src/main/resources/lib</url>
+        </repository>
+    </repositories>
 </project>

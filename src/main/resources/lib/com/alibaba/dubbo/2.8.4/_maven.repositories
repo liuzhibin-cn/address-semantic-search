@@ -1,0 +1,5 @@
+#NOTE: This is an Aether internal implementation file, its format can be changed without prior notice.
+#Sun Sep 18 21:12:48 CST 2016
+dubbo-2.8.4.jar>=
+dubbo-2.8.4-sources.jar>=
+dubbo-2.8.4.pom>=

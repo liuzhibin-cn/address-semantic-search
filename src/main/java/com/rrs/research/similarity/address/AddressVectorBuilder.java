@@ -50,17 +50,21 @@ public class AddressVectorBuilder {
 		long start = System.currentTimeMillis();
 		Date startDate = new Date();
 		
+		//加载地址
 		List<AddressEntity> addrList = service.loadAddresses(province.getId(), city.getId());
 		
+		//生成AddressDocument列表
 		List<AddressDocument> docList = new ArrayList<AddressDocument>(addrList.size());
 		for(AddressEntity addr : addrList){
 			docList.add(new AddressDocument(addr.getId(), addr.restoreText()));
 		}
 		
+		//分词
 		for(AddressDocument doc : docList){
 			doc.segment(segmenter);
 		}
 		
+		//计算TF-IDF
 		HashMap<String, Integer> termsRefStat = AddressDocument.statTermRefCount(docList);
 		int docCount = docList.size();
 		for(AddressDocument doc : docList)

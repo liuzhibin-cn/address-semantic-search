@@ -6,15 +6,14 @@
 			<param name="ConversionPattern" value="%m%n" />
 		</layout>  
 	</appender>  
-	<appender name="file" class="org.apache.log4j.RollingFileAppender">          
-        <param name="File" value="similarity-test.log" />       
-        <!-- 设置是否在重新启动服务时，在原有日志的基础添加新日志 -->       
-        <param name="Append" value="true" />       
-        <param name="MaxBackupIndex" value="10" />       
-        <layout class="org.apache.log4j.PatternLayout">       
-            <param name="ConversionPattern" value="%m%n" />       
-        </layout>       
-    </appender>  
+    <appender name="file" class="org.apache.log4j.RollingFileAppender">  
+        <param name="File" value="similarity.log" />
+        <param name="Append" value="true" />
+        <param name="MaxBackupIndex" value="10" />
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%m%n" />
+        </layout>
+    </appender>
     <appender name="sql" class="org.apache.log4j.RollingFileAppender">
         <param name="File" value="address-sql.log" />
         <param name="Append" value="true" />
@@ -24,17 +23,18 @@
         </layout>
     </appender>
  
-	<root>
-		<level value="WARN" />
-		<appender-ref ref="console" />
-	</root>
-    <logger name="com.rrs.research.similarity.test" additivity="false">  
-        <level value="INFO"/>  
+ 	<logger name="com.rrs.research.similarity.address" additivity="false">
+        <level value="INFO"/>
+        <appender-ref ref="file"/>
         <appender-ref ref="console"/>
-        <!-- <appender-ref ref="file"/> -->    
     </logger> 
-	<logger name="com.rrs.research.similarity.dao" additivity="false">
-        <level value="NONE"/>  
+    <logger name="com.rrs.research.similarity.dao" additivity="false">
+        <level value="ERROR"/>  
         <appender-ref ref="sql"/>
     </logger> 
+    
+	<root>
+		<level value="WARN" />
+		<appender-ref ref="file" />
+	</root>
 </log4j:configuration>

@@ -20,7 +20,7 @@ import com.rrs.research.similarity.dao.RegionDao;
 import com.rrs.research.utils.LogUtil;
 
 /**
- * {@link AddressEntity}和{@link RegionEntity}的操作逻辑，主要是存取访问操作。
+ * {@link AddressEntity}和{@link RegionEntity}的操作逻辑。
  * @author Richie 刘志斌 yudi@sina.com
  */
 public class AddressService implements ApplicationContextAware {
@@ -229,10 +229,11 @@ public class AddressService implements ApplicationContextAware {
 		this.timeRmSpec += System.currentTimeMillis() - start;
 		
 		start = System.currentTimeMillis();
-		if(!this.extractRegion(addr, false)) {
-			this.timeRegion += System.currentTimeMillis() - start;
-			return null;
-		}
+		this.extractRegion(addr, false);
+//		if(!this.extractRegion(addr, false)) {
+//			this.timeRegion += System.currentTimeMillis() - start;
+//			return null;
+//		}
 		this.timeRegion += System.currentTimeMillis() - start;
 		
 		start = System.currentTimeMillis();

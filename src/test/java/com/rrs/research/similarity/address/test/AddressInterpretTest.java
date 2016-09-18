@@ -36,7 +36,7 @@ public class AddressInterpretTest extends BaseTestCase {
 		addr = service.interpretAddress("甘肃临夏临夏县先锋乡张梁村史上社17号");
 		assertNotNull("解析失败", addr);
 		LOG.info("> " + addr.getRawText() + " --> " + addr);
-		assertEquals("详细地址错误", "史上社17号", addr.getText());
+		assertEquals("详细地址错误", "史上社", addr.getText());
 		assertNotNull("未解析出乡镇", addr.getTowns());
 		assertEquals("乡镇错误", 1, addr.getTowns().size());
 		assertEquals("乡镇错误", "先锋乡", addr.getTowns().get(0));
@@ -58,7 +58,7 @@ public class AddressInterpretTest extends BaseTestCase {
 		addr = service.interpretAddress("浙江丽水缙云县壶镇镇缙云县壶镇镇 下潜村257号");
 		assertNotNull("解析失败", addr);
 		LOG.info("> " + addr.getRawText() + " --> " + addr);
-		assertEquals("详细地址错误", "缙云县壶镇镇下潜村257号", addr.getText());
+		assertEquals("详细地址错误", "缙云县壶镇镇下潜村", addr.getText());
 		assertNotNull("未解析出乡镇", addr.getTowns());
 		assertEquals("乡镇错误", 1, addr.getTowns().size());
 		assertEquals("乡镇错误", "壶镇镇", addr.getTowns().get(0));
@@ -119,7 +119,7 @@ public class AddressInterpretTest extends BaseTestCase {
 		assertNotNull("未解析出乡镇", addr.getTowns());
 		assertEquals("乡镇错误", 1, addr.getTowns().size());
 		assertEquals("乡镇错误", "益农镇", addr.getTowns().get(0));
-		assertEquals("详细地址错误", "村委东150米", addr.getText());
+		assertEquals("详细地址错误", "村委东", addr.getText());
 		assertEquals("村庄错误", "兴裕村", addr.getVillage());
 		//测试正确提取村庄，村的名称必须是【三居洋村】，不能是【三居洋村村】
 		addr = service.interpretAddress("福建三明明溪县夏阳乡三居洋村村口");
@@ -189,6 +189,8 @@ public class AddressInterpretTest extends BaseTestCase {
 		//测试 地级市缺失情况：湖南湘潭县易俗河镇中南建材市场
 		this.extractRegion(service, "湖南湘潭县易俗河镇中南建材市场", "易俗河镇中南建材市场"
 				, 430000, 430300, 430321, "测试-区市同名-地级市缺失");
+		this.extractRegion(service, "湖南浏阳市镇头镇回龙村5组", "镇头镇回龙村5组"
+				, 430000, 430100, 430181, "测试-区市同名-地级市缺失");
 		
 		//地级市下面存在与地级市名称相同的县级行政区划，但后来改名了，例如：浙江省绍兴市绍兴县，后改名为：浙江省绍兴市柯桥区
 		//在标准行政区域数据中，将绍兴县放在了柯桥区的别名中
