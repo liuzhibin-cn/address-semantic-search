@@ -7,7 +7,7 @@ import java.util.regex.Pattern;
 
 import org.junit.Test;
 
-import com.rrs.research.similarity.address.RegionEntity;
+import com.rrs.rd.address.service.RegionEntity;
 
 public class BasicFuncTest {
 	@Test

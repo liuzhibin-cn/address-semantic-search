@@ -1,4 +1,4 @@
-package com.rrs.research.similarity.dao;
+package com.rrs.rd.address.dao;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -6,13 +6,14 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import org.apache.ibatis.type.TypeHandler;
+
+import com.rrs.rd.address.service.AddressService;
+import com.rrs.rd.address.service.RegionEntity;
+
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
 import org.apache.ibatis.type.MappedJdbcTypes;
 import org.apache.ibatis.type.MappedTypes;
-
-import com.rrs.research.similarity.address.AddressService;
-import com.rrs.research.similarity.address.RegionEntity;
 
 /**
  * {@link RegionEntity}作为其他实体的属性时的mybatis {@link TypeHandler}。

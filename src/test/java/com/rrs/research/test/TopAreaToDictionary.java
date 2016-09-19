@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.rrs.research.utils.FileUtil;
+import com.rrs.rd.address.utils.FileUtil;
 
 public class TopAreaToDictionary {
 	private final static Logger LOG = LoggerFactory.getLogger(TopAreaToDictionary.class);

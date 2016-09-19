@@ -1,4 +1,4 @@
-package com.rrs.research.utils;
+package com.rrs.rd.address.utils;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;

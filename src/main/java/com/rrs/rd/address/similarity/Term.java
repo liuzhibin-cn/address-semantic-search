@@ -1,4 +1,4 @@
-package com.rrs.research.similarity;
+package com.rrs.rd.address.similarity;
 
 /**
  * 词语（分词后的词语）。

@@ -1,4 +1,4 @@
-package com.rrs.research.similarity.segmenter;
+package com.rrs.rd.address.segmenter;
 
 import java.io.IOException;
 import java.io.StringReader;
@@ -10,7 +10,7 @@ import org.slf4j.LoggerFactory;
 import org.wltea.analyzer.core.IKSegmenter;
 import org.wltea.analyzer.core.Lexeme;
 
-import com.rrs.research.similarity.Segmenter;
+import com.rrs.rd.address.similarity.Segmenter;
 
 /**
  * 使用IKAnalyzer分词器。

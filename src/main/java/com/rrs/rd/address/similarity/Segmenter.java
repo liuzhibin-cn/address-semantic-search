@@ -1,4 +1,4 @@
-package com.rrs.research.similarity;
+package com.rrs.rd.address.similarity;
 
 import java.util.List;
 

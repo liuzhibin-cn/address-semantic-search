@@ -11,10 +11,10 @@ import org.springframework.util.Assert;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
-import com.rrs.research.similarity.address.AddressService;
-import com.rrs.research.similarity.address.RegionEntity;
+import com.rrs.rd.address.service.AddressService;
+import com.rrs.rd.address.service.RegionEntity;
+import com.rrs.rd.address.utils.FileUtil;
 import com.rrs.research.similarity.address.test.BaseTestCase;
-import com.rrs.research.utils.FileUtil;
 
 /**
  * 将淘宝开放平台获得的省市区数据导入数据库。

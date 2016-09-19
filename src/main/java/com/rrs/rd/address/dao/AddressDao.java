@@ -1,11 +1,11 @@
-package com.rrs.research.similarity.dao;
+package com.rrs.rd.address.dao;
 
 import java.util.List;
 
 import org.apache.ibatis.annotations.Flush;
 import org.apache.ibatis.annotations.Param;
 
-import com.rrs.research.similarity.address.AddressEntity;
+import com.rrs.rd.address.service.AddressEntity;
 
 /**
  * 

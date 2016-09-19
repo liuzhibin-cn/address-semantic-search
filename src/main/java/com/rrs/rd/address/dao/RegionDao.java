@@ -1,8 +1,8 @@
-package com.rrs.research.similarity.dao;
+package com.rrs.rd.address.dao;
 
 import java.util.List;
 
-import com.rrs.research.similarity.address.RegionEntity;
+import com.rrs.rd.address.service.RegionEntity;
 
 /**
  * 

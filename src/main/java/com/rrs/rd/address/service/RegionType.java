@@ -1,4 +1,4 @@
-package com.rrs.research.similarity.address;
+package com.rrs.rd.address.service;
 
 import com.rrs.common.dao.IntegerEnum;
 

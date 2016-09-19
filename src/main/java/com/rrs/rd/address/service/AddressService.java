@@ -1,4 +1,4 @@
-package com.rrs.research.similarity.address;
+package com.rrs.rd.address.service;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -15,9 +15,9 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
-import com.rrs.research.similarity.dao.AddressDao;
-import com.rrs.research.similarity.dao.RegionDao;
-import com.rrs.research.utils.LogUtil;
+import com.rrs.rd.address.dao.AddressDao;
+import com.rrs.rd.address.dao.RegionDao;
+import com.rrs.rd.address.utils.LogUtil;
 
 /**
  * {@link AddressEntity}和{@link RegionEntity}的操作逻辑。

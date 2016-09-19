@@ -7,8 +7,8 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.rrs.research.similarity.segmenter.IKAnalyzerSegmenter;
-import com.rrs.research.similarity.segmenter.SmartCNSegmenter;
+import com.rrs.rd.address.segmenter.IKAnalyzerSegmenter;
+import com.rrs.rd.address.segmenter.SmartCNSegmenter;
 
 public class TextSegmenterTest {
 	private final static Logger LOG = LoggerFactory.getLogger(TextSegmenterTest.class);

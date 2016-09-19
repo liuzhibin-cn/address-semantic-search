@@ -2,12 +2,12 @@ package com.rrs.research.similarity.address.test;
 
 import org.junit.Test;
 
-import com.rrs.research.similarity.address.AddressEntity;
-import com.rrs.research.similarity.address.AddressService;
-import com.rrs.research.similarity.address.RegionEntity;
-import com.rrs.research.similarity.address.RegionType;
-import com.rrs.research.similarity.dao.AddressDao;
-import com.rrs.research.similarity.dao.RegionDao;
+import com.rrs.rd.address.dao.AddressDao;
+import com.rrs.rd.address.dao.RegionDao;
+import com.rrs.rd.address.service.AddressEntity;
+import com.rrs.rd.address.service.AddressService;
+import com.rrs.rd.address.service.RegionEntity;
+import com.rrs.rd.address.service.RegionType;
 
 public class AddressDaoTest extends BaseTestCase {
 	@Test

@@ -1,4 +1,4 @@
-package com.rrs.research.utils;
+package com.rrs.rd.address.utils;
 
 import java.io.BufferedOutputStream;
 import java.io.BufferedReader;

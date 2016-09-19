@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
-<mapper namespace="com.rrs.research.similarity.dao.RegionDao">
-	<resultMap id="RegionEntityResult" type="com.rrs.research.similarity.address.RegionEntity">
+<mapper namespace="com.rrs.rd.address.dao.RegionDao">
+	<resultMap id="RegionEntityResult" type="com.rrs.rd.address.service.RegionEntity">
 		<result property="id" column="id" />
 		<result property="parentId" column="parent_id" />
 		<result property="type" column="type" />
@@ -18,11 +18,11 @@ from `bas_region`
 where parent_id=#{pid}
 order by id
 	</select>
-	<insert id="create" parameterType="com.rrs.research.similarity.address.RegionEntity">
+	<insert id="create" parameterType="com.rrs.rd.address.service.RegionEntity">
 insert into `bas_region`(`id`,`parent_id`,`name`,`type`,`zip`,`alias`)
 values(#{id},#{parentId},#{name},#{type},#{zip},#{alias})
 	</insert>
-	<update id="update" parameterType="com.rrs.research.similarity.address.RegionEntity">
+	<update id="update" parameterType="com.rrs.rd.address.service.RegionEntity">
 update bas_region set parent_id=#{parentId}, `name`=#{name}, `type`=#{type}
 where `id`=#{id}
 	</update>

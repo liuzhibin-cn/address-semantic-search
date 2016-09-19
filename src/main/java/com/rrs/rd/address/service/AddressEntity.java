@@ -1,4 +1,4 @@
-package com.rrs.research.similarity.address;
+package com.rrs.rd.address.service;
 
 import java.io.Serializable;
 import java.util.ArrayList;

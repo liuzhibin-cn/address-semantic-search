@@ -9,8 +9,8 @@ import java.io.InputStreamReader;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.rrs.research.similarity.address.AddressEntity;
-import com.rrs.research.similarity.address.AddressService;
+import com.rrs.rd.address.service.AddressEntity;
+import com.rrs.rd.address.service.AddressService;
 
 public class AddressInterpretTest extends BaseTestCase {
 	@Test

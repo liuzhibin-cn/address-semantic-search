@@ -1,4 +1,4 @@
-package com.rrs.research.similarity.address;
+package com.rrs.rd.address.service;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -12,11 +12,11 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.rrs.research.similarity.AddressDocument;
-import com.rrs.research.similarity.Segmenter;
-import com.rrs.research.similarity.Term;
-import com.rrs.research.similarity.dao.AddressDao;
-import com.rrs.research.similarity.segmenter.IKAnalyzerSegmenter;
+import com.rrs.rd.address.dao.AddressDao;
+import com.rrs.rd.address.segmenter.IKAnalyzerSegmenter;
+import com.rrs.rd.address.similarity.AddressDocument;
+import com.rrs.rd.address.similarity.Segmenter;
+import com.rrs.rd.address.similarity.Term;
 
 public class HttpServiceWrapperImpl implements HttpServiceWrapper {
 	private final static Logger LOG = LoggerFactory.getLogger(HttpServiceWrapperImpl.class);

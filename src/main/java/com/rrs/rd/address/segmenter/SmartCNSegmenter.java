@@ -1,4 +1,4 @@
-package com.rrs.research.similarity.segmenter;
+package com.rrs.rd.address.segmenter;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,7 +10,7 @@ import org.apache.lucene.analysis.tokenattributes.CharTermAttribute;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.rrs.research.similarity.Segmenter;
+import com.rrs.rd.address.similarity.Segmenter;
 
 /**
  * 使用lucene的smartcn分词器。
