@@ -40,15 +40,7 @@
 				<include>*</include>
 			</includes>
 			<filtered>false</filtered>
-		</fileSet>	
-		<!-- <fileSet>
-			<directory>src/main/resources/lib</directory>
-			<outputDirectory>lib</outputDirectory>
-			<includes>
-				<include>dubbo-2.8.4.jar</include>
-			</includes>
-			<filtered>false</filtered>
-		</fileSet> -->
+		</fileSet>
 	</fileSets>
 	<dependencySets>
 		<dependencySet>

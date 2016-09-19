@@ -3,41 +3,27 @@ cd `dirname $0`
 BIN_DIR=`pwd`
 cd ..
 DEPLOY_DIR=`pwd`
-CONF_DIR=$DEPLOY_DIR/conf
 
-SERVER_NAME=`sed '/prop.app.name/!d;s/.*=//' conf/service.properties | tr -d '\r'`
-
-if [ -z "$SERVER_NAME" ]; then
-	SERVER_NAME=`hostname`
+if [ ! -f $BIN_DIR/pid.sock ]; then
+    echo "The PID file pid.sock not exists"
+    exit 0
 fi
 
-PIDS=`ps  --no-heading -C java -f --width 1000 | grep "$CONF_DIR" |awk '{print $2}'`
-if [ -z "$PIDS" ]; then
-    echo "ERROR: The $SERVER_NAME does not started!"
-    exit 1
+PID=`cat $BIN_DIR/pid.sock`
+if [ -z "$PID" ]; then
+    echo "Process $PID not found"
+    rm -rf $BIN_DIR/pid.sock
+    exit 0
 fi
 
-if [ "$1" = "dump" ]; then
-$BIN_DIR/dump.sh
+# 检查进程是否启动成功
+COUNT=`ps -ef | grep "com.alibaba.dubbo.container.Main" | grep -v "grep" | grep "$PID" | wc -l`
+if [ 0 == $COUNT ]; then
+    echo "Process $PID not found"
+    rm -rf $BIN_DIR/pid.sock
+    exit 0
 fi
 
-echo -e "Stopping the $SERVER_NAME ...\c"
-for PID in $PIDS ; do
-	kill $PID > /dev/null 2>&1
-done
-
-COUNT=0
-while [ $COUNT -lt 1 ]; do    
-    echo -e ".\c"
-    sleep 1
-    COUNT=1
-    for PID in $PIDS ; do
-		PID_EXIST=`ps --no-heading -p $PID`
-		if [ -n "$PID_EXIST" ]; then
-			COUNT=0
-			break
-		fi
-	done
-done
-echo "OK!"
-echo "PID: $PIDS"
+kill -9 $PID
+rm -rf $BIN_DIR/pid.sock
+echo "OK! PID: $PID"

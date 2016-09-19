@@ -122,7 +122,7 @@ public class AddressService implements ApplicationContextAware {
 	 * @throws RuntimeException
 	 */
 	public int importAddress(List<String> addresses) throws IllegalStateException, RuntimeException {
-		int batchSize = 500;
+		int batchSize = 800;
 		int impCount=0, dupCount=0, interFailedCount=0;
 		List<AddressEntity> batch = new ArrayList<AddressEntity>(batchSize);
 		for(String addr : addresses){
@@ -260,8 +260,8 @@ public class AddressService implements ApplicationContextAware {
 		this.extractRoad(addr);
 		this.timeRoad += System.currentTimeMillis() - start;
 		
-		addr.setText(addr.getText().replaceAll("[0-9A-Za-z\\#]+(单元|号楼|号院|院|楼|号|室|区|组|队|座|栋|幛|幢|期|弄|巷|层|米|户|\\#)?", ""));
-		addr.setText(addr.getText().replaceAll("[一二三四五六七八九十]+(单元|号楼|号院|院|楼|室|区|组|队|号|段|巷|栋|期|弄|层|户|幢|座)", ""));
+//		addr.setText(addr.getText().replaceAll("[0-9A-Za-z\\#]+(单元|号楼|号院|院|楼|号|室|区|组|队|座|栋|幛|幢|期|弄|巷|层|米|户|\\#)?", ""));
+//		addr.setText(addr.getText().replaceAll("[一二三四五六七八九十]+(单元|号楼|号院|院|楼|室|区|组|队|号|段|巷|栋|期|弄|层|户|幢|座)", ""));
 		
 		return addr;
 	}
