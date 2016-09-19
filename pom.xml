@@ -2,11 +2,11 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	
-	<artifactId>address-similarity</artifactId>
-	<groupId>com.rrs.research</groupId>
+	<artifactId>address-match</artifactId>
+	<groupId>com.rrs.rd</groupId>
 	<version>1.0.0</version>
 	<packaging>jar</packaging>
-	<name>address-similarity</name>
+	<name>address-match</name>
 	
 	<properties>
 		<skip_maven_deploy>true</skip_maven_deploy>
@@ -15,7 +15,7 @@
 	</properties>
 	
 	<build>
-		<finalName>address-similarity</finalName>
+		<finalName>address-match</finalName>
 		
         <resources>
             <resource>
@@ -93,7 +93,7 @@
 				<configuration>
 					<appendAssemblyId>false</appendAssemblyId>
 					<descriptor>src/main/resources/assembly-descriptor.xml</descriptor>
-					<finalName>address-similarity</finalName>
+					<finalName>address-match</finalName>
 				</configuration>
 				<executions>
 					<execution>

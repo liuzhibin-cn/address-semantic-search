@@ -1,4 +1,4 @@
-package com.rrs.research.similarity.address.test;
+package com.rrs.rd.address.match;
 
 import java.io.BufferedReader;
 import java.io.File;

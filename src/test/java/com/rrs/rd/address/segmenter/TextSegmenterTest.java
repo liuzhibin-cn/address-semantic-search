@@ -1,4 +1,4 @@
-package com.rrs.research.similarity.test;
+package com.rrs.rd.address.segmenter;
 
 import java.util.HashSet;
 import java.util.List;

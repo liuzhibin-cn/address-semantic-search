@@ -7,7 +7,7 @@
 		</layout>
 	</appender>
     <appender name="file" class="org.apache.log4j.RollingFileAppender">  
-        <param name="File" value="similarity.log" />
+        <param name="File" value="match.log" />
         <param name="Append" value="true" />
         <param name="MaxBackupIndex" value="10" />
         <layout class="org.apache.log4j.PatternLayout">
@@ -15,7 +15,7 @@
         </layout>
     </appender>
     <appender name="sql" class="org.apache.log4j.RollingFileAppender">
-        <param name="File" value="address-sql.log" />
+        <param name="File" value="sql.log" />
         <param name="Append" value="true" />
         <param name="MaxBackupIndex" value="10" />
         <layout class="org.apache.log4j.PatternLayout">

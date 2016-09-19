@@ -1,4 +1,4 @@
-package com.rrs.research.test;
+package com.rrs.rd.address.misc;
 
 import java.util.List;
 
