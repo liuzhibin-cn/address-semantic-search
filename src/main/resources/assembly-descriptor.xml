@@ -31,7 +31,7 @@
 				<include>stop.dic</include>
 				<include>dubbo.xsd</include>
 			</includes>
-			<filtered>false</filtered>
+			<filtered>true</filtered>
 		</fileSet>
 		<fileSet>
 			<directory>src/main/resources/script</directory>

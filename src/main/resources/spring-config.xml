@@ -47,7 +47,7 @@
 	<bean id="addressService" class="com.rrs.rd.address.service.AddressService">
 		<property name="addressDao" ref="addressDao" />
 		<property name="regionDao" ref="regionDao" />
-		<property name="cacheFolder" value="/Users/richie/Documents/workspace_eclipse/cache-folder" />
+		<property name="cacheFolder" value="${cache.path}" />
 		<property name="forbiddenFollowingChars">
 			<list>
 				<value>路</value>

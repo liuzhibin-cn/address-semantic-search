@@ -14,6 +14,31 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 	
+	<profiles>
+		<profile>
+			<id>test</id>
+			<properties>
+				<db.host>127.0.0.1</db.host>
+				<db.name>addr_match</db.name>
+				<db.user>addr_match</db.user>
+				<db.password>cfds123!@#</db.password>
+				<cache.path>/data/address-search/cache</cache.path>
+			</properties>
+		</profile>
+		
+		<profile>
+			<id>dev</id>
+			<activation><activeByDefault>true</activeByDefault></activation>
+			<properties>
+				<db.host>127.0.0.1</db.host>
+				<db.name>my_research</db.name>
+				<db.user>root</db.user>
+				<db.password>dev</db.password>
+				<cache.path>/Users/richie/Documents/workspace_eclipse/cache-folder</cache.path>
+			</properties>
+		</profile>
+	</profiles>
+	
 	<build>
 		<finalName>address-match</finalName>
 		
@@ -22,15 +47,15 @@
             	<directory>src/main/resources</directory>
             	<includes>
             		<include>sql-mapper/*.xml</include>
-            		<include>datasource-config.xml</include>
+            		<!-- <include>datasource-config.xml</include>
 					<include>IKAnalyzer.cfg.xml</include>
 					<include>log4j.xml</include>
 					<include>region.dic</include>
 					<include>spring-config.xml</include>
 					<include>stop.dic</include>
-					<include>dubbo.xsd</include>
+					<include>dubbo.xsd</include> -->
             	</includes>
-            	<filtering>false</filtering>
+            	<filtering>true</filtering>
             </resource>
         </resources>
         

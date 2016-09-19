@@ -17,9 +17,9 @@
 			 parameter zeroDateTimeBehavior can tell mysql jdbc driver to convert such values to java null.
 			 see: http://dev.mysql.com/doc/refman/5.0/en/connector-j-reference-configuration-properties.html
 		-->
- 		<property name="url" value="jdbc:mysql://127.0.0.1:3306/my_research?characterEncoding=utf8&amp;zeroDateTimeBehavior=convertToNull&amp;useSSL=false" /> 
- 		<property name="username" value="root" /> 
- 		<property name="password" value="dev" /> 
+ 		<property name="url" value="jdbc:mysql://${db.host}:3306/${db.name}?characterEncoding=utf8&amp;zeroDateTimeBehavior=convertToNull&amp;useSSL=false" /> 
+ 		<property name="username" value="${db.user}" /> 
+ 		<property name="password" value="${db.password}" /> 
 		<!-- transaction properties, this is necessary because the default isolation level in some db is repeatable read! -->
 		<property name="defaultAutoCommit" value="true" />
 		<!-- READ_COMMITTED -->
