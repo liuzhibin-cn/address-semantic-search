@@ -171,14 +171,14 @@ public class AddressService implements ApplicationContextAware {
 					batch = new ArrayList<AddressEntity>(batchSize);
 					this.timeDb += System.currentTimeMillis() - dbStart;
 					
-					if(impCount % (batchSize * 5) == 0)
+					if(impCount % 40000 == 0)
 						LOG.info("[addr-imp] [perf] imp " + impCount + ". db=" + timeDb/1000.0 + "s, cache=" + timeCache/1000.0 + "s"
 							+ ", interpret=" + timeInter/1000.0 + "s. region=" + timeRegion/1000.0 + "s" + ", rm-r=" + timeRmRed/1000.0 + "s"
 							+ ", town=" + timeTown/1000.0 + "s, road=" + timeRoad/1000.0 + ", build=" + timeBuild/1000.0 + "s"
 							+ ", rm-s=" + timeRmSpec/1000.0 + "s, brac=" + timeBrc/1000.0);
 				}
 			}catch(Exception ex){
-				LOG.error("[addr-imp] [error] " + addr + ": " + ex.getMessage());
+				LOG.error("[addr-imp] [error] " + addr + ": " + ex.getMessage(), ex);
 			}
 		}
 		
