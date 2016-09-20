@@ -13,8 +13,7 @@
 			<directory>src/main/resources/bin</directory>
 			<outputDirectory>bin</outputDirectory>
 			<includes>
-				<include>start.sh</include>
-				<include>stop.sh</include>
+				<include>*</include>
 			</includes>
 			<fileMode>0755</fileMode>
 			<filtered>false</filtered>
