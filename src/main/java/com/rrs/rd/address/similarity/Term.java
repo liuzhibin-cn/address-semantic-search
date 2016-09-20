@@ -35,7 +35,7 @@ public class Term {
 	 */
 	public void calcTfidf(int totalDocs, int termCountInParentDoc, int termRefTimesInAllDocs){
 		double tf = this._tc * 1.0 / termCountInParentDoc;
-		double idf = Math.log( totalDocs / ( termRefTimesInAllDocs + 1 ) );
+		double idf = Math.log( totalDocs * 1.0 / ( termRefTimesInAllDocs + 1 ) );
 		this._tfidf = tf * idf;
 	}
 	
