@@ -33,6 +33,12 @@ public class AddressInterpretTest extends BaseTestCase {
 		assertEquals("乡镇错误", "郭镇", addr.getTowns().get(1));
 		assertEquals("村庄错误", "盐桥村", addr.getVillage());
 		
+		addr = service.interpretAddress("海南海南省直辖市县定安县见龙大道财政局宿舍楼702");
+		assertNotNull("解析失败", addr);
+		LOG.info("> " + addr.getRawText() + " --> " + addr);
+		assertEquals("详细地址错误", "财政局宿舍楼702", addr.getText());
+		assertEquals("道路错误", "见龙大道", addr.getRoad());
+		
 		addr = service.interpretAddress("甘肃临夏临夏县先锋乡张梁村史上社17号");
 		assertNotNull("解析失败", addr);
 		LOG.info("> " + addr.getRawText() + " --> " + addr);
@@ -277,7 +283,7 @@ public class AddressInterpretTest extends BaseTestCase {
 		AddressService service = context.getBean(AddressService.class);
 		AddressEntity addr = new AddressEntity();
 		
-		addr.setText("四川成都武侯区武侯大道县级直管村级单位铁佛段千盛百货\\/ \r\n\t对面200米金履三路288号绿地610015圣路易名邸");
+		addr.setText("四川成都武侯区武侯大道铁佛段千盛百货\\/ \r\n\t对面200米金履三路288号绿地610015圣路易名邸");
 		service.removeSpecialChars(addr);
 		assertEquals("四川成都武侯区武侯大道铁佛段千盛百货对面200米金履三路288号绿地圣路易名邸", addr.getText());
 	}

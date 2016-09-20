@@ -136,12 +136,12 @@ public class AddressService implements ApplicationContextAware {
 				
 				long interStart = System.currentTimeMillis();
 				AddressEntity address = this.interpretAddress(addr);
-				this.timeInter += System.currentTimeMillis() - interStart;
-				
-				if(address==null) {
+				if(address==null || !address.hasCity() || !address.hasCounty()) {
 					interFailedCount++;
 					continue;
 				}
+				this.timeInter += System.currentTimeMillis() - interStart;
+				
 				address.setHash(address.getRawText().hashCode());
 				
 				long cacheStart = System.currentTimeMillis();
@@ -149,19 +149,18 @@ public class AddressService implements ApplicationContextAware {
 				ADDRESS_INDEX_BY_HASH.put(address.getHash(), address);
 				this.timeCache += System.currentTimeMillis() - cacheStart;
 				
-				
 				if(address.getText().length()>100)
-					address.setText(address.getText().substring(0, 100));
+					address.setText(StringUtil.head(address.getText(), 100));
 				if(address.getVillage().length()>5)
-					address.setVillage(address.getVillage().substring(0, 5));
+					address.setVillage(StringUtil.head(address.getVillage(), 5));
 				if(address.getRoad().length()>8)
-					address.setRoad(address.getRoad().substring(0, 8));
+					address.setRoad(StringUtil.head(address.getRoad(), 8));
 				if(address.getRoadNum().length()>10)
-					address.setRoadNum(address.getRoadNum().substring(0, 10));
+					address.setRoadNum(StringUtil.head(address.getRoadNum(), 10));
 				if(address.getBuildingNum().length()>20)
-					address.setBuildingNum(address.getBuildingNum().substring(0, 20));
+					address.setBuildingNum(StringUtil.head(address.getBuildingNum(), 20));
 				if(address.getRawText().length()>150)
-					address.setRawText(address.getRawText().substring(0, 150));
+					address.setRawText(StringUtil.head(address.getRawText(), 150));
 				batch.add(address);
 				
 				impCount++;
@@ -172,10 +171,10 @@ public class AddressService implements ApplicationContextAware {
 					this.timeDb += System.currentTimeMillis() - dbStart;
 					
 					if(impCount % 40000 == 0)
-						LOG.info("[addr-imp] [perf] imp " + impCount + ". db=" + timeDb/1000.0 + "s, cache=" + timeCache/1000.0 + "s"
-							+ ", interpret=" + timeInter/1000.0 + "s. region=" + timeRegion/1000.0 + "s" + ", rm-r=" + timeRmRed/1000.0 + "s"
-							+ ", town=" + timeTown/1000.0 + "s, road=" + timeRoad/1000.0 + ", build=" + timeBuild/1000.0 + "s"
-							+ ", rm-s=" + timeRmSpec/1000.0 + "s, brac=" + timeBrc/1000.0);
+						LOG.info("[addr-imp] [perf] imp " + impCount + ". db=" + timeDb/1000.0 + ", cache=" + timeCache/1000.0
+							+ ", inter=" + timeInter/1000.0 + ". rms=" + timeRmSpec/1000.0 + ", rmr=" + timeRmRed/1000.0
+							+ ", brc=" + timeBrc/1000.0 + "s, reg=" + timeRegion/1000.0 + ", town=" + timeTown/1000.0
+							+ ", road=" + timeRoad/1000.0 + "s, build=" + timeBuild/1000.0);
 				}
 			}catch(Exception ex){
 				LOG.error("[addr-imp] [error] " + addr + ": " + ex.getMessage(), ex);
@@ -190,11 +189,11 @@ public class AddressService implements ApplicationContextAware {
 		}
 		
 		LOG.info("[addr-imp] [perf] imp " + impCount + ", dup " + dupCount +", fail " + interFailedCount);
-		LOG.info("[addr-imp] [perf] elapsed time: db " + timeDb/1000.0 + "s, cache " + timeCache/1000.0 + "s"
-				+ ", interpret " + timeInter/1000.0 + "s");
-		LOG.info("[addr-imp] [perf] region " + timeRegion/1000.0 + "s" + ", rm-red " + timeRmRed/1000.0 + "s"
-				+ ", town " + timeTown/1000.0 + "s, road " + timeRoad/1000.0 + ", build " + timeBuild/1000.0 + "s"
-				+ ", rm-spec " + timeRmSpec/1000.0 + "s, bracket " + timeBrc/1000.0);
+		LOG.info("[addr-imp] [perf] elapsed time: db " + timeDb/1000.0 + ", cache " + timeCache/1000.0 
+				+ ", inter " + timeInter/1000.0);
+		LOG.info("[addr-imp] [perf] rms=" + timeRmSpec/1000.0 + ", rmr=" + timeRmRed/1000.0
+				+ ", brc=" + timeBrc/1000.0 + "s, reg=" + timeRegion/1000.0 + ", town=" + timeTown/1000.0
+				+ ", road=" + timeRoad/1000.0 + "s, build=" + timeBuild/1000.0);
 		
 		return impCount;
 	}
@@ -372,15 +371,15 @@ public class AddressService implements ApplicationContextAware {
 					addr.setProvince(this.getRegion(addr.getCity().getParentId())); //匹配到地级市，找出相应省份
 					addr.setProvinceInferred(true);
 					if(!isTrial){
-						LOG.info("[addr-inter] [ex-regn] [no-prov] "
-							+ addr.getRawText().substring(0, addr.getRawText().length() - addr.getText().length())
+						LOG.debug("[addr-inter] [ex-regn] [no-prov] "
+							+ StringUtil.head(addr.getRawText(), addr.getRawText().length() - addr.getText().length())
 							+ ", try " + addr.getProvince().getName() + addr.getCity().getName());
 					}
 					break;
 				}
 			}
 			if(!addr.hasCity()){ //未匹配到地级市，匹配失败
-				if(!isTrial) LOG.error("[addr-inter] [ex-regn] [no-prov] " + debugString(addr.getRawText()));
+				if(!isTrial) LOG.debug("[addr-inter] [ex-regn] [no-prov] " + debugString(addr.getRawText()));
 				return false;
 			}
 		}
@@ -410,8 +409,8 @@ public class AddressService implements ApplicationContextAware {
 				if(!addr.hasCity() && this.removeInvalidRegionNames(addr, addr.getProvince())){
 					if(this.simpleExtractRegion(addr, RegionType.City, cities, isTrial)){
 						if(!isTrial)
-							LOG.info("[addr-inter] [ex-regn] [no-city] "
-								+ addr.getRawText().substring(0, addr.getRawText().length() - addr.getText().length())
+							LOG.debug("[addr-inter] [ex-regn] [no-city] "
+								+ StringUtil.head(addr.getRawText(), addr.getRawText().length() - addr.getText().length())
 								+ ", try " + addr.getProvince().getName() + " " + addr.getCity().getName());
 					}
 				}
@@ -422,8 +421,8 @@ public class AddressService implements ApplicationContextAware {
 						addr.setCity(theCity);
 						addr.setCityInferred(true);
 						if(!isTrial)
-							LOG.info("[addr-inter] [ex-regn] [no-city] "
-									+ addr.getRawText().substring(0, addr.getRawText().length() - addr.getText().length())
+							LOG.debug("[addr-inter] [ex-regn] [no-city] "
+									+ StringUtil.head(addr.getRawText(), addr.getRawText().length() - addr.getText().length())
 									+ ", try " + addr.getProvince().getName() + " " + addr.getCity().getName() + " " + addr.getCounty().getName());
 					}
 				}
@@ -431,7 +430,7 @@ public class AddressService implements ApplicationContextAware {
 		}
 		if(!addr.hasCity()){ //未匹配到地级市，匹配失败
 			if(!isTrial)
-				LOG.info("[addr-inter] [ex-regn] [no-city] " + debugString(addr.getRawText()));
+				LOG.debug("[addr-inter] [ex-regn] [no-city] " + debugString(addr.getRawText()));
 			return false;
 		}
 		
@@ -459,7 +458,7 @@ public class AddressService implements ApplicationContextAware {
 							addr.setCounty(addr.getCity());
 							addr.setCountyInferred(true);
 							if(!isTrial)
-								LOG.info("[addr-inter] [ex-regn] [no-coun] " + matchedRegionString + addr.getCity().getName()
+								LOG.debug("[addr-inter] [ex-regn] [no-coun] " + matchedRegionString + addr.getCity().getName()
 									+ ", try " + addr.getProvince().getName() + addr.getCity().getName());
 						}
 					}
@@ -468,22 +467,23 @@ public class AddressService implements ApplicationContextAware {
 		}
 		
 		if(!addr.hasCounty()){
-			if(!isTrial) LOG.error("[addr-inter] [ex-regn] [no-coun] " + debugString(addr.getRawText()));
+			if(!isTrial) LOG.debug("[addr-inter] [ex-regn] [no-coun] " + debugString(addr.getRawText()));
 			return false;
 		}
 		return true;
 	}
 	
 	private boolean removeInvalidRegionNames(AddressEntity addr, RegionEntity parentRegion){
+		if(addr.getText().length()<=0) return false;
 		for(int i=0; this.invalidRegionNames!=null && i<this.invalidRegionNames.size(); i++){
 			String ignoreName = this.invalidRegionNames.get(i).trim();
 			if(addr.getText().startsWith(ignoreName)){
-				addr.setText(addr.getText().substring(ignoreName.length()));
+				addr.setText(StringUtil.substring(addr.getText(), ignoreName.length()));
 				return true;
 			}
 			for(String regionName : parentRegion.orderedNameAndAlias()){
 				if(addr.getText().startsWith(regionName + ignoreName)){
-					addr.setText(addr.getText().substring((regionName + ignoreName).length()));
+					addr.setText(StringUtil.substring(addr.getText(), (regionName + ignoreName).length()));
 					return true;
 				}
 			}
@@ -492,6 +492,7 @@ public class AddressService implements ApplicationContextAware {
 	}
 	
 	private boolean simpleExtractRegion(AddressEntity addr, RegionType level, List<RegionEntity> regions, boolean isTrial){
+		if(addr.getText().length()<=0) return false;
 		if(regions==null || regions.isEmpty()) return false;
 		for(RegionEntity region : regions){
 			if(this.simpleExtractRegion(addr, level, region, isTrial)){
@@ -502,7 +503,7 @@ public class AddressService implements ApplicationContextAware {
 	}
 	
 	private boolean simpleExtractRegion(AddressEntity addr, RegionType level, RegionEntity region, boolean isTrial){
-		if(region==null) return false;
+		if(region==null || addr.getText().length()<=0) return false;
 		
 		String match = this.tryMatchRegion(addr.getText(), region, isTrial);
 		if(match==null) return false;
@@ -535,10 +536,10 @@ public class AddressService implements ApplicationContextAware {
 					addr.setCounty(childWithSameAlias);
 					if(addr.getProvince()==null)
 						addr.setProvince(this.getRegion(region.getParentId()));
-					addr.setText(addr.getText().substring(newMatch.length()));
+					addr.setText(StringUtil.substring(addr.getText(), newMatch.length()));
 					if(!isTrial) {
-						LOG.info("[addr-inter] [ex-regn] [no-city] "
-							+ addr.getRawText().substring(0, addr.getRawText().length() - addr.getText().length())
+						LOG.debug("[addr-inter] [ex-regn] [no-city] "
+							+ StringUtil.head(addr.getRawText(), addr.getRawText().length() - addr.getText().length())
 							+ ", try " + addr.getProvince().getName() + " " + addr.getCity().getName() + " " + addr.getCounty().getName());
 					}
 					return true;
@@ -550,7 +551,7 @@ public class AddressService implements ApplicationContextAware {
 		else if(RegionType.City.equals(level)) addr.setCity(region);
 		else if(RegionType.County.equals(level)) addr.setCounty(region);
 		else throw new IllegalArgumentException("Argument {level} must be one of Province, City or County");
-		addr.setText(addr.getText().substring(match.length()));
+		addr.setText(StringUtil.substring(addr.getText(), match.length()));
 		return true;
 	}
 	
@@ -562,7 +563,7 @@ public class AddressService implements ApplicationContextAware {
 	 * @return 成功匹配返回匹配到的省市区名称（明确使用的全名还是别名匹配），匹配失败返回null。
 	 */
 	private String tryMatchRegion(String text, RegionEntity region, boolean isTrial){
-		if(text.length()<=0 || region==null) return null;
+		if(text==null || text.length()<=0 || region==null) return null;
 		
 		boolean conflictOccurs = false;
 		for(String name : region.orderedNameAndAlias()){
@@ -572,7 +573,7 @@ public class AddressService implements ApplicationContextAware {
 				//河北秦皇岛昌黎县昌黎镇秦皇岛市昌黎镇马铁庄村
 				//在移除冗余时匹配：秦皇岛市昌黎镇，会将【昌黎】匹配成为区县【昌黎县】，导致剩下的文本为【镇马铁庄村】
 				if(RegionType.County.equals(region.getType()) && !name.equals(region.getName())){ //使用别名匹配上的
-					String left = substring(text, name.length());
+					String left = StringUtil.tail(text, text.length() - name.length());
 					if(left.length()>0 && left.startsWith("大街") || left.startsWith("大道") || left.startsWith("街道") 
 							|| left.startsWith("镇") || left.startsWith("乡") || left.startsWith("村")
 							|| left.startsWith("路") || left.startsWith("公路"))
@@ -589,14 +590,14 @@ public class AddressService implements ApplicationContextAware {
 						//匹配到的区域名称最后一个字，与下级区域名称的第一个字相同，则可能发生上述冲突
 						&& name.charAt(name.length()-1) == child.getName().charAt(0) 
 						//地址中随后出现的2个字无法匹配下级区域
-						&& !child.getName().startsWith(text.substring(name.length(), name.length()+2))
+						&& !child.getName().startsWith(StringUtil.substring(text, name.length(), name.length()+1))
 						//但匹配到的区域名称最后一个字 + 地址中随后出现的第一个字，可以匹配下级区域
-						&& child.getName().startsWith(text.substring(name.length()-1, name.length()+1))
+						&& child.getName().startsWith(StringUtil.substring(text, name.length()-1, name.length()))
 						){
 						if(!isTrial){
-							LOG.info("[addr-inter] [ex-regn] [conflic] " + text.substring(0, name.length()+2) 
-								+ ", now match " + name + "-" + child.getName().substring(1, child.getName().length())
-								+ ", will try " + name.substring(0, name.length()-1) + "-" + child.getName());
+							LOG.debug("[addr-inter] [ex-regn] [conflic] " + StringUtil.head(text, name.length()+2) 
+								+ ", now match " + name + "-" + StringUtil.tail(child.getName(), child.getName().length()-1)
+								+ ", will try " + StringUtil.head(name, name.length()-1) + "-" + child.getName());
 						}
 						conflictOccurs = true;
 						successMatch = false;
@@ -609,7 +610,7 @@ public class AddressService implements ApplicationContextAware {
 					for(int i=0; this.forbiddenFollowingChars!=null && i<this.forbiddenFollowingChars.size(); i++){
 						String forbidden = this.forbiddenFollowingChars.get(i);
 						if(text.length() < name.length() + forbidden.length()) continue;
-						if(text.substring(name.length()).startsWith(forbidden)){
+						if(StringUtil.substring(text, name.length()).startsWith(forbidden)){
 							successMatch = false;
 							break;
 						}
@@ -638,18 +639,16 @@ public class AddressService implements ApplicationContextAware {
 				digitCharNum++;
 				continue;
 			}
-			if(digitCharNum>=0 && digitCharNum<minDigitCharNum) {
-				sb.append(text.substring(i-digitCharNum, i));
+			if(digitCharNum>0 && digitCharNum<minDigitCharNum) {
+				sb.append(StringUtil.substring(text, i-digitCharNum, i-1));
 			}
 			digitCharNum=0;
 			sb.append(c);
 		}
-		text = sb.toString();
-		//3. 删除特殊区域名称
-		if(this.invalidRegionNames!=null){
-			for(String name : this.invalidRegionNames)
-				text = StringUtil.remove(text, name);
+		if(digitCharNum>0 && digitCharNum<minDigitCharNum) {
+			sb.append(StringUtil.tail(text, digitCharNum));
 		}
+		text = sb.toString();
 		
 		boolean result = text.length() != addr.getText().length();
 		addr.setText(text);
@@ -657,14 +656,23 @@ public class AddressService implements ApplicationContextAware {
 	}
 	
 	public boolean removeRedundancy(AddressEntity addr){
-		if(addr.getText().length()<=0) return false;
+		if(addr.getText().length()<=0 || !addr.hasProvince() || !addr.hasCity()) return false;
 		
 		boolean removed = false;
 		
-		AddressEntity newAddr = new AddressEntity();
 		//采用后序数组方式匹配省市区
-		for(int i=0; i<addr.getText().length()-6; ){
-			newAddr.setRawText(addr.getText().substring(i));
+		int endIndex = addr.getText().length();
+		char provinceFirstChar = addr.getProvince().getName().charAt(0);
+		char cityFirstChar = addr.getCity().getName().charAt(0);
+		for(int i=0; i<endIndex; ){
+			//不可能匹配上省市区的情况
+			char c = addr.getText().charAt(i);
+			if(c!=provinceFirstChar && c!=cityFirstChar) {
+				i++;
+				continue;
+			}
+			AddressEntity newAddr = new AddressEntity();
+			newAddr.setRawText(StringUtil.substring(addr.getText(), i));
 			newAddr.setText(newAddr.getRawText());
 			newAddr.setProvince(addr.getProvince());
 			newAddr.setCity(addr.getCity());
@@ -673,6 +681,7 @@ public class AddressService implements ApplicationContextAware {
 			if(newAddr.matchedRegionCount() - newAddr.inferredCount() >= 2){ //省市区至少连续匹配两个以上部分
 				if(addr.getProvince().equals(newAddr.getProvince()) && addr.getCity().equals(newAddr.getCity())){
 					addr.setText(newAddr.getText());
+					endIndex=addr.getText().length();
 					i=0;
 					removed = true;
 					continue;
@@ -697,7 +706,7 @@ public class AddressService implements ApplicationContextAware {
 		while(matcher.find()){
 			String bracket = matcher.group("bracket");
 			if(bracket.length()<=2) continue;
-			brackets.append(matcher.group("bracket").substring(1, bracket.length()-1));
+			brackets.append(StringUtil.substring(matcher.group("bracket"), 1, bracket.length()-2));
 			found = true;
 		}
 		if(found){
@@ -716,29 +725,29 @@ public class AddressService implements ApplicationContextAware {
 			String text = addr.getText();
 			if(j!=null && j.length()>0){ //街道
 				if(j.length()==6 && j.startsWith("市区")) //市区新塘街道、市区新华街道
-					addr.addTown(j.substring(2));
+					addr.addTown(StringUtil.substring(j, 2));
 				else if(j.equals("市镇府镇") || j.equals("市镇"))
 					return;
 				else if(j.length()==4 && j.startsWith("市") && j.endsWith("镇"))
-					addr.addTown(j.substring(1));
+					addr.addTown(StringUtil.substring(j, 1));
 				else
 					addr.addTown(j);
-				addr.setText(substring(text, matcher.end("j")));
+				addr.setText(StringUtil.substring(text, matcher.end("j")));
 			}
 			if(z!=null && z.length()>0){ //镇
 				addr.addTown(z);
-				addr.setText(substring(text, matcher.end("z")));
+				addr.setText(StringUtil.substring(text, matcher.end("z")));
 			}
 			if(x!=null && x.length()>0){ //乡
 				addr.addTown(x);
-				addr.setText(substring(text, matcher.end("x")));
+				addr.setText(StringUtil.substring(text, matcher.end("x")));
 			}
 			if(c!=null && c.length()>0){ //村
 				if(addr.getText().length()<=c.length()){
 					addr.setVillage(c);
 					addr.setText("");
 				}else{
-					String leftString = substring(text, matcher.end("c"));
+					String leftString = StringUtil.substring(text, matcher.end("c"));
 					if(!c.endsWith("农村")){
 						if(addr.getVillage().length()<=0){
 								addr.setVillage(c);
@@ -749,7 +758,7 @@ public class AddressService implements ApplicationContextAware {
 						else
 							addr.setText(leftString);
 					}else{
-						LOG.info("[addr-inter] [ex-town] [mis-village] " + c + " " + leftString);
+						LOG.debug("[addr-inter] [ex-town] [mis-village] " + c + " " + leftString);
 					}
 				}
 			}
@@ -764,10 +773,8 @@ public class AddressService implements ApplicationContextAware {
 		if(matcher.find()){
 			String road = matcher.group("road"), roadNum = matcher.group("roadnum");
 			addr.setRoad(road);
-			if(roadNum!=null){
-				addr.setRoadNum(roadNum);
-			}
-			addr.setText(addr.getText().substring(road.length() + (roadNum==null ? 0 : roadNum.length())));
+			addr.setRoadNum(roadNum);
+			addr.setText(StringUtil.substring(addr.getText(), road.length() + (roadNum==null ? 0 : roadNum.length())));
 			return true;
 		}
 		return false;
@@ -782,7 +789,7 @@ public class AddressService implements ApplicationContextAware {
 		Matcher matcher = P_BUILDING_NUM1.matcher(addr.getText());
     	while(matcher.find()){
     		if(matcher.end()==matcher.start()) continue; //忽略null匹配结果
-    		building = addr.getText().substring(matcher.start(), matcher.end());
+    		building = StringUtil.substring(addr.getText(), matcher.start(), matcher.end()-1);
     		//最小的匹配模式形如：7栋301，包括4个非空goup：[0:7栋301]、[1:7栋]、[2:栋]、[3:301]
     		int nonEmptyGroups = 0;
     		for(int i=0; i<matcher.groupCount(); i++){
@@ -791,14 +798,14 @@ public class AddressService implements ApplicationContextAware {
     		}
     		if(P_BUILDING_NUM_V.matcher(building).find() && nonEmptyGroups>3){
     			//山东青岛市南区宁夏路118号4号楼6单元202。去掉【路xxx号】前缀
-    			building = addr.getText().substring(matcher.start(), matcher.end());
+    			building = StringUtil.substring(addr.getText(), matcher.start(), matcher.end()-1);
     			int pos = matcher.start();
     			if(building.startsWith("路") || building.startsWith("街") || building.startsWith("巷")){
     				pos += building.indexOf("号")+1;
-    				building = addr.getText().substring(pos, matcher.end());
+    				building = StringUtil.substring(addr.getText(), pos, matcher.end()-1);
     			}
     			addr.setBuildingNum(building);
-    			addr.setText(addr.getText().substring(0, pos));
+    			addr.setText(StringUtil.head(addr.getText(), pos));
 	    		found = true;
 	    		break;
     		}
@@ -807,8 +814,8 @@ public class AddressService implements ApplicationContextAware {
     		//xx-xx-xx（xx栋xx单元xxx）
     		matcher = P_BUILDING_NUM2.matcher(addr.getText());
     		if(matcher.find()){
-    			addr.setBuildingNum(addr.getText().substring(matcher.start(), matcher.end()));
-    			addr.setText(addr.getText().substring(0, matcher.start()));
+    			addr.setBuildingNum(StringUtil.substring(addr.getText(), matcher.start(), matcher.end()-1));
+    			addr.setText(StringUtil.head(addr.getText(), matcher.start()));
 	    		found = true;
     		}
     	}
@@ -816,8 +823,8 @@ public class AddressService implements ApplicationContextAware {
     		//xx组xx号
     		matcher = P_BUILDING_NUM3.matcher(addr.getText());
     		if(matcher.find()){
-    			addr.setBuildingNum(addr.getText().substring(matcher.start(), matcher.end()));
-    			addr.setText(addr.getText().substring(0, matcher.start()));
+    			addr.setBuildingNum(StringUtil.substring(addr.getText(), matcher.start(), matcher.end()-1));
+    			addr.setText(StringUtil.head(addr.getText(), matcher.start()));
 	    		found = true;
     		}
     	}
@@ -836,15 +843,9 @@ public class AddressService implements ApplicationContextAware {
 		return false;
 	}
 	
-	private String substring(String text, int beginIndex){
-		if(text==null) return null;
-		if(text.length()<=beginIndex) return "";
-		return text.substring(beginIndex);
-	}
-	
 	private String debugString(String text){
 		if(text==null) return "";
-		return text.length() <= 25 ? text : text.substring(0, 25) + "...";
+		return text.length() <= 25 ? text : StringUtil.head(text, 25) + "...";
 	}
 	
 	//***************************************************************************************

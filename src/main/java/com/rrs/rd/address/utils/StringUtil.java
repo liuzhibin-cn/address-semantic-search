@@ -49,6 +49,60 @@ public final class StringUtil {
 		return text;
 	}
 	
+	/**
+	 * 取字符串尾部length个字符的子串。
+	 * <p>工具方法目的：由函数进行边界检查，简化应用中边界判断代码。</p>
+	 * @param text
+	 * @param length
+	 * @return
+	 */
+	public static String tail(String text, int length){
+		if(text==null || text.length()<=length) return text;
+		if(length<=0) return "";
+		return text.substring(text.length() - length);
+	}
+	
+	/**
+	 * 取字符串头部length个字符的子串。
+	 * <p>工具方法目的：由函数进行边界检查，简化应用中边界判断代码。</p>
+	 * @param text
+	 * @param length
+	 * @return
+	 */
+	public static String head(String text, int length){
+		if(text==null || text.length()<=length) return text;
+		if(length<=0) return "";
+		return text.substring(0, length);
+	}
+	
+	/**
+	 * 取子字符串。
+	 * <p>工具方法目的：由函数进行边界检查，简化应用中边界判断代码。</p>
+	 * @param text
+	 * @param beginIndex 子串开始位置，<span style="color:red;">包含beginIndex索引处的字符</span>。
+	 * @return
+	 */
+	public static String substring(String text, int beginIndex){
+		if(text==null || text.length()<=0 || beginIndex<=0) return text;
+		if(beginIndex>text.length()-1) return "";
+		return text.substring(beginIndex);
+	}
+	
+	/**
+	 * 取子字符串。
+	 * <p>工具方法目的：由函数进行边界检查，简化应用中边界判断代码。</p>
+	 * @param text
+	 * @param beginIndex 子串开始位置，<span style="color:red;">包含beginIndex索引处的字符</span>。
+	 * @param endIndex 子串结束位置，<span style="color:red;">包含endIndex索引处的字符</span>。
+	 * @return
+	 */
+	public static String substring(String text, int beginIndex, int endIndex){
+		if(text==null || text.length()<=0) return text;
+		int s = beginIndex<=0 ? 0 : beginIndex, e = endIndex>=text.length()-1 ? text.length()-1 : endIndex;
+		if(s>e) return "";
+		return text.substring(s, e+1);
+	}
+	
 	private static Set<Character> getReplaceCharsSet(char[] chars){
 		String key = String.copyValueOf(chars);
 		Set<Character> charsSet = REPLACE_CHARS_CACHE.get(key);
