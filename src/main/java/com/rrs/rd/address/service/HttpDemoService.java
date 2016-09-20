@@ -6,7 +6,7 @@ import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
 
 @Path("address")
-public interface HttpServiceWrapper {
+public interface HttpDemoService {
 	
 	@GET
 	@Path("find/{addrText: .+}")

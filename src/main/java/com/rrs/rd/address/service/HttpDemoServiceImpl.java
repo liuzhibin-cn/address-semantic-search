@@ -18,8 +18,8 @@ import com.rrs.rd.address.similarity.AddressDocument;
 import com.rrs.rd.address.similarity.Segmenter;
 import com.rrs.rd.address.similarity.Term;
 
-public class HttpServiceWrapperImpl implements HttpServiceWrapper {
-	private final static Logger LOG = LoggerFactory.getLogger(HttpServiceWrapperImpl.class);
+public class HttpDemoServiceImpl implements HttpDemoService {
+	private final static Logger LOG = LoggerFactory.getLogger(HttpDemoServiceImpl.class);
 	private AddressService service = null;
 	private AddressDao dao = null;
 	

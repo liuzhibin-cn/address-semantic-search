@@ -36,7 +36,7 @@ public class AddressInterpretTest extends BaseTestCase {
 		addr = service.interpretAddress("甘肃临夏临夏县先锋乡张梁村史上社17号");
 		assertNotNull("解析失败", addr);
 		LOG.info("> " + addr.getRawText() + " --> " + addr);
-		assertEquals("详细地址错误", "史上社", addr.getText());
+		assertEquals("详细地址错误", "史上社17号", addr.getText());
 		assertNotNull("未解析出乡镇", addr.getTowns());
 		assertEquals("乡镇错误", 1, addr.getTowns().size());
 		assertEquals("乡镇错误", "先锋乡", addr.getTowns().get(0));
@@ -58,7 +58,7 @@ public class AddressInterpretTest extends BaseTestCase {
 		addr = service.interpretAddress("浙江丽水缙云县壶镇镇缙云县壶镇镇 下潜村257号");
 		assertNotNull("解析失败", addr);
 		LOG.info("> " + addr.getRawText() + " --> " + addr);
-		assertEquals("详细地址错误", "缙云县壶镇镇下潜村", addr.getText());
+		assertEquals("详细地址错误", "缙云县壶镇镇下潜村257号", addr.getText());
 		assertNotNull("未解析出乡镇", addr.getTowns());
 		assertEquals("乡镇错误", 1, addr.getTowns().size());
 		assertEquals("乡镇错误", "壶镇镇", addr.getTowns().get(0));
@@ -146,7 +146,7 @@ public class AddressInterpretTest extends BaseTestCase {
 		addr = service.interpretAddress("吉林长春绿园区长春汽车产业开发区（省级）（特殊乡镇）长沈路1000号力旺格林春天");
 		assertNotNull("解析失败", addr);
 		LOG.info("> " + addr.getRawText() + " --> " + addr);
-		assertEquals("详细地址错误", "力旺格林春天", addr.getText());
+		assertEquals("详细地址错误", "力旺格林春天省级特殊乡镇", addr.getText());
 		assertNotNull("未解析出省份", addr.getProvince());
 		assertEquals("省份错误", 220000, addr.getProvince().getId());
 		assertNotNull("未解析出地级市", addr.getCity());
@@ -272,6 +272,34 @@ public class AddressInterpretTest extends BaseTestCase {
 				, 340000, 341200, 341221, "测试-删除冗余");
 	}
 	
+	@Test
+	public void testRemoveSpecialChar(){
+		AddressService service = context.getBean(AddressService.class);
+		AddressEntity addr = new AddressEntity();
+		
+		addr.setText("四川成都武侯区武侯大道县级直管村级单位铁佛段千盛百货\\/ \r\n\t对面200米金履三路288号绿地610015圣路易名邸");
+		service.removeSpecialChars(addr);
+		assertEquals("四川成都武侯区武侯大道铁佛段千盛百货对面200米金履三路288号绿地圣路易名邸", addr.getText());
+	}
+	
+	@Test
+	public void testExtractBracket(){
+		AddressService service = context.getBean(AddressService.class);
+		AddressEntity addr = new AddressEntity();
+		
+		//测试正常抽取括号内容
+		addr.setText("()四{}川{aa}(bb)成（）都（cc）武[]侯[dd]区【】武【ee】侯<>大<ff>道〈〉铁〈gg〉佛「」段「hh」千盛百货对面200米金履三路288号绿地圣路易名邸[]");
+		String brackets = service.extractBrackets(addr);
+		assertEquals("aabbccddeeffgghh", brackets);
+		assertEquals("四川成都武侯区武侯大道铁佛段千盛百货对面200米金履三路288号绿地圣路易名邸", addr.getText());
+		
+		//测试存在异常的情况
+//		addr.setText("四川成都(武[]侯区武侯大道铁佛{aa}段千】盛百货对面200米金履三【bb】路288号绿地圣路易名邸");
+//		brackets = service.extractBrackets(addr);
+//		assertEquals("aabb", brackets);
+//		assertEquals("四川成都(武侯区武侯大道铁佛段千】盛百货对面200米金履三路288号绿地圣路易名邸", addr.getText());
+	}
+
 	private void extractRegion(AddressService service, String text, String expected, int pid, int cid, int did, String title){
 		AddressEntity addr = new AddressEntity(text);
 		service.extractRegion(addr, false);

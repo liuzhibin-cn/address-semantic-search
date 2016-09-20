@@ -1,28 +1,55 @@
 package com.rrs.rd.address.match;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 import org.junit.Test;
 
-import com.rrs.rd.address.service.RegionEntity;
-
 public class BasicFuncTest {
 	@Test
-	public void testJavaClass(){
-		List<String> genericList = new ArrayList<String>(1);
-		@SuppressWarnings("rawtypes")
-		List list = new ArrayList(1);
-		List<RegionEntity> regionList = new ArrayList<RegionEntity>();
+	public void testRegexPerformance(){
+		String regStr = "[ \r\n\t,，;；:：.．\\{\\}【】〈〉<>\\[\\]「」“”！·、。\"\\-\"'\\\\]";
+		Pattern pattern = Pattern.compile(regStr);
+		HashSet<Character> replaceChars = new HashSet<Character>(regStr.length());
+		for(int i=0; i<regStr.length(); i++) replaceChars.add(regStr.charAt(i));
 		
-		System.out.println(genericList.getClass().getSimpleName());
-		System.out.println(list.getClass().getSimpleName());
-		System.out.println(regionList.getClass().getSimpleName());
+		String toReplaceStr = "云南普洱澜沧拉祜族自治县\\云南省 普洱市 澜>沧拉祜族自治县  详细地址：  澜沧拉祜族自治县 拉祜广场1栋9单元4-22 []";
+		int loop = 1000000;
 		
-		System.out.println("genericList.class==list.class --> " + genericList.equals(list));
-		System.out.println("genericList.class==regionList.class --> " + genericList.equals(regionList));
+		System.out.println("=======================================================================================");
+		System.out.println("直接替换：" + toReplaceStr.replaceAll(regStr, ""));
+		Matcher matcher = pattern.matcher(toReplaceStr);
+		if(matcher.find())
+			System.out.println("Pattern替换：" + matcher.replaceAll(""));
+		System.out.println("自定义替换：" + this.replace(toReplaceStr, replaceChars));
+		
+		System.out.println("=======================================================================================");
+		long start = System.currentTimeMillis();
+		for(int i=0; i<loop; i++)
+			toReplaceStr.replaceAll(regStr, "");
+		System.out.println("直接替换：" + (System.currentTimeMillis()-start)/1000.0 + "s");
+		start = System.currentTimeMillis();
+		for(int i=0; i<loop; i++){
+			matcher = pattern.matcher(toReplaceStr);
+			if(matcher.find())
+				matcher.replaceAll("");
+		}
+		System.out.println("Pattern替换：" + (System.currentTimeMillis()-start)/1000.0 + "s");
+		start = System.currentTimeMillis();
+		for(int i=0; i<loop; i++){
+			this.replace(toReplaceStr, replaceChars);
+		}
+		System.out.println("自定义替换：" + (System.currentTimeMillis()-start)/1000.0 + "s");
+	}
+	
+	private String replace(String text, Set<Character> replaceChars){
+		StringBuilder sb = new StringBuilder();
+		for(int i=0; i<text.length(); i++){
+			if(!replaceChars.contains(text.charAt(i))) sb.append(text.charAt(i));
+		}
+		return sb.toString();
 	}
 	
 	@Test

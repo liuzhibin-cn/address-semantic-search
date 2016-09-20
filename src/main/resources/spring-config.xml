@@ -18,7 +18,7 @@
 	<dubbo:application name="address-similarity" />
 	<dubbo:protocol name="rest" server="jetty" host="127.0.0.1" port="8000" contextpath="service"
 		extension="com.alibaba.dubbo.rpc.protocol.rest.support.LoggingFilter" />
-	<dubbo:service interface="com.rrs.rd.address.service.HttpServiceWrapper" ref="httpService" 
+	<dubbo:service interface="com.rrs.rd.address.service.HttpDemoService" ref="demoService" 
 		register="false" protocol="rest" />
 
 	<!-- bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
@@ -40,7 +40,7 @@
 			</array>
 		</property>
 	</bean>
-	<bean id="httpService" class="com.rrs.rd.address.service.HttpServiceWrapperImpl">
+	<bean id="demoService" class="com.rrs.rd.address.service.HttpDemoServiceImpl">
 		<property name="addressService" ref="addressService" />
 		<property name="addressDao" ref="addressDao" />
 	</bean>

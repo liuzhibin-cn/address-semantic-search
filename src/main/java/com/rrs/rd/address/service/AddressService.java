@@ -18,6 +18,7 @@ import org.springframework.context.ApplicationContextAware;
 import com.rrs.rd.address.dao.AddressDao;
 import com.rrs.rd.address.dao.RegionDao;
 import com.rrs.rd.address.utils.LogUtil;
+import com.rrs.rd.address.utils.StringUtil;
 
 /**
  * {@link AddressEntity}和{@link RegionEntity}的操作逻辑。
@@ -33,10 +34,10 @@ public class AddressService implements ApplicationContextAware {
 	
 	private List<String> forbiddenFollowingChars;
 	private List<String> invalidRegionNames;
-	private static String RM_INVALID_TEXT_PATERN_STRING;
+	private static char[] specialCharsToBeRemoved = " \r\n\t,，;；:：·.．。！、\"'“”|_-\\/{}【】〈〉<>[]「」".toCharArray();
 	
 	private static Set<String> PROVINCE_LEVEL_CITIES = new HashSet<String>(8);
-	private static Pattern BRACKET_PATTERN = Pattern.compile("(?<bracket>(\\(|（)[^\\)）]+(\\)|）))");
+	private static Pattern BRACKET_PATTERN = Pattern.compile("(?<bracket>([\\(（\\{\\<〈\\[【「][^\\)）\\}\\>〉\\]】」]*[\\)）\\}\\>〉\\]】」]))");
 	
 	/**
 	 * REGION_TREE为中国国家区域对象，全国所有行政区域都以树状结构加载到REGION_TREE
@@ -122,7 +123,7 @@ public class AddressService implements ApplicationContextAware {
 	 * @throws RuntimeException
 	 */
 	public int importAddress(List<String> addresses) throws IllegalStateException, RuntimeException {
-		int batchSize = 800;
+		int batchSize = 1000;
 		int impCount=0, dupCount=0, interFailedCount=0;
 		List<AddressEntity> batch = new ArrayList<AddressEntity>(batchSize);
 		for(String addr : addresses){
@@ -169,6 +170,12 @@ public class AddressService implements ApplicationContextAware {
 					this.addressDao.batchCreate(batch);
 					batch = new ArrayList<AddressEntity>(batchSize);
 					this.timeDb += System.currentTimeMillis() - dbStart;
+					
+					if(impCount % (batchSize * 5) == 0)
+						LOG.info("[addr-imp] [perf] imp " + impCount + ". db=" + timeDb/1000.0 + "s, cache=" + timeCache/1000.0 + "s"
+							+ ", interpret=" + timeInter/1000.0 + "s. region=" + timeRegion/1000.0 + "s" + ", rm-r=" + timeRmRed/1000.0 + "s"
+							+ ", town=" + timeTown/1000.0 + "s, road=" + timeRoad/1000.0 + ", build=" + timeBuild/1000.0 + "s"
+							+ ", rm-s=" + timeRmSpec/1000.0 + "s, brac=" + timeBrc/1000.0);
 				}
 			}catch(Exception ex){
 				LOG.error("[addr-imp] [error] " + addr + ": " + ex.getMessage());
@@ -220,9 +227,12 @@ public class AddressService implements ApplicationContextAware {
 		AddressEntity addr = new AddressEntity(addressText);
 		
 		start = System.currentTimeMillis();
-		@SuppressWarnings("unused")
 		String brackets = this.extractBrackets(addr);
 		this.timeBrc += System.currentTimeMillis() - start;
+		
+		start = System.currentTimeMillis();
+		this.extractBuildingNum(addr);
+		this.timeBuild += System.currentTimeMillis() - start;
 		
 		start = System.currentTimeMillis();
 		this.removeSpecialChars(addr);
@@ -230,19 +240,11 @@ public class AddressService implements ApplicationContextAware {
 		
 		start = System.currentTimeMillis();
 		this.extractRegion(addr, false);
-//		if(!this.extractRegion(addr, false)) {
-//			this.timeRegion += System.currentTimeMillis() - start;
-//			return null;
-//		}
 		this.timeRegion += System.currentTimeMillis() - start;
 		
 		start = System.currentTimeMillis();
 		this.removeRedundancy(addr);
 		this.timeRmRed += System.currentTimeMillis() - start;
-		
-		start = System.currentTimeMillis();
-		this.extractBuildingNum(addr);
-		this.timeBuild += System.currentTimeMillis() - start;
 		
 		start = System.currentTimeMillis();
 		this.extractTownAndVillage(addr);
@@ -260,8 +262,10 @@ public class AddressService implements ApplicationContextAware {
 		this.extractRoad(addr);
 		this.timeRoad += System.currentTimeMillis() - start;
 		
-//		addr.setText(addr.getText().replaceAll("[0-9A-Za-z\\#]+(单元|号楼|号院|院|楼|号|室|区|组|队|座|栋|幛|幢|期|弄|巷|层|米|户|\\#)?", ""));
-//		addr.setText(addr.getText().replaceAll("[一二三四五六七八九十]+(单元|号楼|号院|院|楼|室|区|组|队|号|段|巷|栋|期|弄|层|户|幢|座)", ""));
+		addr.setText(addr.getText().replaceAll("[0-9A-Za-z\\#]+(单元|楼|室|层|米|户|\\#)", ""));
+		addr.setText(addr.getText().replaceAll("[一二三四五六七八九十]+(单元|楼|室|层|米|户)", ""));
+		if(brackets!=null && brackets.length()>0)
+			addr.setText(addr.getText()+brackets);
 		
 		return addr;
 	}
@@ -620,11 +624,32 @@ public class AddressService implements ApplicationContextAware {
 	public boolean removeSpecialChars(AddressEntity addr){
 		if(addr.getText().length()<=0) return false;
 		String text = addr.getText();
-		text = text.replaceAll("[0-9]{6,}", "");
-		text = text.replaceAll("[ \r\n\t,，;；:：.．\\{\\}【】〈〉「」“”！·、。\"\\-]", "").trim();
 		
-		if(this.getRmInvalidTextPattern()!=null)
-			text = text.replaceAll(this.getRmInvalidTextPattern(), "");
+		//性能优化：使用String.replaceAll()和Matcher.replaceAll()方法性能相差不大，都比较耗时
+		//这种简单替换场景，自定义方法的性能比String.replaceAll()和Matcher.replaceAll()快10多倍接近20倍
+		//1. 删除特殊字符
+		text = StringUtil.remove(text, specialCharsToBeRemoved);
+		//2. 删除连续出现5个以上的数字
+		StringBuilder sb = new StringBuilder();
+		int digitCharNum = 0, minDigitCharNum=5; 
+		for(int i=0; i<text.length(); i++){
+			char c = text.charAt(i);
+			if(c>='0' && c<='9'){
+				digitCharNum++;
+				continue;
+			}
+			if(digitCharNum>=0 && digitCharNum<minDigitCharNum) {
+				sb.append(text.substring(i-digitCharNum, i));
+			}
+			digitCharNum=0;
+			sb.append(c);
+		}
+		text = sb.toString();
+		//3. 删除特殊区域名称
+		if(this.invalidRegionNames!=null){
+			for(String name : this.invalidRegionNames)
+				text = StringUtil.remove(text, name);
+		}
 		
 		boolean result = text.length() != addr.getText().length();
 		addr.setText(text);
@@ -668,14 +693,16 @@ public class AddressService implements ApplicationContextAware {
 		//  将返回：（阳明花园），address.getText()变为：城关镇竹山县城关镇民族路41号2单元402号
 		Matcher matcher = BRACKET_PATTERN.matcher(addr.getText());
 		boolean found = false;
-		StringBuilder sb = new StringBuilder();
+		StringBuilder brackets = new StringBuilder();
 		while(matcher.find()){
-			sb.append(matcher.group("bracket"));
+			String bracket = matcher.group("bracket");
+			if(bracket.length()<=2) continue;
+			brackets.append(matcher.group("bracket").substring(1, bracket.length()-1));
 			found = true;
 		}
 		if(found){
-			String result = sb.toString();
-			addr.setText(addr.getText().replaceAll("(?<bracket>(\\(|（)[^\\)）]+(\\)|）))", ""));
+			String result = brackets.toString();
+			addr.setText(matcher.replaceAll(""));
 			return result;
 		}
 		return null;
@@ -807,23 +834,6 @@ public class AddressService implements ApplicationContextAware {
 			return true;
 		}
 		return false;
-	}
-	
-	private String getRmInvalidTextPattern(){
-		if(this.invalidRegionNames==null) return null;
-		if(RM_INVALID_TEXT_PATERN_STRING!=null) return RM_INVALID_TEXT_PATERN_STRING;
-		
-		synchronized(this){
-			if(RM_INVALID_TEXT_PATERN_STRING!=null) return RM_INVALID_TEXT_PATERN_STRING;
-			StringBuilder sb = new StringBuilder();
-			for(int i=0; i<this.invalidRegionNames.size(); i++){
-				if(i>0) sb.append('|');
-				sb.append(this.invalidRegionNames.get(i));
-			}
-			RM_INVALID_TEXT_PATERN_STRING = sb.toString();
-		}
-		
-		return RM_INVALID_TEXT_PATERN_STRING;
 	}
 	
 	private String substring(String text, int beginIndex){

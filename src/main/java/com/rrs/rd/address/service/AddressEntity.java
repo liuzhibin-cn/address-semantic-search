@@ -232,16 +232,17 @@ public class AddressEntity implements Serializable {
 
     public String restoreText(){
     	StringBuilder sb = new StringBuilder();
-    	//if(this.hasProvince()) sb.append(this.getProvince().getName());
-    	//if(this.hasCity()) sb.append(this.getCity().getName());
+    	if(this.hasProvince()) sb.append(this.getProvince().getName());
+    	if(this.hasCity()) sb.append(this.getCity().getName());
     	if(this.hasCounty()) sb.append(this.getCounty().getName());
     	if(this.getTowns()!=null){
     		for(String town : this.getTowns())
     			sb.append(town);
     	}
-    	sb.append(this.getVillage());
-    	sb.append(this.getRoad());
-    	sb.append(this.getText());
+    	sb.append(this.getVillage())
+    		.append(this.getRoad())
+    		.append(this.getRoadNum())
+    		.append(this.getText());
     	return sb.toString();
     }
     
