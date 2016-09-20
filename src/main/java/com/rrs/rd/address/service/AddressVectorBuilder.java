@@ -68,7 +68,7 @@ public class AddressVectorBuilder {
 		HashMap<String, Integer> termsRefStat = AddressDocument.statTermRefCount(docList);
 		int docCount = docList.size();
 		for(AddressDocument doc : docList)
-			doc.calcTfidf(docCount, termsRefStat);
+			doc.calcIdf(docCount, termsRefStat);
 		
 		//将计算TF-IDF后的文档写入文件
 		File file = new File(service.getCacheFolder() + "/" + province.getId() + "-" + city.getId() + ".idx");
@@ -89,7 +89,7 @@ public class AddressVectorBuilder {
 				for(int i=0; i<doc.getTerms().size(); i++){
 					Term term = doc.getTerms().get(i);
 					if(i>0) sb.append(';');
-					sb.append(term.text()).append('|').append(term.tfidf());
+					sb.append(term.getText()).append('|').append(term.getIndex()).append('|').append(term.getIdf());
 				}
 				sb.append('\n');
 				bufferedStream.write(sb.toString().getBytes("utf8"));

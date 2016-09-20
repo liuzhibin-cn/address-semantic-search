@@ -55,7 +55,7 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 		
 		AddressDocument targetDoc = new AddressDocument(0, targetAddr.restoreText());
 		targetDoc.segment(segmenter);
-		targetDoc.calcTfidf(allDocs.size(), AddressDocument.statTermRefCount(allDocs));
+		targetDoc.calcIdf(allDocs.size(), AddressDocument.statTermRefCount(allDocs));
 		
 		//与地址库所有地址比较余弦相似度
 		int TOPN = 10;
@@ -128,7 +128,7 @@ public class HttpDemoServiceImpl implements HttpDemoService {
                 List<Term> terms = new ArrayList<Term>(t2.length);
                 for(String termStr : t2){
                 	String[] t3 = termStr.split("\\|");
-                	terms.add(new Term(t3[0], Double.parseDouble(t3[1])));
+                	terms.add(new Term(t3[0], Integer.parseInt(t3[1]), Double.parseDouble(t3[2])));
                 }
                 doc.setTerms(terms);
                 result.add(doc);

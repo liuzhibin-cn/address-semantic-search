@@ -5,7 +5,7 @@ import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 /**
  * 文档对象。
@@ -30,19 +30,13 @@ public class AddressDocument {
 	public void segment(Segmenter segmenter){
 		//分词
 		List<String> tokens = segmenter.segment(this.text);
-		
-		HashMap<String, Integer> map = new HashMap<String, Integer>();
-		for(String token : tokens){
-			if(map.containsKey(token)){
-				map.put(token, map.get(token)+1);
-				continue;
-			}
-			map.put(token, 1);
-		}
-		
+		Set<String> processedTokens = new HashSet<String>(tokens.size());
 		this.terms = new ArrayList<Term>(tokens.size());
-		for(Map.Entry<String, Integer> entry : map.entrySet()){
-			this.terms.add(new Term(entry.getKey(), entry.getValue()));
+		int index = 1;
+		for(String token : tokens){
+			if(processedTokens.contains(token)) continue;
+			this.terms.add(new Term(token, index++));
+			processedTokens.add(token);
 		}
 	}
 	
@@ -56,10 +50,10 @@ public class AddressDocument {
 		HashMap<String, Integer> result = new HashMap<String, Integer>();
 		for(AddressDocument doc : allDocs){
 			for(Term term : doc.terms){
-				if(!result.containsKey(term.text())){
-					result.put(term.text(), 1);
+				if(!result.containsKey(term.getText())){
+					result.put(term.getText(), 1);
 				}else{
-					result.put(term.text(), result.get(term.text()) + 1);
+					result.put(term.getText(), result.get(term.getText()) + 1);
 				}
 			}
 		}
@@ -67,20 +61,27 @@ public class AddressDocument {
 	}
 	
 	/**
-	 * 为文档中的每个词语计算{@link Term#idf() 逆文档频率}和{@link Term#tfidf() TF-IDF}。
+	 * 为文档中的每个词语计算{@link Term#getIdf() 逆文档频率}。
+	 * <p>
+	 * TC: 词数 Term Count，某个词在文档中出现的次数。<br />
+	 * TF: 词频 Term Frequency, 某个词在文档中出现的频率，TF = 该词在文档中出现的次数 / 该文档的总词数。<br />
+	 * IDF: 逆文档词频 Inverse Document Frequency，IDF = log( 文档总数 / ( 包含该词的文档数 + 1 ) )。分母加1是为了防止分母出现0的情况。<br />
+	 * TF-IDF: TF-IDF = TF * IDF。 
+	 * </p>
 	 * @param docCount 文档总数
 	 * @param termRefStat 必须是{@link #statTermRefCount(Collection)}的返回结果
 	 */
-	public void calcTfidf(int docCount, HashMap<String, Integer> termRefStat){
-		int termCount = this.totalTermCount();
-		for(Term term : this.terms){
+	public void calcIdf(int docCount, HashMap<String, Integer> termRefStat){
+		for(int i=0; i<this.terms.size(); i++){
+			Term term = this.terms.get(i);
 			int refCount = 1;
 			//注意：
 			//为全部文档执行分词、计算TF-IDF时，任何一个词语肯定会包含在termRefStat中。
 			//但是为某一特定文档搜索相似文档时，它的词语不一定包含在termRefStat中。
-			if(termRefStat.containsKey(term.text()))
-				refCount = termRefStat.get(term.text());
-			term.calcTfidf(docCount, termCount, refCount);
+			if(termRefStat.containsKey(term.getText()))
+				refCount = termRefStat.get(term.getText());
+			double idf = Math.log( docCount * 1.0 / ( refCount + 1 ) );
+			term.setIdf(idf<0 ? 0 : idf);
 		}
 	}
 	
@@ -92,19 +93,19 @@ public class AddressDocument {
 	 */
 	public double calcSimilarity(AddressDocument refDoc){
 		//为2个文档建立向量
-		HashSet<String> terms = new HashSet<String>();
-		for(Term t : this.getTerms()) terms.add(t.text());
-		for(Term t : refDoc.getTerms()) terms.add(t.text());
+		Set<String> terms = new HashSet<String>();
+		for(Term t : this.getTerms()) terms.add(t.getText());
+		for(Term t : refDoc.getTerms()) terms.add(t.getText());
 		double[] vectorA = new double[terms.size()];
 		double[] vectorB = new double[terms.size()];
-		int index=0;
+		int index = 0, maxCount = this.getTerms().size() > refDoc.getTerms().size() ? this.getTerms().size() + 1 : refDoc.getTerms().size() + 1;
 		for(String term : terms){
 			if(this.containsTerm(term)) 
-				vectorA[index] = this.getTerm(term).tfidf();
+				vectorA[index] = this.getTerm(term).getIdf() * Math.cos(this.getTerm(term).getIndex() * 90.0 / maxCount);
 			else 
 				vectorA[index] = 0;
 			if(refDoc.containsTerm(term))
-				vectorB[index] = refDoc.getTerm(term).tfidf();
+				vectorB[index] = refDoc.getTerm(term).getIdf() * Math.cos(refDoc.getTerm(term).getIndex() * 90.0 / maxCount);
 			else 
 				vectorB[index] = 0;
 			index++;
@@ -168,7 +169,7 @@ public class AddressDocument {
 	public Term getTerm(String term){
 		if(term==null) return null;
 		for(Term t : this.terms)
-			if(t.text().equals(term)) return t;
+			if(t.getText().equals(term)) return t;
 		return null;
 	}
 	
@@ -184,7 +185,7 @@ public class AddressDocument {
 	public boolean containsTerm(String term){
 		if(term==null || term.length()<=0) return false;
 		for(Term t : this.terms)
-			if(t.text().equals(term)) return true;
+			if(t.getText().equals(term)) return true;
 		return false;
 	}
 	
@@ -195,18 +196,7 @@ public class AddressDocument {
 	 */
 	public boolean containsTerm(Term term){
 		if(term==null) return false;
-		return this.containsTerm(term.text());
+		return this.containsTerm(term.getText());
 	}
 	
-	/**
-	 * 该文档总词数。
-	 * @return
-	 */
-	public int totalTermCount() {
-		if(this.terms==null) return 0;
-		int count = 0;
-		for(Term term : this.terms)
-			count += term.tc();
-		return count;
-	}
 }
