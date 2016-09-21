@@ -78,6 +78,8 @@ public class SimilarityService {
 		for(String token : tokens)
 			this.addTerm(token, 1, terms, doneTokens, null);
 		
+		doc.setTerms(terms);
+		
 		return doc;
 	}
 	

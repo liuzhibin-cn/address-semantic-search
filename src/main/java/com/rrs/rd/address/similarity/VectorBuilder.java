@@ -71,7 +71,7 @@ public class VectorBuilder {
 				bufferedStream.write((simiService.serialize(doc)+"\n").getBytes("utf8"));
 			bufferedStream.flush();
 		} catch (Exception e) {
-			System.out.println("> Write cache file error" + e.getMessage());
+			System.out.println("> Write cache file error: " + e.getMessage());
 			e.printStackTrace(System.out);
 		}finally{
 			if(bufferedStream!=null) try { bufferedStream.close(); } catch (IOException e) {}
