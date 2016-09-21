@@ -295,7 +295,7 @@ public class SimilarityService {
 	}
 	
 	public List<SimilarDocumentResult> findSimilarAddress(String addressText, int topN){
-		long start = System.currentTimeMillis();
+		long start = System.currentTimeMillis(), startCompute = 0, elapsedCompute = 0;
 		
 		//解析地址
 		if(addressText==null || addressText.trim().isEmpty())
@@ -354,7 +354,9 @@ public class SimilarityService {
 		if(topN<=0) topN=5;
 		List<SimilarDocumentResult> silimarDocs = new ArrayList<SimilarDocumentResult>(topN);
 		for(Document doc : allDocs){
+			startCompute = System.currentTimeMillis();
 			double similarity = this.computeDocSimilarity(doc, targetDoc);
+			elapsedCompute += System.currentTimeMillis() - start;
 			//保存topN相似地址
 			if(silimarDocs.size()<topN) {
 				silimarDocs.add(new SimilarDocumentResult(doc, similarity));
@@ -373,7 +375,8 @@ public class SimilarityService {
 		//按相似度从高到低排序
 		this.bubbleSort(silimarDocs);
 		
-		LOG.info("[doc] [find] elapsed " + (System.currentTimeMillis() - start)/1000.0 + "s, " + addressText);
+		LOG.info("[doc] [find] elapsed " + (System.currentTimeMillis() - start)/1000.0 
+				+ "s (computer " + elapsedCompute/1000.0 + "s), " + addressText);
 		
 		return silimarDocs;
 	}
