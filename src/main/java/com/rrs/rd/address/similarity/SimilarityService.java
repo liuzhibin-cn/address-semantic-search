@@ -373,7 +373,7 @@ public class SimilarityService {
 		//按相似度从高到低排序
 		this.bubbleSort(silimarDocs);
 		
-		LOG.info("[doc] [find] elapsed " + (System.currentTimeMillis() - start)/1000.0 + "s, " + addressText + " >>");
+		LOG.info("[doc] [find] elapsed " + (System.currentTimeMillis() - start)/1000.0 + "s, " + addressText);
 		
 		return silimarDocs;
 	}

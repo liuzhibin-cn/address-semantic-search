@@ -66,7 +66,6 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 	}
 	
 	private List<String> findSimilarAddress(String addrText, Segmenter segmenter){
-		SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss SSS");
 		List<SimilarDocumentResult> similarDocs = simiService.findSimilarAddress(addrText, 5);
 		List<AddressEntity> similarAddrs = new ArrayList<AddressEntity>(5);
 		for(int i=0; i<similarDocs.size(); i++){
@@ -81,9 +80,8 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 			result.add(similarDocs.get(i).getSimilarity() + ";" + addr.getRawText());
 		}
 		
-		LOG.info(" ");
-		LOG.info("> " + dateFormat.format(new Date()) + ": " + addrText + " 的相似地址：");
-		for(String s : result) LOG.info(">   " + s);
+		LOG.info("> Similar address for {" + addrText + "}: ");
+		for(String s : result) LOG.info(">     " + s);
 		
 		return result;
 	}
