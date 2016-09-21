@@ -114,10 +114,10 @@ public class SimilarityService {
 		List<Term> terms = new ArrayList<Term>(tokens.size()+7);
 		//2.1 地址解析后已经识别出来的部分，直接作为词语生成Term。包括：省、地级市、区县、街道/镇/乡、村、道路、门牌号(roadNum)。
 		//省市区如果匹配不准确，结果误差就很大，因此加大省市区权重。但实际上计算IDF时省份、城市的IDF基本都为0。
-		if(addr.hasProvince()) 
-			this.addTerm(addr.getProvince().getName(), HIGH_TERM_WEIGHT, terms, doneTokens, addr.getProvince());
-		if(addr.hasCity()) 
-			this.addTerm(addr.getCity().getName(), HIGH_TERM_WEIGHT, terms, doneTokens, addr.getCity());
+//		if(addr.hasProvince()) 
+//			this.addTerm(addr.getProvince().getName(), HIGH_TERM_WEIGHT, terms, doneTokens, addr.getProvince());
+//		if(addr.hasCity()) 
+//			this.addTerm(addr.getCity().getName(), HIGH_TERM_WEIGHT, terms, doneTokens, addr.getCity());
 		if(addr.hasCounty()) 
 			this.addTerm(addr.getCounty().getName(), HIGH_TERM_WEIGHT, terms, doneTokens, addr.getCounty());
 		String residentDistrict = null, town = null;
@@ -223,18 +223,13 @@ public class SimilarityService {
 	 */
 	public double computeDocSimilarity(Document a, Document b){
 		double sumAA=0, sumBB=0, sumAB=0;
-		int size = b.getTerms().size();
-		for(int i=0; i<size; i++){
-			Term termB = b.getTerms().get(i);
+		for(Term termB : b.getTerms()){
 			Term termA = a.getTerm(termB.getText());
 			sumBB += termB.getEigenvalue() * termB.getEigenvalue();
-			sumAB += termB.getEigenvalue() * (termA==null ? 0 : termA.getEigenvalue());
+			sumAB += (termA==null ? 0 : termA.getEigenvalue() * termB.getEigenvalue());
 		}
-		size = a.getTerms().size();
-		for(int i=0; i<size; i++){
-			Term termA = a.getTerms().get(i);
+		for(Term termA : a.getTerms())
 			sumAA += termA.getEigenvalue() * termA.getEigenvalue();
-		}
 		return sumAB / (Math.sqrt(sumAA) * Math.sqrt(sumBB));
 	}
 	
