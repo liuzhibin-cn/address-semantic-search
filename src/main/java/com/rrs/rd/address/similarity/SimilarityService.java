@@ -223,13 +223,18 @@ public class SimilarityService {
 	 */
 	public double computeDocSimilarity(Document a, Document b){
 		double sumAA=0, sumBB=0, sumAB=0;
-		for(Term termB : b.getTerms()){
+		int size = b.getTerms().size();
+		for(int i=0; i<size; i++){
+			Term termB = b.getTerms().get(i);
 			Term termA = a.getTerm(termB.getText());
 			sumBB += termB.getEigenvalue() * termB.getEigenvalue();
 			sumAB += termB.getEigenvalue() * (termA==null ? 0 : termA.getEigenvalue());
 		}
-		for(Term termA : a.getTerms())
+		size = a.getTerms().size();
+		for(int i=0; i<size; i++){
+			Term termA = a.getTerms().get(i);
 			sumAA += termA.getEigenvalue() * termA.getEigenvalue();
+		}
 		return sumAB / (Math.sqrt(sumAA) * Math.sqrt(sumBB));
 	}
 	
@@ -351,10 +356,10 @@ public class SimilarityService {
 		}
 		
 		//按相似度从高到低排序
-		this.bubbleSort(silimarDocs);
+		this.sortDesc(silimarDocs);
 		
-		LOG.info("[doc] [find] elapsed " + (System.currentTimeMillis() - start)/1000.0 
-				+ "s (com=" + elapsedCompute/1000.0 + "), " + addressText);
+		LOG.info("[doc] [find] elapsed " + (System.currentTimeMillis() - start)
+				+ "ms (com=" + elapsedCompute + "ms), " + addressText);
 		
 		return silimarDocs;
 	}
@@ -365,7 +370,7 @@ public class SimilarityService {
 	 * @param topDocs
 	 * @param topSimilarities
 	 */
-	private void bubbleSort(List<SimilarDocumentResult> docs){
+	private void sortDesc(List<SimilarDocumentResult> docs){
 		boolean exchanged = true;
 		int endIndex = docs.size() - 1;
 		while(exchanged){
