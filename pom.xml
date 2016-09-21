@@ -49,12 +49,12 @@
             		<include>sql-mapper/*.xml</include>
             		<include>dubbo.xsd</include>
             		
-            		<!-- <include>datasource-config.xml</include>
+            		<include>datasource-config.xml</include>
 					<include>IKAnalyzer.cfg.xml</include>
 					<include>log4j.xml</include>
 					<include>region.dic</include>
 					<include>spring-config.xml</include>
-					<include>stop.dic</include> -->
+					<include>stop.dic</include>
             	</includes>
             	<filtering>true</filtering>
             </resource>

@@ -26,22 +26,34 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 	public String find(String addrText){
 		long start = System.currentTimeMillis();
 		
-		List<String> addrs = this.findSimilarAddress(addrText, new IKAnalyzerSegmenter());
+		List<String> addrs = null;
+		boolean exception = false;
+		Exception ex = null;
+		try{
+			addrs = this.findSimilarAddress(addrText, new IKAnalyzerSegmenter());
+		}catch(Exception e){
+			exception = true;
+			ex = e;
+		}
 		StringBuilder sb = new StringBuilder();
 		sb.append("<html><head><style>")
 			.append("body, td, th { font-size:12px; padding:2px 0 2px 5px; }")
 			.append("td, th{ border-left:1px solid #888; border-top: 1px solid #888; }")
 			.append("table{ border-right:1px solid #888; border-bottom: 1px solid #888; }")
 			.append("</style></head><body>");
-		sb.append("找到的TOP").append(addrs.size()).append("与【").append(addrText).append("】相似的地址：<br /><br />");
-		sb.append("<table style='width:750px' cellspacing=0 cellpadding=0>");
-		sb.append("<tr style='text-align:center'><th style='width:130px;'>相似度</th><th>详细地址</th></tr>");
-		for(String str : addrs){
-			String[] tokens = str.split(";");
-			sb.append("<tr><td>").append(tokens[0]).append("</td><td>").append(tokens[1]).append("</td></tr>");
+		if(!exception){
+			sb.append("找到的TOP").append(addrs.size()).append("与【").append(addrText).append("】相似的地址：<br /><br />");
+			sb.append("<table style='width:750px' cellspacing=0 cellpadding=0>");
+			sb.append("<tr style='text-align:center'><th style='width:130px;'>相似度</th><th>详细地址</th></tr>");
+			for(String str : addrs){
+				String[] tokens = str.split(";");
+				sb.append("<tr><td>").append(tokens[0]).append("</td><td>").append(tokens[1]).append("</td></tr>");
+			}
+			sb.append("</table>");
+			sb.append("<br />用时：").append((System.currentTimeMillis()-start)/1000.0).append("秒");
+		}else{
+			sb.append("发生错误：").append(ex.getMessage());
 		}
-		sb.append("</table>");
-		sb.append("<br />用时：").append((System.currentTimeMillis()-start)/1000.0).append("秒");
 		sb.append("</body></html>");
 		
 		return sb.toString();
@@ -50,8 +62,13 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 	private List<String> findSimilarAddress(String addrText, Segmenter segmenter){
 		SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss SSS");
 		AddressEntity targetAddr = service.interpretAddress(addrText);
+		if(!targetAddr.hasProvince() || !targetAddr.hasCity() || !targetAddr.hasCounty())
+			throw new RuntimeException("无法为地址解析出省、市、区：" + addrText);
 		
 		List<AddressDocument> allDocs = this.loadDocsFromCache(service, targetAddr.getProvince().getId(), targetAddr.getCity().getId());
+		if(allDocs==null || allDocs.isEmpty())
+			throw new RuntimeException(targetAddr.getProvince().getName() + targetAddr.getCity().getName() 
+					+ "：该地区地址库中缺少历史地址数据，或者还未为该地区的历史地址数据建立索引");
 		
 		AddressDocument targetDoc = new AddressDocument(0, targetAddr.restoreText());
 		targetDoc.segment(segmenter);

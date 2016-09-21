@@ -15,10 +15,11 @@ public class TextSegmenterTest {
 	private final static HashSet<String> addresses = new HashSet<String>();
 	
 	static{
+		addresses.add("山东青岛李沧区虎山路街道北崂路993号东山峰景6号楼1单元602室");
 		addresses.add("辽宁省沈阳市沈河区东陵街道海上五月花三期302楼2-8-1号");
-		addresses.add("安徽省合肥市瑶海区长江东路8号琥珀名城和园10栋2203");
-		addresses.add("河南省南阳市邓州市花洲街道新华东路刘庄村兴德旅社");
-		addresses.add("河北省唐山市路北区唐山高新技术产业开发区龙泽路于龙福南道交叉口南行50米维也纳音乐城");
+//		addresses.add("安徽省合肥市瑶海区长江东路8号琥珀名城和园10栋2203");
+//		addresses.add("河南省南阳市邓州市花洲街道新华东路刘庄村兴德旅社");
+//		addresses.add("河北省唐山市路北区唐山高新技术产业开发区龙泽路于龙福南道交叉口南行50米维也纳音乐城");
 	}
 	
 	@Test
@@ -30,7 +31,7 @@ public class TextSegmenterTest {
 		for(String addr : addresses){
 			LOG.info("> " + i + ". " + addr);
 			i++;
-			this.printWordTokens(ik.segment(addr));
+			this.printSegmentedWord(ik.segment(addr));
 		}
 		
 		LOG.info("**************************************************************");
@@ -39,11 +40,11 @@ public class TextSegmenterTest {
 		i=1;
 		for(String addr : addresses){
 			LOG.info("> " + i + ". " + addr);
-			this.printWordTokens(smartcn.segment(addr));
+			this.printSegmentedWord(smartcn.segment(addr));
 		}
 	}
 	
-	private void printWordTokens(List<String> tokens){
+	private void printSegmentedWord(List<String> tokens){
 		StringBuilder sb = new StringBuilder();
 		for(String token : tokens){
 			sb.append(token).append(' ');

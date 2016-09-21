@@ -37,7 +37,7 @@ CREATE TABLE `tmp_splitted_values` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 
 DELIMITER ;;
-CREATE DEFINER=`root`@`127.0.0.1` PROCEDURE `p_split_address_multi_values`()
+CREATE PROCEDURE `p_split_address_multi_values`()
 BEGIN
 	declare v_type, v_refid, v_flag, v_index int;
     declare v_val, v_str varchar(30);
@@ -53,12 +53,16 @@ BEGIN
     while v_flag>0 do
 		
         set v_index = instr(v_str, ';');
-        while v_index>0 do
-			set v_val = left(v_str, v_index-1);
-            insert into tmp_splitted_values (type, refid, val) values ( v_type, v_refid, v_val );
-            set v_str = right(v_str, char_length(v_str) - v_index);
-            set v_index = instr(v_str, ';');
-        end while;
+        if v_index>0 then
+			while v_index>0 do
+				set v_val = left(v_str, v_index-1);
+				insert into tmp_splitted_values (type, refid, val) values ( v_type, v_refid, v_val );
+				set v_str = right(v_str, char_length(v_str) - v_index);
+				set v_index = instr(v_str, ';');
+			end while;
+		else
+			insert into tmp_splitted_values (type, refid, val) values ( v_type, v_refid, v_str );
+        end if;
         
         fetch cur into v_type, v_refid, v_str;
     end while;
