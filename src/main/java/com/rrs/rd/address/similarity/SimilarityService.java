@@ -80,6 +80,8 @@ public class SimilarityService {
 	private static Map<String, List<Document>> VECTORS_CACHE = new HashMap<String, List<Document>>();
 	private static Map<String, Map<String, Integer>> IDRS_CACHE = new HashMap<String, Map<String, Integer>>();
 	
+	private long time1=0, time2=0, time3=0;
+	
 	/**
 	 * 分词，设置词语权重。
 	 * @param addresses
@@ -223,9 +225,12 @@ public class SimilarityService {
 	 */
 	public double computeDocSimilarity(Document a, Document b){
 		//为2个文档建立向量
+		long start = System.currentTimeMillis();
 		Set<String> terms = new HashSet<String>();
 		for(Term t : a.getTerms()) terms.add(t.getText());
 		for(Term t : b.getTerms()) terms.add(t.getText());
+		time1 += System.currentTimeMillis() - start;
+		start = System.currentTimeMillis();
 		double[] va = new double[terms.size()];
 		double[] vb = new double[terms.size()];
 		int index = 0;
@@ -240,8 +245,12 @@ public class SimilarityService {
 				vb[index] = 0;
 			index++;
 		}
+		time2 += System.currentTimeMillis() - start;
+		start = System.currentTimeMillis();
 		//计算2个向量余弦相似度
-		return this.computeDocSimilarity(va, vb);
+		double r = this.computeDocSimilarity(va, vb);
+		time3 += System.currentTimeMillis() - start;
+		return r;
 	}
 	
 	private double computeDocSimilarity(double[] va, double[] vb){
@@ -296,6 +305,7 @@ public class SimilarityService {
 	
 	public List<SimilarDocumentResult> findSimilarAddress(String addressText, int topN){
 		long start = System.currentTimeMillis(), startCompute = 0, elapsedCompute = 0;
+		time1 = time2 = time3 = 0;
 		
 		//解析地址
 		if(addressText==null || addressText.trim().isEmpty())
@@ -376,7 +386,7 @@ public class SimilarityService {
 		this.bubbleSort(silimarDocs);
 		
 		LOG.info("[doc] [find] elapsed " + (System.currentTimeMillis() - start)/1000.0 
-				+ "s (computer " + elapsedCompute/1000.0 + "s), " + addressText);
+				+ "s (com=" + elapsedCompute/1000.0 + ", time1="+time1/1000.0+", time2="+time2/1000.0+", time3="+time3/1000.0+"), " + addressText);
 		
 		return silimarDocs;
 	}
