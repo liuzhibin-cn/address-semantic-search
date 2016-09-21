@@ -52,6 +52,11 @@ public class VectorBuilder {
 		
 		List<AddressEntity> addrList = addrService.loadAddresses(province.getId(), city.getId());
 		List<Document> docList = simiService.analyse(addrList);
+		if(docList==null || docList.isEmpty()){
+			System.out.println("> [" + format.format(startDate) + " -> " + format.format(new Date()) + "] "
+					+ province.getName() + "-" + city.getName() + ", addresses 0");
+			return;
+		}
 		simiService.buildDocDimensions(docList);
 		
 		//将计算TF-IDF后的文档写入文件
@@ -60,7 +65,8 @@ public class VectorBuilder {
 			if(file.exists()) file.delete();
 			file.createNewFile();
 		} catch (IOException e1) {
-			e1.printStackTrace();
+			e1.printStackTrace(System.out);
+			return;
 		}
 		OutputStream outStream = null;
 		BufferedOutputStream bufferedStream = null; 

@@ -4,6 +4,7 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
+import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -35,6 +36,7 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 		}catch(Exception e){
 			exception = true;
 			ex = e;
+			LOG.error("[addr] [match] [error] " + e.getMessage(), e);
 		}
 		StringBuilder sb = new StringBuilder();
 		sb.append("<html><head><style>")
@@ -54,6 +56,15 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 			sb.append("<br />用时：").append((System.currentTimeMillis()-start)/1000.0).append("秒");
 		}else{
 			sb.append("发生错误：").append(ex.getMessage());
+			sb.append("<br />").append(ex.getClass().getName());
+			if(ex.getStackTrace()!=null){
+				for(StackTraceElement ste : ex.getStackTrace()){
+					sb.append("<br />&nbsp;&nbsp;&nbsp;at ")
+						.append(ste.getClassName())
+						.append('.').append(ste.getMethodName())
+						.append('(').append(ste.getFileName()).append(':').append(ste.getLineNumber()).append(")<br />");
+				}
+			}
 		}
 		sb.append("</body></html>");
 		
