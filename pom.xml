@@ -23,6 +23,7 @@
 				<db.user>addr_match</db.user>
 				<db.password>cfds123!@#</db.password>
 				<cache.path>/data/address-search/cache</cache.path>
+				<cache.vectors.in.memory>true</cache.vectors.in.memory>
 			</properties>
 		</profile>
 		
@@ -35,6 +36,7 @@
 				<db.user>root</db.user>
 				<db.password>dev</db.password>
 				<cache.path>/Users/richie/Documents/workspace_eclipse/cache-folder</cache.path>
+				<cache.vectors.in.memory>false</cache.vectors.in.memory>
 			</properties>
 		</profile>
 	</profiles>

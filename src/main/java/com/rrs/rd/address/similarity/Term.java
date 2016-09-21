@@ -1,24 +1,23 @@
 package com.rrs.rd.address.similarity;
 
 /**
- * 词语（分词后的词语）。
+ * 词语。
  * @author Richie 刘志斌 yudi@sina.com
- *
  */
 public class Term {
 	private String text;
-	private double freq = 0;
-	private double value = 0;
+	private double weight = 0;
+	private double eigenvalue = 0;
 	
 	public Term(String text, double freq){
 		this.text = text;
-		this.freq = freq;
+		this.weight = freq;
 	}
 	
 	public Term(String text, double freq, double value){
 		this.text = text;
-		this.freq = freq;
-		this.value = value;
+		this.weight = freq;
+		this.eigenvalue = value;
 	}
 	
 	/**
@@ -29,16 +28,28 @@ public class Term {
 		return text;
 	}
 	
-	public double getFreq(){
-		return this.freq;
+	/**
+	 * 词语权重（类TF值）。
+	 * @return
+	 */
+	public double getWeight(){
+		return this.weight;
 	}
 	
-	public double getValue() {
-		return value;
+	public void setWeight(double freq){
+		this.weight = freq;
 	}
 	
-	public void setValue(double value){
-		this.value = value;
+	/**
+	 * 词语特征值（类TF-IDF值）。
+	 * @return
+	 */
+	public double getEigenvalue() {
+		return eigenvalue;
+	}
+	
+	public void setEigenvalue(double value){
+		this.eigenvalue = value;
 	}
 	
 	@Override

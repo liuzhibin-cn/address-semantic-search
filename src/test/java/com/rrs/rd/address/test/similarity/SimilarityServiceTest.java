@@ -11,6 +11,7 @@ import com.rrs.rd.address.similarity.Term;
 import com.rrs.rd.address.test.match.BaseTestCase;
 
 public class SimilarityServiceTest extends BaseTestCase {
+	//TODO: 提升相似度。北京北京东城区新发地汉龙南站南B区25号
 	@Test
 	public void testSerialize(){
 		Document doc = new Document(11981);
@@ -36,12 +37,12 @@ public class SimilarityServiceTest extends BaseTestCase {
 		assertEquals(doc.getTerms().size(), deserialized.getTerms().size());
 		
 		assertEquals(doc.getTerms().get(0).getText(), deserialized.getTerms().get(0).getText());
-		assertEquals(doc.getTerms().get(0).getValue(), deserialized.getTerms().get(0).getValue());
+		assertEquals(doc.getTerms().get(0).getEigenvalue(), deserialized.getTerms().get(0).getEigenvalue());
 		
 		assertEquals(doc.getTerms().get(3).getText(), deserialized.getTerms().get(3).getText());
-		assertEquals(doc.getTerms().get(3).getValue(), deserialized.getTerms().get(3).getValue());
+		assertEquals(doc.getTerms().get(3).getEigenvalue(), deserialized.getTerms().get(3).getEigenvalue());
 		
 		assertEquals(doc.getTerms().get(4).getText(), deserialized.getTerms().get(4).getText());
-		assertEquals(doc.getTerms().get(4).getValue(), deserialized.getTerms().get(4).getValue());
+		assertEquals(doc.getTerms().get(4).getEigenvalue(), deserialized.getTerms().get(4).getEigenvalue());
 	}
 }

@@ -82,7 +82,7 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 					+ "：该地区地址库中缺少历史地址数据，或者还未为该地区的历史地址数据建立索引");
 		
 		Document targetDoc = simiService.analyse(targetAddr);
-		simiService.buildDocDimensions(targetDoc, allDocs.size(), simiService.statInverseDocRefers(allDocs));
+		simiService.computeTermEigenvalue(targetDoc, allDocs.size(), simiService.statInverseDocRefers(allDocs));
 		
 		//与地址库所有地址比较余弦相似度
 		int TOPN = 10;
@@ -90,7 +90,7 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 		double[] topSimilarities = new double[TOPN];
 		for(int i=0; i<TOPN; i++) topSimilarities[i] = -1;
 		for(Document doc : allDocs){
-			double similarity = simiService.computeSimilarity(doc, targetDoc);
+			double similarity = simiService.computeDocSimilarity(doc, targetDoc);
 			//保存top5相似地址
 			int index = -1;
 			for(int i=0; i<TOPN; i++){
