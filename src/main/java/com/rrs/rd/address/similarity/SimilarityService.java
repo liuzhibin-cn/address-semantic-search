@@ -356,7 +356,7 @@ public class SimilarityService {
 		for(Document doc : allDocs){
 			startCompute = System.currentTimeMillis();
 			double similarity = this.computeDocSimilarity(doc, targetDoc);
-			elapsedCompute += System.currentTimeMillis() - start;
+			elapsedCompute += System.currentTimeMillis() - startCompute;
 			//保存topN相似地址
 			if(silimarDocs.size()<topN) {
 				silimarDocs.add(new SimilarDocumentResult(doc, similarity));
