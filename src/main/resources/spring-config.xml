@@ -46,7 +46,7 @@
 		<property name="addressDao" ref="addressDao" />
 	</bean>
 	<bean id="similarityService" class="com.rrs.rd.address.similarity.SimilarityService">
-		<property name="addressService" value="addressService" />
+		<property name="addressService" ref="addressService" />
 		<property name="cacheFolder" value="${cache.path}" />
 		<property name="cacheVectorsInMemory" value="${cache.vectors.in.memory}" />
 	</bean>
