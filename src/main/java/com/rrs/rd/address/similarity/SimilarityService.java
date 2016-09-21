@@ -80,8 +80,6 @@ public class SimilarityService {
 	private static Map<String, List<Document>> VECTORS_CACHE = new HashMap<String, List<Document>>();
 	private static Map<String, Map<String, Integer>> IDRS_CACHE = new HashMap<String, Map<String, Integer>>();
 	
-	private long time1=0, time2=0, time3=0;
-	
 	/**
 	 * 分词，设置词语权重。
 	 * @param addresses
@@ -224,43 +222,14 @@ public class SimilarityService {
 	 * @return
 	 */
 	public double computeDocSimilarity(Document a, Document b){
-		//为2个文档建立向量
-		long start = System.currentTimeMillis();
-		Set<String> terms = new HashSet<String>();
-		for(Term t : a.getTerms()) terms.add(t.getText());
-		for(Term t : b.getTerms()) terms.add(t.getText());
-		time1 += System.currentTimeMillis() - start;
-		start = System.currentTimeMillis();
-		double[] va = new double[terms.size()];
-		double[] vb = new double[terms.size()];
-		int index = 0;
-		for(String term : terms){
-			if(a.containsTerm(term)) 
-				va[index] = a.getTerm(term).getEigenvalue();
-			else 
-				va[index] = 0;
-			if(b.containsTerm(term))
-				vb[index] = b.getTerm(term).getEigenvalue();
-			else 
-				vb[index] = 0;
-			index++;
+		double sumAA=0, sumBB=0, sumAB=0;
+		for(Term termB : b.getTerms()){
+			Term termA = a.getTerm(termB.getText());
+			sumBB += termB.getEigenvalue() * termB.getEigenvalue();
+			sumAB += termB.getEigenvalue() * (termA==null ? 0 : termA.getEigenvalue());
 		}
-		time2 += System.currentTimeMillis() - start;
-		start = System.currentTimeMillis();
-		//计算2个向量余弦相似度
-		double r = this.computeDocSimilarity(va, vb);
-		time3 += System.currentTimeMillis() - start;
-		return r;
-	}
-	
-	private double computeDocSimilarity(double[] va, double[] vb){
-		if(va==null || vb==null || va.length!=vb.length) return 0;
-		double sumAB = 0, sumAA = 0, sumBB = 0;
-		for(int i=0; i<va.length; i++){
-			sumAB += va[i] * vb[i];
-			sumAA += va[i] * va[i];
-			sumBB += vb[i] * vb[i];
-		}
+		for(Term termA : a.getTerms())
+			sumAA += termA.getEigenvalue() * termA.getEigenvalue();
 		return sumAB / (Math.sqrt(sumAA) * Math.sqrt(sumBB));
 	}
 	
@@ -305,7 +274,6 @@ public class SimilarityService {
 	
 	public List<SimilarDocumentResult> findSimilarAddress(String addressText, int topN){
 		long start = System.currentTimeMillis(), startCompute = 0, elapsedCompute = 0;
-		time1 = time2 = time3 = 0;
 		
 		//解析地址
 		if(addressText==null || addressText.trim().isEmpty())
@@ -365,7 +333,7 @@ public class SimilarityService {
 		List<SimilarDocumentResult> silimarDocs = new ArrayList<SimilarDocumentResult>(topN);
 		for(Document doc : allDocs){
 			startCompute = System.currentTimeMillis();
-			double similarity = this.computeDocSimilarity(doc, targetDoc);
+			double similarity = this.computeDocSimilarity(targetDoc, doc);
 			elapsedCompute += System.currentTimeMillis() - startCompute;
 			//保存topN相似地址
 			if(silimarDocs.size()<topN) {
@@ -386,7 +354,7 @@ public class SimilarityService {
 		this.bubbleSort(silimarDocs);
 		
 		LOG.info("[doc] [find] elapsed " + (System.currentTimeMillis() - start)/1000.0 
-				+ "s (com=" + elapsedCompute/1000.0 + ", time1="+time1/1000.0+", time2="+time2/1000.0+", time3="+time3/1000.0+"), " + addressText);
+				+ "s (com=" + elapsedCompute/1000.0 + "), " + addressText);
 		
 		return silimarDocs;
 	}

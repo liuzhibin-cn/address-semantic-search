@@ -1,6 +1,10 @@
 package com.rrs.rd.address.similarity;
 
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * 文档对象。
@@ -9,6 +13,7 @@ import java.util.List;
 public class Document {
 	private int id;
 	private List<Term> terms = null;
+	private Map<String, Term> termsMap = null;
 	
 	public Document() {}
 	
@@ -38,10 +43,9 @@ public class Document {
 	 * @return
 	 */
 	public Term getTerm(String term){
-		if(term==null) return null;
-		for(Term t : this.terms)
-			if(t.getText().equals(term)) return t;
-		return null;
+		if(term==null || this.terms==null) return null;
+		if(this.termsMap==null) this.buildMapCache();
+		return this.termsMap.get(term);
 	}
 	
 	public void setTerms(List<Term> value){
@@ -54,20 +58,19 @@ public class Document {
 	 * @return
 	 */
 	public boolean containsTerm(String term){
-		if(term==null || term.length()<=0) return false;
-		for(Term t : this.terms)
-			if(t.getText().equals(term)) return true;
-		return false;
+		if(term==null || this.terms==null) return false;
+		if(this.termsMap==null){
+			this.buildMapCache();
+		}
+		return this.termsMap.containsKey(term);
 	}
 	
-	/**
-	 * 该文档是否包含词语term。
-	 * @param term
-	 * @return
-	 */
-	public boolean containsTerm(Term term){
-		if(term==null) return false;
-		return this.containsTerm(term.getText());
+	private synchronized void buildMapCache(){
+		if(this.termsMap==null){
+			this.termsMap = new HashMap<String, Term>(this.terms.size());
+			for(Term t : this.terms)
+				this.termsMap.put(t.getText(), t);
+		}
 	}
 	
 }
