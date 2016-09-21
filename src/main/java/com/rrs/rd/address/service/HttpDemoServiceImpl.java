@@ -4,7 +4,6 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -59,10 +58,10 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 			sb.append("<br />").append(ex.getClass().getName());
 			if(ex.getStackTrace()!=null){
 				for(StackTraceElement ste : ex.getStackTrace()){
-					sb.append("<br />&nbsp;&nbsp;&nbsp;at ")
+					sb.append("<br /><span style='margin-left:20px'>at ")
 						.append(ste.getClassName())
 						.append('.').append(ste.getMethodName())
-						.append('(').append(ste.getFileName()).append(':').append(ste.getLineNumber()).append(")<br />");
+						.append('(').append(ste.getFileName()).append(':').append(ste.getLineNumber()).append(")</span>");
 				}
 			}
 		}
