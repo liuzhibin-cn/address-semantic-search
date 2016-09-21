@@ -25,15 +25,21 @@
 				<include>datasource-config.xml</include>
 				<include>IKAnalyzer.cfg.xml</include>
 				<include>log4j.xml</include>
-				<include>region.dic</include>
 				<include>spring-config.xml</include>
-				<include>stop.dic</include>
 			</includes>
 			<filtered>true</filtered>
 		</fileSet>
 		<fileSet>
-			<directory>src/main/resources/script</directory>
-			<outputDirectory>script</outputDirectory>
+			<directory>src/main/resources/conf/script</directory>
+			<outputDirectory>conf/script</outputDirectory>
+			<includes>
+				<include>*</include>
+			</includes>
+			<filtered>false</filtered>
+		</fileSet>
+		<fileSet>
+			<directory>src/main/resources/conf/dic</directory>
+			<outputDirectory>conf/dic</outputDirectory>
 			<includes>
 				<include>*</include>
 			</includes>

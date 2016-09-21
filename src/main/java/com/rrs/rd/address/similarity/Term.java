@@ -7,18 +7,18 @@ package com.rrs.rd.address.similarity;
  */
 public class Term {
 	private String text;
-	private int index = 0;
-	private double idf = 0;
+	private double freq = 0;
+	private double value = 0;
 	
-	public Term(String text, int index){
+	public Term(String text, double freq){
 		this.text = text;
-		this.index = index;
+		this.freq = freq;
 	}
 	
-	public Term(String text, int index, double idf){
+	public Term(String text, double freq, double value){
 		this.text = text;
-		this.index = index;
-		this.idf = idf;
+		this.freq = freq;
+		this.value = value;
 	}
 	
 	/**
@@ -29,16 +29,16 @@ public class Term {
 		return text;
 	}
 	
-	public int getIndex(){
-		return this.index;
+	public double getFreq(){
+		return this.freq;
 	}
 	
-	public double getIdf() {
-		return idf;
+	public double getValue() {
+		return value;
 	}
 	
-	public void setIdf(double value){
-		this.idf = value;
+	public void setValue(double value){
+		this.value = value;
 	}
 	
 	@Override

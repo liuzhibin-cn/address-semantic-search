@@ -30,7 +30,6 @@ public class AddressService implements ApplicationContextAware {
 	private static ApplicationContext context = null;
 	private AddressDao addressDao;
 	private RegionDao regionDao;
-	private String cacheFolder;
 	
 	private List<String> forbiddenFollowingChars;
 	private List<String> invalidRegionNames;
@@ -936,12 +935,6 @@ public class AddressService implements ApplicationContextAware {
 	}
 	public void setRegionDao(RegionDao dao){
 		this.regionDao = dao;
-	}
-	public void setCacheFolder(String value){
-		this.cacheFolder = value;
-	}
-	public String getCacheFolder(){
-		return this.cacheFolder;
 	}
 	public void setForbiddenFollowingChars(List<String> value){
 		this.forbiddenFollowingChars = value;

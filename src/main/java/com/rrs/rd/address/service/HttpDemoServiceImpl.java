@@ -14,13 +14,14 @@ import org.slf4j.LoggerFactory;
 
 import com.rrs.rd.address.dao.AddressDao;
 import com.rrs.rd.address.segmenter.IKAnalyzerSegmenter;
-import com.rrs.rd.address.similarity.AddressDocument;
+import com.rrs.rd.address.similarity.Document;
 import com.rrs.rd.address.similarity.Segmenter;
-import com.rrs.rd.address.similarity.Term;
+import com.rrs.rd.address.similarity.SimilarityService;
 
 public class HttpDemoServiceImpl implements HttpDemoService {
 	private final static Logger LOG = LoggerFactory.getLogger(HttpDemoServiceImpl.class);
-	private AddressService service = null;
+	private AddressService addrService = null;
+	private SimilarityService simiService = null;
 	private AddressDao dao = null;
 	
 	public String find(String addrText){
@@ -61,26 +62,25 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 	
 	private List<String> findSimilarAddress(String addrText, Segmenter segmenter){
 		SimpleDateFormat dateFormat = new SimpleDateFormat("HH:mm:ss SSS");
-		AddressEntity targetAddr = service.interpretAddress(addrText);
+		AddressEntity targetAddr = addrService.interpretAddress(addrText);
 		if(!targetAddr.hasProvince() || !targetAddr.hasCity() || !targetAddr.hasCounty())
 			throw new RuntimeException("无法为地址解析出省、市、区：" + addrText);
 		
-		List<AddressDocument> allDocs = this.loadDocsFromCache(service, targetAddr.getProvince().getId(), targetAddr.getCity().getId());
+		List<Document> allDocs = this.loadDocsFromCache(simiService, targetAddr.getProvince().getId(), targetAddr.getCity().getId());
 		if(allDocs==null || allDocs.isEmpty())
 			throw new RuntimeException(targetAddr.getProvince().getName() + targetAddr.getCity().getName() 
 					+ "：该地区地址库中缺少历史地址数据，或者还未为该地区的历史地址数据建立索引");
 		
-		AddressDocument targetDoc = new AddressDocument(0, targetAddr.restoreText());
-		targetDoc.segment(segmenter);
-		targetDoc.calcIdf(allDocs.size(), AddressDocument.statTermRefCount(allDocs));
+		Document targetDoc = simiService.analyse(targetAddr);
+		simiService.buildDocDimensions(targetDoc, allDocs.size(), simiService.statInverseDocRefers(allDocs));
 		
 		//与地址库所有地址比较余弦相似度
 		int TOPN = 10;
-		AddressDocument[] topDocs = new AddressDocument[TOPN];
+		Document[] topDocs = new Document[TOPN];
 		double[] topSimilarities = new double[TOPN];
 		for(int i=0; i<TOPN; i++) topSimilarities[i] = -1;
-		for(AddressDocument doc : allDocs){
-			double similarity = doc.calcSimilarity(targetDoc);
+		for(Document doc : allDocs){
+			double similarity = simiService.computeSimilarity(doc, targetDoc);
 			//保存top5相似地址
 			int index = -1;
 			for(int i=0; i<TOPN; i++){
@@ -104,7 +104,7 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 		int sameCountyCount = 0;
 		List<AddressEntity> similarAddrs = new ArrayList<AddressEntity>(TOPN);
 		for(int i=0; i<topDocs.length; i++){
-			AddressDocument doc = topDocs[i];
+			Document doc = topDocs[i];
 			AddressEntity addr = dao.get(doc.getId());
 			similarAddrs.add(addr);
 			if(targetAddr.hasCounty() && targetAddr.getCounty().equals(addr.getCounty()))
@@ -129,25 +129,17 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 		return result;
 	}
 	
-	private List<AddressDocument> loadDocsFromCache(AddressService service, int provinceId, int cityId){
-		List<AddressDocument> result = new ArrayList<AddressDocument>();
+	private List<Document> loadDocsFromCache(SimilarityService service, int provinceId, int cityId){
+		List<Document> result = new ArrayList<Document>();
 		
-		File file = new File(service.getCacheFolder() + "/" + provinceId + "-" + cityId + ".idx");
+		File file = new File(service.getCacheFolder() + "/" + provinceId + "-" + cityId + ".vt");
 		try {
             InputStreamReader sr = new InputStreamReader(new FileInputStream(file), "utf8");
             BufferedReader br = new BufferedReader(sr);
             String line = null;
             while((line = br.readLine()) != null){
-                String[] t1 = line.split(":");
-                AddressDocument doc = new AddressDocument();
-                doc.setId(Integer.parseInt(t1[0]));
-                String[] t2 = t1[1].split(";");
-                List<Term> terms = new ArrayList<Term>(t2.length);
-                for(String termStr : t2){
-                	String[] t3 = termStr.split("\\|");
-                	terms.add(new Term(t3[0], Integer.parseInt(t3[1]), Double.parseDouble(t3[2])));
-                }
-                doc.setTerms(terms);
+                Document doc = service.deserialize(line);
+                if(doc==null) continue;
                 result.add(doc);
             }
             br.close();
@@ -165,7 +157,7 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 	 * @param topDoc
 	 * @param topSimilarity
 	 */
-	private void sort(AddressDocument[] topDoc, double[] topSimilarity){
+	private void sort(Document[] topDoc, double[] topSimilarity){
 		boolean exchanged = true;
 		int endIndex = topSimilarity.length - 1;
 		while(exchanged){
@@ -175,7 +167,7 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 					double temp = topSimilarity[i-1];
 					topSimilarity[i-1] = topSimilarity[i];
 					topSimilarity[i] = temp;
-					AddressDocument tempDoc = topDoc[i-1];
+					Document tempDoc = topDoc[i-1];
 					topDoc[i-1] = topDoc[i];
 					topDoc[i] = tempDoc;
 					exchanged = true;
@@ -186,7 +178,10 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 	}
 
 	public void setAddressService(AddressService service){
-		this.service = service;
+		this.addrService = service;
+	}
+	public void setSimilarityService(SimilarityService service){
+		this.simiService = service;
 	}
 	public void setAddressDao(AddressDao dao){
 		this.dao = dao;
