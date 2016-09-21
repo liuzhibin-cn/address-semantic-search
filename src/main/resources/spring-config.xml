@@ -41,7 +41,6 @@
 		</property>
 	</bean>
 	<bean id="demoService" class="com.rrs.rd.address.service.HttpDemoServiceImpl">
-		<property name="addressService" ref="addressService" />
 		<property name="similarityService" ref="similarityService" />
 		<property name="addressDao" ref="addressDao" />
 	</bean>
