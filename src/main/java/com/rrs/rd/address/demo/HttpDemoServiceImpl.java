@@ -1,96 +1,91 @@
 package com.rrs.rd.address.demo;
 
+import java.io.StringWriter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.Velocity;
+import org.apache.velocity.runtime.RuntimeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.rrs.rd.address.persist.AddressEntity;
+import com.rrs.rd.address.persist.AddressPersister;
 import com.rrs.rd.address.persist.dao.AddressDao;
-import com.rrs.rd.address.similarity.Segmenter;
 import com.rrs.rd.address.similarity.SimilarDocResult;
 import com.rrs.rd.address.similarity.SimilarityComputer;
-import com.rrs.rd.address.similarity.segment.IKAnalyzerSegmenter;
 
 public class HttpDemoServiceImpl implements HttpDemoService {
 	private final static Logger LOG = LoggerFactory.getLogger(HttpDemoServiceImpl.class);
 	private SimilarityComputer computer = null;
-	private AddressDao dao = null;
+	private AddressPersister persisiter = null;
 	
-	public String find(String addrText){
-		long start = System.currentTimeMillis();
-		
-		List<String> addrs = null;
-		boolean exception = false;
-		Exception ex = null;
-		try{
-			addrs = this.findSimilarAddress(addrText, new IKAnalyzerSegmenter());
-		}catch(Exception e){
-			exception = true;
-			ex = e;
-			LOG.error("[addr] [match] [error] " + e.getMessage(), e);
-		}
-		StringBuilder sb = new StringBuilder();
-		sb.append("<html><head><style>")
-			.append("body, td, th { font-size:12px; padding:2px 0 2px 5px; }")
-			.append("td, th{ border-left:1px solid #888; border-top: 1px solid #888; }")
-			.append("table{ border-right:1px solid #888; border-bottom: 1px solid #888; }")
-			.append("</style></head><body>");
-		if(!exception){
-			sb.append("找到的TOP").append(addrs.size()).append("与【").append(addrText).append("】相似的地址：<br /><br />");
-			sb.append("<table style='width:750px' cellspacing=0 cellpadding=0>");
-			sb.append("<tr style='text-align:center'><th style='width:130px;'>相似度</th><th>详细地址</th></tr>");
-			for(String str : addrs){
-				String[] tokens = str.split(";");
-				sb.append("<tr><td>").append(tokens[0]).append("</td><td>").append(tokens[1]).append("</td></tr>");
-			}
-			sb.append("</table>");
-			sb.append("<br />用时：").append((System.currentTimeMillis()-start)/1000.0).append("秒");
-		}else{
-			sb.append("发生错误：").append(ex.getMessage());
-			if(!RuntimeException.class.isAssignableFrom(ex.getClass())){
-			sb.append("<br />").append(ex.getClass().getName());
-				if(ex.getStackTrace()!=null){
-					for(StackTraceElement ste : ex.getStackTrace()){
-						sb.append("<br /><span style='margin-left:20px'>at ")
-							.append(ste.getClassName())
-							.append('.').append(ste.getMethodName())
-							.append('(').append(ste.getFileName()).append(':').append(ste.getLineNumber()).append(")</span>");
-					}
-				}
-			}
-		}
-		sb.append("</body></html>");
-		
-		return sb.toString();
+	public void init(){
+		Properties properties = new Properties();
+		properties.setProperty(Velocity.INPUT_ENCODING, "UTF-8");
+		properties.setProperty(RuntimeConstants.RUNTIME_LOG_LOGSYSTEM_CLASS,"org.apache.velocity.runtime.log.NullLogSystem");
+		Velocity.init(properties);
 	}
 	
-	private List<String> findSimilarAddress(String addrText, Segmenter segmenter){
+	public String find(String addrText){
+		Map<String, Object> model = new HashMap<String, Object>();
+		String vm = "templates/find-addr.vm";
+		try{
+			this.findSimilarAddress(addrText, model);
+		}catch(RuntimeException rex){
+			LOG.error("[addr] [find-similar] [error] " + rex.getMessage());
+			model.put("rex", rex);
+			vm = "templates/find-addr-error.vm";
+		}catch(Exception ex){
+			LOG.error("[addr] [find-similar] [error] " + ex.getMessage(), ex);
+			model.put("ex", ex);
+			vm = "templates/find-addr-error.vm";
+		}
+		
+        StringWriter writer = new StringWriter();
+        try {
+            VelocityContext context = new VelocityContext();
+            for (String name : model.keySet()) {
+                context.put(name, model.get(name));
+            }
+            Velocity.evaluate(context, writer, "", vm);
+            return writer.toString();
+        } catch (Exception ex) {
+            LOG.error("[addr] [find-similar] [error] Velocity template evaluate error: " + ex.getMessage(), ex);
+            return "Velocity template evaluate error: " + ex.getMessage();
+        } finally {
+            try { writer.close(); } catch (Exception e) { }
+        }
+	}
+	
+	private void findSimilarAddress(String addrText, Map<String, Object> model){
+		long startAt = System.currentTimeMillis();
 		List<SimilarDocResult> similarDocs = computer.findSimilarAddress(addrText, 5);
-		List<AddressEntity> similarAddrs = new ArrayList<AddressEntity>(5);
-		for(int i=0; i<similarDocs.size(); i++){
-			SimilarDocResult doc = similarDocs.get(i);
-			AddressEntity addr = dao.get(doc.getDocument().getId());
-			similarAddrs.add(addr);
+		model.put("elapsedTime", System.currentTimeMillis() - startAt);
+		
+		List<SimilarAddressVO> vos = new ArrayList<SimilarAddressVO>(similarDocs.size());
+		for(SimilarDocResult doc : similarDocs){
+			SimilarAddressVO vo = new SimilarAddressVO(doc);
+			vo.setAddress(persisiter.getAddress(doc.getDocument().getId()));
+			vos.add(vo);
 		}
+		model.put("similarAddresses", vos);
 		
-		List<String> result = new ArrayList<String>();
-		for(int i=0; i<similarAddrs.size(); i++){
-			AddressEntity addr = similarAddrs.get(i);
-			result.add(similarDocs.get(i).getSimilarity() + ";" + addr.getRawText());
+		if(LOG.isInfoEnabled()){
+			LOG.info("> Similar address for {" + addrText + "}: ");
+			for(SimilarAddressVO vo : vos) 
+				LOG.info(">     " + vo.getSimilarity() +"; " + vo.getAddress().getId() + ": " + vo.getAddress().getRawText());
 		}
-		
-		LOG.info("> Similar address for {" + addrText + "}: ");
-		for(String s : result) LOG.info(">     " + s);
-		
-		return result;
 	}
 	
 	public void setComputer(SimilarityComputer value){
 		this.computer = value;
 	}
-	public void setAddressDao(AddressDao dao){
-		this.dao = dao;
+	public void setPersister(AddressPersister value){
+		this.persisiter = value;
 	}
 }

@@ -284,11 +284,11 @@ public class SimilarityComputer {
 			throw new IllegalArgumentException("Null or empty address text! Please provider a valid address.");
 		AddressEntity targetAddr = this.interpreter.interpretAddress(addressText);
 		if(targetAddr==null){
-			LOG.warn("[doc] [find] [addr-err] null << " + addressText);
+			LOG.warn("[addr] [find-similar] [addr-err] null << " + addressText);
 			throw new RuntimeException("Can't interpret address!");
 		}
 		if(!targetAddr.hasProvince() || !targetAddr.hasCity() || !targetAddr.hasCounty()){
-			LOG.warn("[doc] [find] [addr-err] "
+			LOG.warn("[addr] [find-similar] [addr-err] "
 					+ (targetAddr.hasProvince() ? targetAddr.getProvince().getName() : "X") + "-"
 					+ (targetAddr.hasCity() ? targetAddr.getCity().getName() : "X") + "-"
 					+ (targetAddr.hasCounty() ? targetAddr.getCounty().getName() : "X")
@@ -359,7 +359,7 @@ public class SimilarityComputer {
 		//按相似度从高到低排序
 		this.sortDesc(silimarDocs);
 		
-		LOG.info("[doc] [find] [perf] elapsed " + (System.currentTimeMillis() - start)
+		LOG.info("[addr] [find-similar] [perf] elapsed " + (System.currentTimeMillis() - start)
 				+ "ms (com=" + elapsedCompute + "ms), " + addressText);
 		
 		return silimarDocs;

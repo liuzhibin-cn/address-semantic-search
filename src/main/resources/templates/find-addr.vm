@@ -1,0 +1,24 @@
+<html>
+<head>
+	<title>Search similar address</title>
+</head>
+<body style="padding:10px;">
+	<style>
+		body, td, th, div, p { font-size:12px; }
+		td, th { border-left:1px solid #888; border-top: 1px solid #888; padding:2px 0 2px 5px; }
+		table { border-right:1px solid #888; border-bottom: 1px solid #888; }
+	</style>
+	
+	<div>
+		与【$!{sourceAddress}】相似的地址：
+		<table style='width:750px' cellspacing=0 cellpadding=0>
+			<tr style='text-align:center'><th style='width:130px;'>相似度</th><th>详细地址</th></tr>
+			#foreach($addr in ${similarAddresses})
+			<tr><td>$!{addr.similarity}</td><td>$!{addr.address.rawText}</td></tr>
+			#end
+		</table>
+		用时：$!{elapsedTime}毫秒
+	</div>
+	
+</body>
+</html>

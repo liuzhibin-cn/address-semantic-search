@@ -38,6 +38,20 @@
 				<cache.path>/Users/richie/Documents/workspace_eclipse/cache-folder</cache.path>
 				<cache.vectors.in.memory>false</cache.vectors.in.memory>
 			</properties>
+			<build>
+				<resources>
+					<resource> <!-- 本地测试、调试需要包含这些文件 -->
+		            	<directory>src/main/resources</directory>
+		            	<includes>
+		            		<include>datasource-config.xml</include>
+							<include>IKAnalyzer.cfg.xml</include>
+							<include>log4j.xml</include>
+							<include>spring-config.xml</include>
+		            	</includes>
+		            	<filtering>true</filtering>
+					</resource>
+				</resources>
+			</build>
 		</profile>
 	</profiles>
 	
@@ -49,14 +63,10 @@
             	<directory>src/main/resources</directory>
             	<includes>
             		<include>sql-mapper/*.xml</include>
+            		<include>templates/*.vm</include>
             		<include>dubbo.xsd</include>
-            		
-            		<include>datasource-config.xml</include>
-					<include>IKAnalyzer.cfg.xml</include>
-					<include>log4j.xml</include>
-					<include>spring-config.xml</include>
             	</includes>
-            	<filtering>true</filtering>
+            	<filtering>false</filtering>
             </resource>
         </resources>
         
@@ -178,6 +188,13 @@
 			<groupId>org.javassist</groupId>
 			<artifactId>javassist</artifactId>
 			<version>3.20.0-GA</version>
+		</dependency>
+		
+		<!-- HTML render -->
+		<dependency>
+		    <groupId>org.apache.velocity</groupId>
+		    <artifactId>velocity</artifactId>
+		    <version>1.7</version>
 		</dependency>
 		
 		<!-- <dependency>

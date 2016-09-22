@@ -1,0 +1,15 @@
+<html>
+<head><title>Search similar address</title></head>
+<body style="padding:10px;">
+<style> body, pre { font-size:12px; } </style>
+#if(${rex!=null}) <span>$!{rex.message}</span> #end
+#if(${ex!=null})
+	<span>$!{ex.message}</span><br /><br />
+	$!{ex.class.name}
+    #foreach($ste in $ex.stackTrace)
+    	<br />
+    	<span style='margin-left:20px'>at $!{ste.className}.$!{ste.methodName}($!{ste.fileName}:$!{ste.lineNumber})</span>
+    #end
+#end
+</body>
+</html>
