@@ -3,21 +3,22 @@
 <title>Search similar address</title>
 <style>
 	body, td, th, div, p, h3 { font-size:12px; margin:0; padding:0; }
-	td, th { border-collapse:collapse; border-left:1px solid #888; border-top: 1px solid #888; padding:2px 0 2px 5px; }
+	td, th { border-collapse:collapse; border-left:1px solid #888; border-top: 1px solid #888; padding:2px 4px 2px 4px; }
 	table { border-collapse:collapse; border-right:1px solid #888; border-bottom: 1px solid #888; }
 	.left10 { margin-left:10px; }
 	.top5 { margin-top:5px; }
 	.top20 { margin-top:20px; }
+	h3 { font-size:14px; font-weight:600; }
 </style>
 </head>
 <body style="padding:10px;">
 
 <div>
 	<h3>与【$!{inputAddress.rawText}】相似的地址</h3>
-	<table style='width:750px'>
+	<table>
 		<tr style='text-align:center'>
-			<th style='width:130px;'>相似度</th>
-			<th style="width:80px;">地址ID</th>
+			<th>相似度</th>
+			<th>地址ID</th>
 			<th>详细地址</th>
 		</tr>
 		#foreach($vo in ${similarVOs})
@@ -42,8 +43,8 @@
 	#if($utils.notEmpty($inputAddress.text))<span class="left10">[其它:$!{inputAddress.text}]</span>#end
 	#if($utils.notEmpty($inputAddress.buildingNum))<span class="left10">[楼号/房间号:$!{inputAddress.buildingNum}]</span>#end
 	<table class="top5">
-		<tr>#foreach($term in ${inputDocument.terms})<td>$!{term.text}</td>#end</tr>
-		<tr>#foreach($term in ${inputDocument.terms})<td>$utils.round($term.eigenvalue, 4)</td>#end</tr>
+		<tr><td>词语</td>#foreach($term in ${inputDocument.terms})<td>$!{term.text}</td>#end</tr>
+		<tr><td>特征值</td>#foreach($term in ${inputDocument.terms})<td>$utils.round($term.eigenvalue, 4)</td>#end</tr>
 	</table>
 </div>
 
@@ -52,8 +53,8 @@
 	#foreach($vo in ${similarVOs})
 	<span>$!{vo.address.rawText}</span>
 	<table class="top5">
-		<tr>#foreach($term in ${vo.document.terms})<td>$!{term.text}</td>#end</tr>
-		<tr>#foreach($term in ${vo.document.terms})<td>$utils.round($term.eigenvalue, 4)</td>#end</tr>
+		<tr><td>词语</td>#foreach($term in ${vo.document.terms})<td>$!{term.text}</td>#end</tr>
+		<tr><td>特征值</td>#foreach($term in ${vo.document.terms})<td>$utils.round($term.eigenvalue, 4)</td>#end</tr>
 	</table>
 	#end
 </div>
