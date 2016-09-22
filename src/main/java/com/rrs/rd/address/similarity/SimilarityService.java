@@ -201,7 +201,7 @@ public class SimilarityService {
 	 */
 	public void computeTermEigenvalue(Document doc, int totalDocs, Map<String, Integer> idrc){
 		if(doc.getTerms()==null) return;
-		double squareSum = 0;
+		double squareSum = 0; //预计算向量特征值的一部分
 		for(Term term : doc.getTerms()){
 			int thisTermRefCount = 1;
 			//注意：
@@ -212,9 +212,9 @@ public class SimilarityService {
 			double idf = Math.log( totalDocs * 1.0 / ( thisTermRefCount + 1 ) );
 			if(idf<0) idf = 0;
 			term.setEigenvalue(idf * term.getWeight());
-			squareSum += term.getEigenvalue() * term.getEigenvalue();
+			squareSum += term.getEigenvalue() * term.getEigenvalue(); //预计算向量特征值的一部分
 		}
-		doc.setEigenvaluePart(Math.sqrt(squareSum));
+		doc.setEigenvaluePart(Math.sqrt(squareSum)); //预计算向量特征值的一部分
 	}
 	
 	/**
@@ -262,13 +262,17 @@ public class SimilarityService {
 		String[] t2 = t1[1].split("\\|\\|");
 		if(t2.length<=0) return doc;
 		List<Term> terms = new ArrayList<Term>(t2.length);
+		double squareSum = 0; //预计算向量特征值的一部分
 		for(String termStr : t2){
 			String[] t3 = termStr.split("\\-\\-");
 			if(t3.length!=2) continue;
 			Term term = new Term(t3[0], 0, Double.parseDouble(t3[1]));
 			terms.add(term);
+			squareSum += term.getEigenvalue() * term.getEigenvalue(); //预计算向量特征值的一部分
 		}
 		doc.setTerms(terms);
+		doc.setEigenvaluePart(Math.sqrt(squareSum)); //预计算向量特征值的一部分
+		
 		return doc;
 	}
 	
