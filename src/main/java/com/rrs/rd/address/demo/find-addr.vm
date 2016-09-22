@@ -3,15 +3,16 @@
 <title>Search similar address</title>
 <style>
 	body, td, th, div, p, h3 { font-size:12px; margin:0; padding:0; }
-	td, th { border-collapse:collapse; border-left:1px solid #888; border-top: 1px solid #888; padding:2px 4px 2px 4px; }
+	td, th { border-collapse:collapse; border-left:1px solid #888; border-top: 1px solid #888; padding:1px 4px 1px 4px; }
 	table { border-collapse:collapse; border-right:1px solid #888; border-bottom: 1px solid #888; }
 	.left10 { margin-left:10px; }
 	.top5 { margin-top:5px; }
 	.top20 { margin-top:20px; }
+	.bot10 { margin-bottom:10px; }
 	h3 { font-size:14px; font-weight:600; }
 </style>
 </head>
-<body style="padding:10px;">
+<body style="padding:5px 20px 0 20px;">
 
 <div>
 	<h3>与【$!{inputAddress.rawText}】相似的地址</h3>
@@ -52,7 +53,7 @@
 	<h3>相似地址分词详情</h3>
 	#foreach($vo in ${similarVOs})
 	<span>$!{vo.address.rawText}</span>
-	<table class="top5">
+	<table class="bot10">
 		<tr><td>词语</td>#foreach($term in ${vo.document.terms})<td>$!{term.text}</td>#end</tr>
 		<tr><td>特征值</td>#foreach($term in ${vo.document.terms})<td>$utils.round($term.eigenvalue, 4)</td>#end</tr>
 	</table>

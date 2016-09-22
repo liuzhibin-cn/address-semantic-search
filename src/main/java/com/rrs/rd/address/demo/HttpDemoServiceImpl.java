@@ -80,7 +80,7 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 		
 		AddressEntity inputAddr = interpreter.interpretAddress(addrText);
 		model.put("inputAddress", inputAddr);
-		Document inputDoc = computer.analyse(inputAddr);
+		Document inputDoc = computer.analyseAndComputeTermEigenvalue(inputAddr);
 		model.put("inputDocument", inputDoc);
 		
 		List<SimilarAddressVO> vos = new ArrayList<SimilarAddressVO>(similarDocs.size());

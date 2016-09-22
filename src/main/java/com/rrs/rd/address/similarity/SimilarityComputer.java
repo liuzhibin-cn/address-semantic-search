@@ -166,9 +166,9 @@ public class SimilarityComputer {
 	 * @param docs 所有文档。
 	 * @return 全部词语的逆向引用情况，key为词语，value为该词语在多少个文档中出现过。
 	 */
-	public Map<String, Integer> statInverseDocRefers(List<Document> docs){
-		if(docs==null) return null;
+	private Map<String, Integer> statInverseDocRefers(List<Document> docs){
 		Map<String, Integer> idrc = new HashMap<String, Integer>(); 
+		if(docs==null) return idrc;
 		for(Document doc : docs) {
 			if(doc.getTerms()==null) continue;
 			for(Term term : doc.getTerms()){
@@ -185,7 +185,7 @@ public class SimilarityComputer {
 	 * 为文档中的每个词语计算特征值，类似词语的TF-IDF值。
 	 * @param docs
 	 */
-	public void computeTermEigenvalue(List<Document> docs){
+	private void computeTermEigenvalue(List<Document> docs){
 		if(docs==null) return;
 		Map<String, Integer> idrc = statInverseDocRefers(docs);
 		for(Document doc: docs){
@@ -199,7 +199,7 @@ public class SimilarityComputer {
 	 * @param totalDocs 总文档数。
 	 * @param idrc 所有文档全部词语逆向引用统计情况，必须是方法{@link #statInverseDocRefers(List)}的返回值。
 	 */
-	public void computeTermEigenvalue(Document doc, int totalDocs, Map<String, Integer> idrc){
+	private void computeTermEigenvalue(Document doc, int totalDocs, Map<String, Integer> idrc){
 		if(doc.getTerms()==null) return;
 		double squareSum = 0; //预计算向量特征值的一部分
 		for(Term term : doc.getTerms()){
@@ -215,6 +215,19 @@ public class SimilarityComputer {
 			squareSum += term.getEigenvalue() * term.getEigenvalue(); //预计算向量特征值的一部分
 		}
 		doc.setEigenvaluePart(Math.sqrt(squareSum)); //预计算向量特征值的一部分
+	}
+	
+	public Document analyseAndComputeTermEigenvalue(AddressEntity address){
+		//从文件缓存或内存缓存获取所有文档。
+		List<Document> docs = loadDocunentsFromCache(address);
+		if(docs.isEmpty()) {
+			throw new RuntimeException("No history data for: " 
+				+ address.getProvince().getName() + address.getCity().getName() );
+		}
+		//为词语计算特征值
+		Document doc = analyse(address);
+		computeTermEigenvalue(doc, docs.size(), IDRS_CACHE.get(buildCacheKey(address)));
+		return doc;
 	}
 	
 	/**
@@ -297,24 +310,7 @@ public class SimilarityComputer {
 		}
 		
 		//从文件缓存或内存缓存获取所有文档。
-		List<Document> allDocs = null;
-		String cacheKey = targetAddr.getProvince().getId() + "-" +targetAddr.getCity().getId();
-		if(targetAddr.getCity().getChildren()!=null)
-			cacheKey = cacheKey + "-" + targetAddr.getCounty().getId();
-		if(!cacheVectorsInMemory)
-			allDocs = loadDocVectorCache(cacheKey);
-		else{
-			allDocs = VECTORS_CACHE.get(cacheKey);
-			if(allDocs==null){
-				synchronized (VECTORS_CACHE) {
-					allDocs = VECTORS_CACHE.get(cacheKey);
-					if(allDocs==null){
-						allDocs = loadDocVectorCache(cacheKey);
-						VECTORS_CACHE.put(cacheKey, allDocs);
-					}
-				}
-			}
-		}
+		List<Document> allDocs = loadDocunentsFromCache(targetAddr);
 		if(allDocs.isEmpty()) {
 			throw new RuntimeException("No history data for: " 
 				+ targetAddr.getProvince().getName() + targetAddr.getCity().getName() );
@@ -322,17 +318,7 @@ public class SimilarityComputer {
 		
 		//为词语计算特征值
 		Document targetDoc = analyse(targetAddr);
-		Map<String, Integer> idrs = IDRS_CACHE.get(cacheKey);
-		if(idrs==null){
-			synchronized (IDRS_CACHE) {
-				idrs = IDRS_CACHE.get(cacheKey);
-				if(idrs==null){
-					idrs = statInverseDocRefers(allDocs);
-					IDRS_CACHE.put(cacheKey, idrs);
-				}
-			}
-		}
-		computeTermEigenvalue(targetDoc, allDocs.size(), idrs);
+		computeTermEigenvalue(targetDoc, allDocs.size(), IDRS_CACHE.get(buildCacheKey(targetAddr)));
 		
 		//对应地址库中每条地址计算相似度，并保留相似度最高的topN条地址
 		if(topN<=0) topN=5;
@@ -365,6 +351,48 @@ public class SimilarityComputer {
 		return silimarDocs;
 	}
 	
+	private List<Document> loadDocunentsFromCache(AddressEntity address){
+		String cacheKey = buildCacheKey(address);
+		if(cacheKey==null) return null;
+		
+		List<Document> docs = null;
+		if(!cacheVectorsInMemory)
+			docs = loadDocumentsFromFileCache(cacheKey);
+		else{
+			docs = VECTORS_CACHE.get(cacheKey);
+			if(docs==null){
+				synchronized (VECTORS_CACHE) {
+					docs = VECTORS_CACHE.get(cacheKey);
+					if(docs==null){
+						docs = loadDocumentsFromFileCache(cacheKey);
+						if(docs==null) docs = new ArrayList<Document>(0);
+						VECTORS_CACHE.put(cacheKey, docs);
+					}
+				}
+			}
+		}
+		Map<String, Integer> idrs = IDRS_CACHE.get(cacheKey);
+		if(idrs==null){
+			synchronized (IDRS_CACHE) {
+				idrs = IDRS_CACHE.get(cacheKey);
+				if(idrs==null){
+					idrs = statInverseDocRefers(docs);
+					IDRS_CACHE.put(cacheKey, idrs);
+				}
+			}
+		}
+		return docs;
+	}
+	
+	private String buildCacheKey(AddressEntity address){
+		if(address==null || !address.hasProvince() || !address.hasCity()) return null;
+		StringBuilder sb = new StringBuilder();
+		sb.append(address.getProvince().getId()).append('-').append(address.getCity().getId());
+		if(address.getCity().getChildren()!=null)
+			sb.append('-').append(address.getCounty().getId());
+		return sb.toString();
+	}
+	
 	/**
 	 * 冒泡排序，按相似度从大到小顺序排列
 	 * 
@@ -388,7 +416,7 @@ public class SimilarityComputer {
 		}
 	}
 	
-	private List<Document> loadDocVectorCache(String key){
+	private List<Document> loadDocumentsFromFileCache(String key){
 		List<Document> docs = new ArrayList<Document>();
 		
 		String filePath = getCacheFolder() + "/" + key + ".vt";
@@ -414,7 +442,7 @@ public class SimilarityComputer {
 		return docs;
 	}
 	
-	public void buildDocVectorCache(String key, List<AddressEntity> addresses){
+	public void buildDocumentFileCache(String key, List<AddressEntity> addresses){
 		long start = System.currentTimeMillis();
 		
 		if(addresses==null || addresses.isEmpty()) return;
