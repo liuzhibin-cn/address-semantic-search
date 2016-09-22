@@ -45,9 +45,9 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 			model.put("ex", ex);
 			vm = "templates/find-addr-error.vm";
 		}
-		
-		File file = new File(HttpDemoServiceImpl.class.getClassLoader().getResource(vm).getPath()); 
-		String vmContent = FileUtil.readTextFile(file, "utf-8");
+		 
+		String vmContent = FileUtil.readClassPathFile(vm, "utf-8");
+		LOG.info(vmContent);
 		
         StringWriter writer = new StringWriter();
         try {

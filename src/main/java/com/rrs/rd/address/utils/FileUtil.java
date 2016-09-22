@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.OutputStream;
 
@@ -42,6 +43,25 @@ public final class FileUtil {
             sr.close();
 	    } catch (Exception e) {
 	        LOG.error("Can not read text file: " + file.getPath(), e);
+	    }
+		return sb.toString();
+	}
+	
+	public static String readClassPathFile(String path, String encoding){
+		if(path==null || path.isEmpty()) return null;
+		StringBuilder sb = new StringBuilder();
+		try {
+			InputStream stream = FileUtil.class.getClassLoader().getResourceAsStream(path);
+            InputStreamReader sr = new InputStreamReader(stream, encoding);
+            BufferedReader br = new BufferedReader(sr);
+            String line = null;
+            while((line = br.readLine()) != null){
+                sb.append(line);
+            }
+            br.close();
+            sr.close();
+	    } catch (Exception e) {
+	        LOG.error("Can not read class path resource: " + path, e);
 	    }
 		return sb.toString();
 	}
