@@ -48,13 +48,15 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 			sb.append("<br />用时：").append((System.currentTimeMillis()-start)/1000.0).append("秒");
 		}else{
 			sb.append("发生错误：").append(ex.getMessage());
+			if(!RuntimeException.class.isAssignableFrom(ex.getClass())){
 			sb.append("<br />").append(ex.getClass().getName());
-			if(ex.getStackTrace()!=null){
-				for(StackTraceElement ste : ex.getStackTrace()){
-					sb.append("<br /><span style='margin-left:20px'>at ")
-						.append(ste.getClassName())
-						.append('.').append(ste.getMethodName())
-						.append('(').append(ste.getFileName()).append(':').append(ste.getLineNumber()).append(")</span>");
+				if(ex.getStackTrace()!=null){
+					for(StackTraceElement ste : ex.getStackTrace()){
+						sb.append("<br /><span style='margin-left:20px'>at ")
+							.append(ste.getClassName())
+							.append('.').append(ste.getMethodName())
+							.append('(').append(ste.getFileName()).append(':').append(ste.getLineNumber()).append(")</span>");
+					}
 				}
 			}
 		}

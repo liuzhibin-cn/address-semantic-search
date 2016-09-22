@@ -43,7 +43,7 @@ public class VectorBuilder {
 						List<AddressEntity> addresses = addrService.loadAddresses(province.getId(), city.getId(), county.getId());
 						simiService.buildDocVectorCache(province.getId() + "-" + city.getId() + "-" + county.getId(), addresses);
 						System.out.println("> [" + format.format(startDate) + " -> " + format.format(new Date()) + "] "
-							+ province.getName() + "-" + city.getName() + ", " + addresses.size() + " addresses, " 
+							+ province.getName() + "-" + city.getName() + "-" + county.getName() + ", " + addresses.size() + " addresses, " 
 							+ "elapsed: " + (System.currentTimeMillis()-start)/1000.0 + "s.");
 					}catch(Exception ex){
 						System.out.println("> [" + format.format(startDate) + " -> " + format.format(new Date()) + "] "
