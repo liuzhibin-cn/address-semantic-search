@@ -1,5 +1,6 @@
 package com.rrs.rd.address.demo;
 
+import java.io.File;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -38,6 +39,7 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 		Map<String, Object> model = new HashMap<String, Object>();
 		model.put("addressText", addrText);
 		
+		String path = HttpDemoServiceImpl.class.getPackage().getName().replace('.', File.separatorChar);
 		String vm = "find-addr.vm";
 		try{
 			this.findSimilarAddress(addrText, model);
@@ -51,7 +53,7 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 			vm = "find-addr-error.vm";
 		}
 		 
-		String vmContent = FileUtil.readClassPathFile(vm, "utf-8");
+		String vmContent = FileUtil.readClassPathFile(path + File.separatorChar + vm, "utf-8");
 		LOG.info(vmContent);
 		
         StringWriter writer = new StringWriter();
