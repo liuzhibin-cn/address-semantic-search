@@ -1,4 +1,4 @@
-package com.rrs.rd.address.test.match;
+package com.rrs.rd.address.test;
 
 import junit.framework.TestCase;
 
@@ -8,8 +8,8 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import com.google.gson.GsonBuilder;
 
-public class BaseTestCase extends TestCase {
-	protected final static Logger LOG = LoggerFactory.getLogger(BaseTestCase.class);
+public class TestBase extends TestCase {
+	protected final static Logger LOG = LoggerFactory.getLogger(TestBase.class);
     protected ClassPathXmlApplicationContext context = null;
 
     public void setUp() {

@@ -23,6 +23,10 @@
         </layout>
     </appender>
  
+ 	<logger name="com.rrs.rd.address.test" additivity="false">
+        <level value="INFO"/>
+        <appender-ref ref="console"/>
+    </logger>
  	<logger name="com.rrs.rd.address.similarity" additivity="false">
         <level value="INFO"/>
         <appender-ref ref="file"/>

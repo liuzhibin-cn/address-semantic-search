@@ -18,8 +18,8 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.rrs.rd.address.interpret.AddressInterpreter;
 import com.rrs.rd.address.persist.AddressEntity;
-import com.rrs.rd.address.persist.AddressPersister;
 import com.rrs.rd.address.persist.RegionEntity;
 import com.rrs.rd.address.similarity.segment.IKAnalyzerSegmenter;
 
@@ -72,7 +72,7 @@ public class SimilarityComputer {
 	private static double MIDDLE_TERM_WEIGHT = 3; //权重中值
 	private static double LOW_TERM_WEIGHT = 0.5; //权重低值
 	
-	private AddressPersister persister = null;
+	private AddressInterpreter interpreter = null;
 	private Segmenter segmenter = new IKAnalyzerSegmenter();
 	private List<String> defaultTokens = new ArrayList<String>(0);
 	private String cacheFolder;
@@ -282,7 +282,7 @@ public class SimilarityComputer {
 		//解析地址
 		if(addressText==null || addressText.trim().isEmpty())
 			throw new IllegalArgumentException("Null or empty address text! Please provider a valid address.");
-		AddressEntity targetAddr = this.persister.interpretAddress(addressText);
+		AddressEntity targetAddr = this.interpreter.interpretAddress(addressText);
 		if(targetAddr==null){
 			LOG.warn("[doc] [find] [addr-err] null << " + addressText);
 			throw new RuntimeException("Can't interpret address!");
@@ -466,8 +466,8 @@ public class SimilarityComputer {
 	public void setCacheVectorsInMemory(boolean value){
 		this.cacheVectorsInMemory = value;
 	}
-	public void setPersister(AddressPersister value){
-		this.persister = value;
+	public void setInterpreter(AddressInterpreter value){
+		this.interpreter = value;
 	}
 	public void setCacheFolder(String value){
 		this.cacheFolder = value;

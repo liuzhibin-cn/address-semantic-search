@@ -10,13 +10,14 @@ import java.util.List;
 
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
+import com.rrs.rd.address.interpret.AddressInterpreter;
+
 /**
  * 地址导入工具类。
  * @author Richie 刘志斌 yudi@sina.com
  */
-public class AddressFileImporter {
+public class FileImporter {
 	private static ClassPathXmlApplicationContext context = null;
-	private static AddressPersister persister = null;
 	
 	/**
 	 * 第一个输入参数必须是地址文件路径。地址文件格式：省份;城市;区县;详细地址
@@ -29,18 +30,23 @@ public class AddressFileImporter {
 	 * @param args
 	 */
 	public static void main(String[] args){
+		long startAt = System.currentTimeMillis();
+		int imported = 0;
+		AddressPersister persister = null;
+		AddressInterpreter interpreter = null;
 		//启动spring容器
 		try{
 			context = new ClassPathXmlApplicationContext(new String[] { "spring-config.xml" });
+			context.start(); 
 			persister = context.getBean(AddressPersister.class);
-			if(context==null || persister==null)
-				throw new Exception("无法初始化Spring ApplicationContext或者AddressPersister实例");
+			interpreter = context.getBean(AddressInterpreter.class);
+			if(context==null || persister==null || interpreter==null)
+				throw new Exception("无法启动spring容器，或者启动之后未实例化AddressPersister、AddressInterpreter");
 		}catch(Exception ex){
 			System.out.println("> [错误] spring-config.xml文件配置错误：" + ex.getMessage());
 			ex.printStackTrace(System.out);
 			return;
 		}
-		context.start(); 
 		try{
 			//检查地址文件路径
 			if(args==null || args.length<=0 || args[0]==null || args[0].trim().length()<=0){
@@ -52,7 +58,7 @@ public class AddressFileImporter {
 				System.out.println("> [错误] 地址库文件\"" + args[0] + "\"不存在");
 				return;
 			}
-			importAddressFile(file);
+			imported = importAddressFile(file, persister, interpreter);
 		}catch(Exception ex){
 			System.out.println("> [错误] 导入地址库失败：" + ex.getMessage());
 			ex.printStackTrace(System.out);
@@ -60,12 +66,10 @@ public class AddressFileImporter {
 			context.close();
 		}
 		
-		System.out.println("> 导入结束。耗时情况: db " + (persister.timeDb/1000.0) + "s, cache " + (persister.timeCache/1000.0) + "s"
-				+ ", interpret " + (persister.timeInter/1000.0) + "s. region " + (persister.timeRegion/1000.0) + "s"
-				+ ", rm " + (persister.timeRmRed/1000.0) + "s, other " + (persister.timeInter-persister.timeRegion-persister.timeRmRed)/1000.0 + "s");
+		System.out.println("> 导入: " + imported + "，用时: " + (System.currentTimeMillis() - startAt)/1000.0 + "s.");
 	}
 	
-	private static int importAddressFile(File file){
+	private static int importAddressFile(File file, AddressPersister persister, AddressInterpreter interpreter){
 		int imported = 0;
 		
 		InputStreamReader sr = null;
@@ -80,22 +84,19 @@ public class AddressFileImporter {
 		}
 		
 		String line = null;
-		List<String> addresses = new ArrayList<String>();
+		List<String> addrTextList = new ArrayList<String>();
 		System.out.println("> 开始导入地址库");
 		
 		try{
             while((line = br.readLine()) != null){
-            	addresses.add(line);
+            	addrTextList.add(line);
             }
             try{
-            	imported = persister.importAddress(addresses);
+            	List<AddressEntity> addresses = interpreter.interpret(addrTextList); 
+            	imported = persister.importAddresses(addresses);
         	}catch(RuntimeException ex){
         		System.out.println("> [错误] " + ex.getMessage());
         		ex.printStackTrace(System.out);
-        	}catch(Exception ex){
-        		System.out.println("> [错误] " + ex.getMessage());
-        		ex.printStackTrace(System.out);
-        		return imported;
         	}
 		} catch (Exception ex) {
 			System.out.println("> [错误] 导入失败：" + ex.getMessage());

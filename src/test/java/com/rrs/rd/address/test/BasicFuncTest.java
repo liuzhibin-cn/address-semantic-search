@@ -1,4 +1,4 @@
-package com.rrs.rd.address.test.match;
+package com.rrs.rd.address.test;
 
 import java.util.HashSet;
 import java.util.Set;

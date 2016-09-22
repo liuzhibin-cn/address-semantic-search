@@ -1,4 +1,4 @@
-package com.rrs.rd.address.test.misc;
+package com.rrs.rd.address.test;
 
 import org.junit.Test;
 

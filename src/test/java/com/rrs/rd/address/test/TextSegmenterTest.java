@@ -1,4 +1,4 @@
-package com.rrs.rd.address.test.segmenter;
+package com.rrs.rd.address.test;
 
 import java.util.HashSet;
 import java.util.List;

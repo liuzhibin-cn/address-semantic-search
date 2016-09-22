@@ -1,4 +1,4 @@
-package com.rrs.rd.address.test.similarity;
+package com.rrs.rd.address.test;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -8,9 +8,8 @@ import org.junit.Test;
 import com.rrs.rd.address.similarity.Document;
 import com.rrs.rd.address.similarity.SimilarityComputer;
 import com.rrs.rd.address.similarity.Term;
-import com.rrs.rd.address.test.match.BaseTestCase;
 
-public class SimilarityServiceTest extends BaseTestCase {
+public class SimilarityServiceTest extends TestBase {
 	//TODO: 提升相似度。北京北京东城区新发地汉龙南站南B区25号
 	@Test
 	public void testSerialize(){

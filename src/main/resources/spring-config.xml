@@ -45,13 +45,12 @@
 		<property name="addressDao" ref="addressDao" />
 	</bean>
 	<bean id="computer" class="com.rrs.rd.address.similarity.SimilarityComputer">
-		<property name="persister" ref="persister" />
+		<property name="interpreter" ref="interpreter" />
 		<property name="cacheFolder" value="${cache.path}" />
 		<property name="cacheVectorsInMemory" value="${cache.vectors.in.memory}" />
 	</bean>
-	<bean id="persister" class="com.rrs.rd.address.persist.AddressPersister">
-		<property name="addressDao" ref="addressDao" />
-		<property name="regionDao" ref="regionDao" />
+	<bean id="interpreter" class="com.rrs.rd.address.interpret.AddressInterpreter">
+		<property name="persister" ref="persister" />
 		<property name="forbiddenFollowingChars">
 			<list>
 				<value>路</value>
@@ -71,6 +70,10 @@
 				<value>县区直属镇</value>
 			</list>
 		</property>
+	</bean>
+	<bean id="persister" class="com.rrs.rd.address.persist.AddressPersister">
+		<property name="addressDao" ref="addressDao" />
+		<property name="regionDao" ref="regionDao" />
 	</bean>
 	<bean id="addressDao" class="org.mybatis.spring.mapper.MapperFactoryBean">
 		<property name="mapperInterface" value="com.rrs.rd.address.persist.dao.AddressDao" />

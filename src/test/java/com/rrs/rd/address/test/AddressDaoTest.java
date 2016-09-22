@@ -1,4 +1,4 @@
-package com.rrs.rd.address.test.match;
+package com.rrs.rd.address.test;
 
 import org.junit.Test;
 
@@ -9,7 +9,7 @@ import com.rrs.rd.address.persist.RegionType;
 import com.rrs.rd.address.persist.dao.AddressDao;
 import com.rrs.rd.address.persist.dao.RegionDao;
 
-public class AddressDaoTest extends BaseTestCase {
+public class AddressDaoTest extends TestBase {
 	@Test
 	public void testAddressDao(){
 		AddressDao dao = context.getBean(AddressDao.class);
