@@ -1,4 +1,4 @@
-package com.rrs.rd.address.segmenter;
+package com.rrs.rd.address.similarity.segment;
 
 import java.util.ArrayList;
 import java.util.List;

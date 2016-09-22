@@ -1,11 +1,11 @@
-package com.rrs.rd.address.dao;
+package com.rrs.rd.address.persist.dao;
 
 import java.util.List;
 
 import org.apache.ibatis.annotations.Flush;
 import org.apache.ibatis.annotations.Param;
 
-import com.rrs.rd.address.service.AddressEntity;
+import com.rrs.rd.address.persist.AddressEntity;
 
 /**
  * 

@@ -16,9 +16,9 @@
 	<import resource="datasource-config.xml" />
 
 	<dubbo:application name="address-similarity" />
-	<dubbo:protocol name="rest" server="jetty" host="127.0.0.1" port="8000" contextpath="service"
+	<dubbo:protocol name="rest" server="jetty" host="127.0.0.1" port="8000" contextpath="test"
 		extension="com.alibaba.dubbo.rpc.protocol.rest.support.LoggingFilter" />
-	<dubbo:service interface="com.rrs.rd.address.service.HttpDemoService" ref="demoService" 
+	<dubbo:service interface="com.rrs.rd.address.demo.HttpDemoService" ref="demoService" 
 		register="false" protocol="rest" />
 
 	<!-- bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
@@ -36,20 +36,20 @@
 		<property name="typeHandlers">
 			<array>
 				<bean class="com.rrs.common.dao.ListOnSimicolonSeparatedStringColumnTypeHandler" />
-				<bean class="com.rrs.rd.address.dao.RegionTypeTypeHandler" />
+				<bean class="com.rrs.rd.address.persist.dao.RegionTypeTypeHandler" />
 			</array>
 		</property>
 	</bean>
-	<bean id="demoService" class="com.rrs.rd.address.service.HttpDemoServiceImpl">
-		<property name="similarityService" ref="similarityService" />
+	<bean id="demoService" class="com.rrs.rd.address.demo.HttpDemoServiceImpl">
+		<property name="computer" ref="computer" />
 		<property name="addressDao" ref="addressDao" />
 	</bean>
-	<bean id="similarityService" class="com.rrs.rd.address.similarity.SimilarityService">
-		<property name="addressService" ref="addressService" />
+	<bean id="computer" class="com.rrs.rd.address.similarity.SimilarityComputer">
+		<property name="persister" ref="persister" />
 		<property name="cacheFolder" value="${cache.path}" />
 		<property name="cacheVectorsInMemory" value="${cache.vectors.in.memory}" />
 	</bean>
-	<bean id="addressService" class="com.rrs.rd.address.service.AddressService">
+	<bean id="persister" class="com.rrs.rd.address.persist.AddressPersister">
 		<property name="addressDao" ref="addressDao" />
 		<property name="regionDao" ref="regionDao" />
 		<property name="forbiddenFollowingChars">
@@ -73,12 +73,12 @@
 		</property>
 	</bean>
 	<bean id="addressDao" class="org.mybatis.spring.mapper.MapperFactoryBean">
-		<property name="mapperInterface" value="com.rrs.rd.address.dao.AddressDao" />
+		<property name="mapperInterface" value="com.rrs.rd.address.persist.dao.AddressDao" />
 		<!-- property name="sqlSessionTemplate" ref="sqlSession" / -->
 		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
 	</bean>
 	<bean id="regionDao"  class="org.mybatis.spring.mapper.MapperFactoryBean">
-		<property name="mapperInterface" value="com.rrs.rd.address.dao.RegionDao" />
+		<property name="mapperInterface" value="com.rrs.rd.address.persist.dao.RegionDao" />
 		<!-- property name="sqlSessionTemplate" ref="sqlSession" / -->
 		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
 	</bean>

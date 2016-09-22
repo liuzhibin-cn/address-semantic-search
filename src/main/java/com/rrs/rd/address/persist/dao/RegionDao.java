@@ -1,8 +1,8 @@
-package com.rrs.rd.address.dao;
+package com.rrs.rd.address.persist.dao;
 
 import java.util.List;
 
-import com.rrs.rd.address.service.RegionEntity;
+import com.rrs.rd.address.persist.RegionEntity;
 
 /**
  * 

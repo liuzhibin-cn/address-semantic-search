@@ -1,4 +1,4 @@
-package com.rrs.rd.address.service;
+package com.rrs.rd.address.persist;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -16,7 +16,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
  */
 public class AddressFileImporter {
 	private static ClassPathXmlApplicationContext context = null;
-	private static AddressService service = null;
+	private static AddressPersister persister = null;
 	
 	/**
 	 * 第一个输入参数必须是地址文件路径。地址文件格式：省份;城市;区县;详细地址
@@ -32,9 +32,9 @@ public class AddressFileImporter {
 		//启动spring容器
 		try{
 			context = new ClassPathXmlApplicationContext(new String[] { "spring-config.xml" });
-			service = context.getBean(AddressService.class);
-			if(context==null || service==null)
-				throw new Exception("无法初始化Spring ApplicationContext或者AddressService实例");
+			persister = context.getBean(AddressPersister.class);
+			if(context==null || persister==null)
+				throw new Exception("无法初始化Spring ApplicationContext或者AddressPersister实例");
 		}catch(Exception ex){
 			System.out.println("> [错误] spring-config.xml文件配置错误：" + ex.getMessage());
 			ex.printStackTrace(System.out);
@@ -60,9 +60,9 @@ public class AddressFileImporter {
 			context.close();
 		}
 		
-		System.out.println("> 导入结束。耗时情况: db " + (service.timeDb/1000.0) + "s, cache " + (service.timeCache/1000.0) + "s"
-				+ ", interpret " + (service.timeInter/1000.0) + "s. region " + (service.timeRegion/1000.0) + "s"
-				+ ", rm " + (service.timeRmRed/1000.0) + "s, other " + (service.timeInter-service.timeRegion-service.timeRmRed)/1000.0 + "s");
+		System.out.println("> 导入结束。耗时情况: db " + (persister.timeDb/1000.0) + "s, cache " + (persister.timeCache/1000.0) + "s"
+				+ ", interpret " + (persister.timeInter/1000.0) + "s. region " + (persister.timeRegion/1000.0) + "s"
+				+ ", rm " + (persister.timeRmRed/1000.0) + "s, other " + (persister.timeInter-persister.timeRegion-persister.timeRmRed)/1000.0 + "s");
 	}
 	
 	private static int importAddressFile(File file){
@@ -88,7 +88,7 @@ public class AddressFileImporter {
             	addresses.add(line);
             }
             try{
-            	imported = service.importAddress(addresses);
+            	imported = persister.importAddress(addresses);
         	}catch(RuntimeException ex){
         		System.out.println("> [错误] " + ex.getMessage());
         		ex.printStackTrace(System.out);

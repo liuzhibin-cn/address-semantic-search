@@ -1,4 +1,4 @@
-package com.rrs.rd.address.dao;
+package com.rrs.rd.address.persist.dao;
 
 import java.sql.CallableStatement;
 import java.sql.PreparedStatement;
@@ -7,8 +7,8 @@ import java.sql.SQLException;
 
 import org.apache.ibatis.type.TypeHandler;
 
-import com.rrs.rd.address.service.AddressService;
-import com.rrs.rd.address.service.RegionEntity;
+import com.rrs.rd.address.persist.AddressPersister;
+import com.rrs.rd.address.persist.RegionEntity;
 
 import org.apache.ibatis.type.BaseTypeHandler;
 import org.apache.ibatis.type.JdbcType;
@@ -47,20 +47,20 @@ public class RegionPropertyTypeHandler extends BaseTypeHandler<RegionEntity> {
 	public RegionEntity getNullableResult(ResultSet rs, String columnName) throws SQLException {
 		int value = rs.getInt(columnName);
 		if(value<=0) return null;
-		return AddressService.instance().getRegion(value);
+		return AddressPersister.instance().getRegion(value);
 	}
 
 	@Override
 	public RegionEntity getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
 		int value = rs.getInt(columnIndex);
 		if(value<=0) return null;
-		return AddressService.instance().getRegion(value);
+		return AddressPersister.instance().getRegion(value);
 	}
 
 	@Override
 	public RegionEntity getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
 		int value = cs.getInt(columnIndex);
 		if(value<=0) return null;
-		return AddressService.instance().getRegion(value);
+		return AddressPersister.instance().getRegion(value);
 	}
 }

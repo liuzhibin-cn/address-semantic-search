@@ -1,4 +1,4 @@
-package com.rrs.rd.address.service;
+package com.rrs.rd.address.persist;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -15,8 +15,8 @@ import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;
 import org.springframework.context.ApplicationContextAware;
 
-import com.rrs.rd.address.dao.AddressDao;
-import com.rrs.rd.address.dao.RegionDao;
+import com.rrs.rd.address.persist.dao.AddressDao;
+import com.rrs.rd.address.persist.dao.RegionDao;
 import com.rrs.rd.address.utils.LogUtil;
 import com.rrs.rd.address.utils.StringUtil;
 
@@ -24,8 +24,8 @@ import com.rrs.rd.address.utils.StringUtil;
  * {@link AddressEntity}和{@link RegionEntity}的操作逻辑。
  * @author Richie 刘志斌 yudi@sina.com
  */
-public class AddressService implements ApplicationContextAware {
-	private final static Logger LOG = LoggerFactory.getLogger(AddressService.class);
+public class AddressPersister implements ApplicationContextAware {
+	private final static Logger LOG = LoggerFactory.getLogger(AddressPersister.class);
 	
 	private static ApplicationContext context = null;
 	private AddressDao addressDao;
@@ -97,8 +97,8 @@ public class AddressService implements ApplicationContextAware {
 	 * 获取AddressService实例bean。
 	 * @return
 	 */
-	public static AddressService instance(){
-		return context.getBean(AddressService.class);
+	public static AddressPersister instance(){
+		return context.getBean(AddressPersister.class);
 	}
 
 	public long timeDb=0, timeCache=0, timeInter=0, timeRegion=0, timeRmRed=0

@@ -1,4 +1,4 @@
-package com.rrs.rd.address.service;
+package com.rrs.rd.address.persist;
 
 import java.io.Serializable;
 import java.util.ArrayList;

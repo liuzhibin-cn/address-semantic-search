@@ -5,11 +5,11 @@ package com.rrs.rd.address.similarity;
  * @author Richie 刘志斌 yudi@sina.com
  * 2016年9月21日
  */
-public class SimilarDocumentResult {
+public class SimilarDocResult {
 	private Document document;
 	private double similarity;
 	
-	public SimilarDocumentResult(Document document, double similarity){
+	public SimilarDocResult(Document document, double similarity){
 		this.document = document;
 		this.similarity = similarity;
 	}

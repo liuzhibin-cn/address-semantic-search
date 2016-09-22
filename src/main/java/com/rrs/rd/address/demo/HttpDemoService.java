@@ -1,4 +1,4 @@
-package com.rrs.rd.address.service;
+package com.rrs.rd.address.demo;
 
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;

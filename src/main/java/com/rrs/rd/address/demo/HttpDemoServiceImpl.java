@@ -1,4 +1,4 @@
-package com.rrs.rd.address.service;
+package com.rrs.rd.address.demo;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -6,15 +6,16 @@ import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.rrs.rd.address.dao.AddressDao;
-import com.rrs.rd.address.segmenter.IKAnalyzerSegmenter;
+import com.rrs.rd.address.persist.AddressEntity;
+import com.rrs.rd.address.persist.dao.AddressDao;
 import com.rrs.rd.address.similarity.Segmenter;
-import com.rrs.rd.address.similarity.SimilarDocumentResult;
-import com.rrs.rd.address.similarity.SimilarityService;
+import com.rrs.rd.address.similarity.SimilarDocResult;
+import com.rrs.rd.address.similarity.SimilarityComputer;
+import com.rrs.rd.address.similarity.segment.IKAnalyzerSegmenter;
 
 public class HttpDemoServiceImpl implements HttpDemoService {
 	private final static Logger LOG = LoggerFactory.getLogger(HttpDemoServiceImpl.class);
-	private SimilarityService simiService = null;
+	private SimilarityComputer computer = null;
 	private AddressDao dao = null;
 	
 	public String find(String addrText){
@@ -66,10 +67,10 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 	}
 	
 	private List<String> findSimilarAddress(String addrText, Segmenter segmenter){
-		List<SimilarDocumentResult> similarDocs = simiService.findSimilarAddress(addrText, 5);
+		List<SimilarDocResult> similarDocs = computer.findSimilarAddress(addrText, 5);
 		List<AddressEntity> similarAddrs = new ArrayList<AddressEntity>(5);
 		for(int i=0; i<similarDocs.size(); i++){
-			SimilarDocumentResult doc = similarDocs.get(i);
+			SimilarDocResult doc = similarDocs.get(i);
 			AddressEntity addr = dao.get(doc.getDocument().getId());
 			similarAddrs.add(addr);
 		}
@@ -86,8 +87,8 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 		return result;
 	}
 	
-	public void setSimilarityService(SimilarityService service){
-		this.simiService = service;
+	public void setComputer(SimilarityComputer value){
+		this.computer = value;
 	}
 	public void setAddressDao(AddressDao dao){
 		this.dao = dao;

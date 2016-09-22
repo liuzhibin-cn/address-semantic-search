@@ -26,16 +26,16 @@
  	<logger name="com.rrs.rd.address.similarity" additivity="false">
         <level value="INFO"/>
         <appender-ref ref="file"/>
-    </logger> 
- 	<logger name="com.rrs.rd.address.service" additivity="false">
+    </logger>
+    <!-- <logger name="com.rrs.rd.address.persist.dao" additivity="false">
+        <level value="ERROR"/>  
+        <appender-ref ref="sql"/>
+    </logger>  --> 
+ 	<logger name="com.rrs.rd.address.persist" additivity="false">
         <level value="INFO"/>
         <appender-ref ref="file"/>
         <!-- <appender-ref ref="console"/> -->
-    </logger> 
-    <!-- <logger name="com.rrs.rd.address.dao" additivity="false">
-        <level value="ERROR"/>  
-        <appender-ref ref="sql"/>
-    </logger>  -->
+    </logger>
     <!-- <logger name="com.alibaba.dubbo.rpc.protocol.rest.support.LoggingFilter" additivity="false">
     	<level value="INFO"/>
         <appender-ref ref="file"/>

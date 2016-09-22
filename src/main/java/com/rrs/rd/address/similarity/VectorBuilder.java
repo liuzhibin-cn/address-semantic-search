@@ -6,24 +6,24 @@ import java.util.List;
 
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
-import com.rrs.rd.address.service.AddressEntity;
-import com.rrs.rd.address.service.AddressService;
-import com.rrs.rd.address.service.RegionEntity;
+import com.rrs.rd.address.persist.AddressEntity;
+import com.rrs.rd.address.persist.AddressPersister;
+import com.rrs.rd.address.persist.RegionEntity;
 
 public class VectorBuilder {
 	private static ClassPathXmlApplicationContext context = null;
-	private static AddressService addrService = null;
-	private static SimilarityService simiService = null;
+	private static AddressPersister persister = null;
+	private static SimilarityComputer computer = null;
 	private static SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss.SSS");
 
 	public static void main(String[] args) {
 		//启动spring容器
 		try{
 			context = new ClassPathXmlApplicationContext(new String[] { "spring-config.xml" });
-			simiService = context.getBean(SimilarityService.class);
-			addrService = context.getBean(AddressService.class);
-			if(context==null || simiService==null || addrService==null){
-				System.out.println("> [错误] 应用初始化失败，无法初始化spring context或者AddressService、SimilarityService对象");
+			computer = context.getBean(SimilarityComputer.class);
+			persister = context.getBean(AddressPersister.class);
+			if(context==null || computer==null || persister==null){
+				System.out.println("> [错误] 应用初始化失败，无法初始化spring context或者AddressPersister、SimilarityComputer对象");
 				return;
 			}
 		}catch(Exception ex){
@@ -33,15 +33,15 @@ public class VectorBuilder {
 		}
 		context.start(); 
 		
-		RegionEntity root = addrService.rootRegion();
+		RegionEntity root = persister.rootRegion();
 		for(RegionEntity province : root.getChildren()){
 			for(RegionEntity city : province.getChildren()){
 				if(city.getChildren()==null){
 					long start = System.currentTimeMillis();
 					Date startDate = new Date();
 					try{
-						List<AddressEntity> addresses = addrService.loadAddresses(province.getId(), city.getId(), 0);
-						simiService.buildDocVectorCache(province.getId() + "-" + city.getId(), addresses);
+						List<AddressEntity> addresses = persister.loadAddresses(province.getId(), city.getId(), 0);
+						computer.buildDocVectorCache(province.getId() + "-" + city.getId(), addresses);
 						System.out.println("> [" + format.format(startDate) + " -> " + format.format(new Date()) + "] "
 							+ province.getName() + "-" + city.getName() + ", " + addresses.size() + " addresses, " 
 							+ "elapsed: " + (System.currentTimeMillis()-start)/1000.0 + "s.");
@@ -55,8 +55,8 @@ public class VectorBuilder {
 						long start = System.currentTimeMillis();
 						Date startDate = new Date();
 						try{
-							List<AddressEntity> addresses = addrService.loadAddresses(province.getId(), city.getId(), county.getId());
-							simiService.buildDocVectorCache(province.getId() + "-" + city.getId() + "-" + county.getId(), addresses);
+							List<AddressEntity> addresses = persister.loadAddresses(province.getId(), city.getId(), county.getId());
+							computer.buildDocVectorCache(province.getId() + "-" + city.getId() + "-" + county.getId(), addresses);
 							System.out.println("> [" + format.format(startDate) + " -> " + format.format(new Date()) + "] "
 								+ province.getName() + "-" + city.getName() + "-" + county.getName() + ", " + addresses.size() + " addresses, " 
 								+ "elapsed: " + (System.currentTimeMillis()-start)/1000.0 + "s.");

@@ -1,4 +1,4 @@
-package com.rrs.rd.address.service;
+package com.rrs.rd.address.persist;
 
 import com.rrs.common.dao.IntegerEnum;
 

@@ -2,18 +2,18 @@ package com.rrs.rd.address.test.match;
 
 import org.junit.Test;
 
-import com.rrs.rd.address.dao.AddressDao;
-import com.rrs.rd.address.dao.RegionDao;
-import com.rrs.rd.address.service.AddressEntity;
-import com.rrs.rd.address.service.AddressService;
-import com.rrs.rd.address.service.RegionEntity;
-import com.rrs.rd.address.service.RegionType;
+import com.rrs.rd.address.persist.AddressEntity;
+import com.rrs.rd.address.persist.AddressPersister;
+import com.rrs.rd.address.persist.RegionEntity;
+import com.rrs.rd.address.persist.RegionType;
+import com.rrs.rd.address.persist.dao.AddressDao;
+import com.rrs.rd.address.persist.dao.RegionDao;
 
 public class AddressDaoTest extends BaseTestCase {
 	@Test
 	public void testAddressDao(){
 		AddressDao dao = context.getBean(AddressDao.class);
-		AddressService service = context.getBean(AddressService.class);
+		AddressPersister service = context.getBean(AddressPersister.class);
 		
 		AddressEntity address = new AddressEntity();
 		address.setText("xx镇xx村xx组");

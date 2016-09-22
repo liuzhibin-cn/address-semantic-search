@@ -9,13 +9,13 @@ import java.io.InputStreamReader;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import com.rrs.rd.address.service.AddressEntity;
-import com.rrs.rd.address.service.AddressService;
+import com.rrs.rd.address.persist.AddressEntity;
+import com.rrs.rd.address.persist.AddressPersister;
 
 public class AddressInterpretTest extends BaseTestCase {
 	@Test
 	public void testInterpretAddress(){
-		AddressService service = context.getBean(AddressService.class);
+		AddressPersister service = context.getBean(AddressPersister.class);
 		
 		//测试正常解析
 		AddressEntity addr = service.interpretAddress("青海海西格尔木市河西街道郭镇盐桥村");
@@ -164,7 +164,7 @@ public class AddressInterpretTest extends BaseTestCase {
 	
 	@Test
 	public void testExtractRegion(){
-		AddressService service = context.getBean(AddressService.class);
+		AddressPersister service = context.getBean(AddressPersister.class);
 		
 		//测试 正常的地址解析
 		this.extractRegion(service, "广东广州从化区温泉镇新田村", "温泉镇新田村", 440000, 440100, 440184, "测试-正常解析");
@@ -248,7 +248,7 @@ public class AddressInterpretTest extends BaseTestCase {
 	
 	@Test
 	public void testRemoveRedundancy(){
-		AddressService service = context.getBean(AddressService.class);
+		AddressPersister service = context.getBean(AddressPersister.class);
 		
 		//测试正常删除冗余
 		this.removeRedundancy(service, "湖南长沙望城区湖南省长沙市望城县长沙市望城区金星北路尚公馆", "金星北路尚公馆"
@@ -280,7 +280,7 @@ public class AddressInterpretTest extends BaseTestCase {
 	
 	@Test
 	public void testRemoveSpecialChar(){
-		AddressService service = context.getBean(AddressService.class);
+		AddressPersister service = context.getBean(AddressPersister.class);
 		AddressEntity addr = new AddressEntity();
 		
 		addr.setText("四川成都武侯区武侯大道铁佛段千盛百货\\/ \r\n\t对面200米金履三路288号绿地610015圣路易名邸");
@@ -290,7 +290,7 @@ public class AddressInterpretTest extends BaseTestCase {
 	
 	@Test
 	public void testExtractBracket(){
-		AddressService service = context.getBean(AddressService.class);
+		AddressPersister service = context.getBean(AddressPersister.class);
 		AddressEntity addr = new AddressEntity();
 		
 		//测试正常抽取括号内容
@@ -306,7 +306,7 @@ public class AddressInterpretTest extends BaseTestCase {
 //		assertEquals("四川成都(武侯区武侯大道铁佛段千】盛百货对面200米金履三路288号绿地圣路易名邸", addr.getText());
 	}
 
-	private void extractRegion(AddressService service, String text, String expected, int pid, int cid, int did, String title){
+	private void extractRegion(AddressPersister service, String text, String expected, int pid, int cid, int did, String title){
 		AddressEntity addr = new AddressEntity(text);
 		service.extractRegion(addr, false);
 		assertNotNull(title + ": 省份未解析", addr.getProvince());
@@ -320,7 +320,7 @@ public class AddressInterpretTest extends BaseTestCase {
 		assertEquals(title + ": 解析后的地址错误", expected, addr.getText());
 	}
 	
-	private void removeRedundancy(AddressService service, String text, String expected, int pid, int cid, int did, String title){
+	private void removeRedundancy(AddressPersister service, String text, String expected, int pid, int cid, int did, String title){
 		AddressEntity addr = new AddressEntity(text);
 		addr.setProvince(service.getRegion(pid));
 		addr.setCity(service.getRegion(cid));
@@ -336,7 +336,7 @@ public class AddressInterpretTest extends BaseTestCase {
 	@Ignore
 	@Test
 	public void removeRedundancyFromAddressFile(){
-		AddressService service = context.getBean(AddressService.class);
+		AddressPersister service = context.getBean(AddressPersister.class);
 		
 		File file = new File(AddressInterpretTest.class.getClassLoader().getResource("test-addresses.txt").getPath());
 		InputStreamReader sr = null;

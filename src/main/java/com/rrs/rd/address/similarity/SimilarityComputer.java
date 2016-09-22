@@ -18,10 +18,10 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.rrs.rd.address.segmenter.IKAnalyzerSegmenter;
-import com.rrs.rd.address.service.AddressEntity;
-import com.rrs.rd.address.service.AddressService;
-import com.rrs.rd.address.service.RegionEntity;
+import com.rrs.rd.address.persist.AddressEntity;
+import com.rrs.rd.address.persist.AddressPersister;
+import com.rrs.rd.address.persist.RegionEntity;
+import com.rrs.rd.address.similarity.segment.IKAnalyzerSegmenter;
 
 /**
  * 相似度算法相关逻辑。
@@ -63,8 +63,8 @@ import com.rrs.rd.address.service.RegionEntity;
  * @author Richie 刘志斌 yudi@sina.com
  * 2016年9月21日
  */
-public class SimilarityService {
-	private final static Logger LOG = LoggerFactory.getLogger(SimilarityService.class);
+public class SimilarityComputer {
+	private final static Logger LOG = LoggerFactory.getLogger(SimilarityComputer.class);
 	
 	private static String DEFAULT_CACHE_FOLDER = "~/.vector_cache";
 	private static double DEFAULT_TERM_WEIGHT = 1; //正常权重值
@@ -72,7 +72,7 @@ public class SimilarityService {
 	private static double MIDDLE_TERM_WEIGHT = 3; //权重中值
 	private static double LOW_TERM_WEIGHT = 0.5; //权重低值
 	
-	private AddressService addressService = null;
+	private AddressPersister persister = null;
 	private Segmenter segmenter = new IKAnalyzerSegmenter();
 	private List<String> defaultTokens = new ArrayList<String>(0);
 	private String cacheFolder;
@@ -276,13 +276,13 @@ public class SimilarityService {
 		return doc;
 	}
 	
-	public List<SimilarDocumentResult> findSimilarAddress(String addressText, int topN){
+	public List<SimilarDocResult> findSimilarAddress(String addressText, int topN){
 		long start = System.currentTimeMillis(), startCompute = 0, elapsedCompute = 0;
 		
 		//解析地址
 		if(addressText==null || addressText.trim().isEmpty())
 			throw new IllegalArgumentException("Null or empty address text! Please provider a valid address.");
-		AddressEntity targetAddr = this.addressService.interpretAddress(addressText);
+		AddressEntity targetAddr = this.persister.interpretAddress(addressText);
 		if(targetAddr==null){
 			LOG.warn("[doc] [find] [addr-err] null << " + addressText);
 			throw new RuntimeException("Can't interpret address!");
@@ -336,14 +336,14 @@ public class SimilarityService {
 		
 		//对应地址库中每条地址计算相似度，并保留相似度最高的topN条地址
 		if(topN<=0) topN=5;
-		List<SimilarDocumentResult> silimarDocs = new ArrayList<SimilarDocumentResult>(topN);
+		List<SimilarDocResult> silimarDocs = new ArrayList<SimilarDocResult>(topN);
 		for(Document doc : allDocs){
 			startCompute = System.currentTimeMillis();
 			double similarity = this.computeDocSimilarity(targetDoc, doc);
 			elapsedCompute += System.currentTimeMillis() - startCompute;
 			//保存topN相似地址
 			if(silimarDocs.size()<topN) {
-				silimarDocs.add(new SimilarDocumentResult(doc, similarity));
+				silimarDocs.add(new SimilarDocResult(doc, similarity));
 				continue;
 			}
 			int index = 0;
@@ -352,7 +352,7 @@ public class SimilarityService {
 					index = i;
 			}
 			if(silimarDocs.get(index).getSimilarity() < similarity){
-				silimarDocs.set(index, new SimilarDocumentResult(doc, similarity));
+				silimarDocs.set(index, new SimilarDocResult(doc, similarity));
 			}
 		}
 		
@@ -371,14 +371,14 @@ public class SimilarityService {
 	 * @param topDocs
 	 * @param topSimilarities
 	 */
-	private void sortDesc(List<SimilarDocumentResult> docs){
+	private void sortDesc(List<SimilarDocResult> docs){
 		boolean exchanged = true;
 		int endIndex = docs.size() - 1;
 		while(exchanged){
 			exchanged = false;
 			for(int i=1; i<=endIndex; i++){
 				if(docs.get(i-1).getSimilarity() < docs.get(i).getSimilarity()){
-					SimilarDocumentResult temp = docs.get(i-1);
+					SimilarDocResult temp = docs.get(i-1);
 					docs.set(i-1, docs.get(i));
 					docs.set(i, temp);
 					exchanged = true;
@@ -466,8 +466,8 @@ public class SimilarityService {
 	public void setCacheVectorsInMemory(boolean value){
 		this.cacheVectorsInMemory = value;
 	}
-	public void setAddressService(AddressService value){
-		this.addressService = value;
+	public void setPersister(AddressPersister value){
+		this.persister = value;
 	}
 	public void setCacheFolder(String value){
 		this.cacheFolder = value;
