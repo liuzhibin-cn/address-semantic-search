@@ -36,18 +36,20 @@ public class VectorBuilder {
 		RegionEntity root = addrService.rootRegion();
 		for(RegionEntity province : root.getChildren()){
 			for(RegionEntity city : province.getChildren()){
-				long start = System.currentTimeMillis();
-				Date startDate = new Date();
-				try{
-					List<AddressEntity> addresses = addrService.loadAddresses(province.getId(), city.getId());
-					simiService.buildDocVectorCache(province.getId() + "-" + city.getId(), addresses);
-					System.out.println("> [" + format.format(startDate) + " -> " + format.format(new Date()) + "] "
-						+ province.getName() + "-" + city.getName() + ", " + addresses.size() + " addresses, " 
-						+ "elapsed: " + (System.currentTimeMillis()-start)/1000.0 + "s.");
-				}catch(Exception ex){
-					System.out.println("> [" + format.format(startDate) + " -> " + format.format(new Date()) + "] "
-						+ province.getName() + "-" + city.getName() + " error: " + ex.getMessage());
-					ex.printStackTrace(System.out);
+				for(RegionEntity county : city.getChildren()){
+					long start = System.currentTimeMillis();
+					Date startDate = new Date();
+					try{
+						List<AddressEntity> addresses = addrService.loadAddresses(province.getId(), city.getId(), county.getId());
+						simiService.buildDocVectorCache(province.getId() + "-" + city.getId() + "-" + county.getId(), addresses);
+						System.out.println("> [" + format.format(startDate) + " -> " + format.format(new Date()) + "] "
+							+ province.getName() + "-" + city.getName() + ", " + addresses.size() + " addresses, " 
+							+ "elapsed: " + (System.currentTimeMillis()-start)/1000.0 + "s.");
+					}catch(Exception ex){
+						System.out.println("> [" + format.format(startDate) + " -> " + format.format(new Date()) + "] "
+							+ province.getName() + "-" + city.getName() + " error: " + ex.getMessage());
+						ex.printStackTrace(System.out);
+					}
 				}
 			}
 		}

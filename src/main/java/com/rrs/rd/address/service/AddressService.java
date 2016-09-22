@@ -326,8 +326,8 @@ public class AddressService implements ApplicationContextAware {
 		return importedCount;
 	}
 	
-	public List<AddressEntity> loadAddresses(int provinceId, int cityId){
-		return this.addressDao.find(provinceId, cityId);
+	public List<AddressEntity> loadAddresses(int provinceId, int cityId, int countyId){
+		return this.addressDao.find(provinceId, cityId, countyId);
 	}
 	
 	//***************************************************************************************

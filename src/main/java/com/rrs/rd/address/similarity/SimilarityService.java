@@ -298,7 +298,7 @@ public class SimilarityService {
 		
 		//从文件缓存或内存缓存获取所有文档。
 		List<Document> allDocs = null;
-		String cacheKey = targetAddr.getProvince().getId() + "-" +targetAddr.getCity().getId();
+		String cacheKey = targetAddr.getProvince().getId() + "-" +targetAddr.getCity().getId() + "-" + targetAddr.getCounty().getId();
 		if(!this.cacheVectorsInMemory)
 			allDocs = this.loadDocVectorCache(cacheKey);
 		else{

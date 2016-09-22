@@ -16,7 +16,7 @@ public interface AddressDao {
 	List<AddressEntity> findAll();
 	int create(AddressEntity address);
 	int batchCreate(@Param("addresses") List<AddressEntity> addresses);
-	List<AddressEntity> find(@Param("pid")int provinceId, @Param("cid")int cityId);
+	List<AddressEntity> find(@Param("provinceId")int provinceId, @Param("cityId")int cityId,  @Param("countyId")int countyId);
 	AddressEntity get(int id);
 	int delete(int id);
 	
