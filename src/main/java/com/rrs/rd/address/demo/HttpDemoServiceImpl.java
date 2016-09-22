@@ -101,4 +101,7 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 	public void setPersister(AddressPersister value){
 		this.persisiter = value;
 	}
+	public void setInterpreter(AddressInterpreter value){
+		this.interpreter = value;
+	}
 }
