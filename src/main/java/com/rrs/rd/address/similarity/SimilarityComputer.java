@@ -359,7 +359,7 @@ public class SimilarityComputer {
 		//按相似度从高到低排序
 		this.sortDesc(silimarDocs);
 		
-		LOG.info("[doc] [find] elapsed " + (System.currentTimeMillis() - start)
+		LOG.info("[doc] [find] [perf] elapsed " + (System.currentTimeMillis() - start)
 				+ "ms (com=" + elapsedCompute + "ms), " + addressText);
 		
 		return silimarDocs;
