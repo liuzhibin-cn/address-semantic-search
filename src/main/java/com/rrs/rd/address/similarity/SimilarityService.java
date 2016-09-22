@@ -114,10 +114,10 @@ public class SimilarityService {
 		List<Term> terms = new ArrayList<Term>(tokens.size()+7);
 		//2.1 地址解析后已经识别出来的部分，直接作为词语生成Term。包括：省、地级市、区县、街道/镇/乡、村、道路、门牌号(roadNum)。
 		//省市区如果匹配不准确，结果误差就很大，因此加大省市区权重。但实际上计算IDF时省份、城市的IDF基本都为0。
-//		if(addr.hasProvince()) 
-//			this.addTerm(addr.getProvince().getName(), HIGH_TERM_WEIGHT, terms, doneTokens, addr.getProvince());
-//		if(addr.hasCity()) 
-//			this.addTerm(addr.getCity().getName(), HIGH_TERM_WEIGHT, terms, doneTokens, addr.getCity());
+		if(addr.hasProvince()) 
+			this.addTerm(addr.getProvince().getName(), HIGH_TERM_WEIGHT, terms, doneTokens, addr.getProvince());
+		if(addr.hasCity()) 
+			this.addTerm(addr.getCity().getName(), HIGH_TERM_WEIGHT, terms, doneTokens, addr.getCity());
 		if(addr.hasCounty()) 
 			this.addTerm(addr.getCounty().getName(), HIGH_TERM_WEIGHT, terms, doneTokens, addr.getCounty());
 		String residentDistrict = null, town = null;
@@ -201,6 +201,7 @@ public class SimilarityService {
 	 */
 	public void computeTermEigenvalue(Document doc, int totalDocs, Map<String, Integer> idrc){
 		if(doc.getTerms()==null) return;
+		double squareSum = 0;
 		for(Term term : doc.getTerms()){
 			int thisTermRefCount = 1;
 			//注意：
@@ -211,7 +212,9 @@ public class SimilarityService {
 			double idf = Math.log( totalDocs * 1.0 / ( thisTermRefCount + 1 ) );
 			if(idf<0) idf = 0;
 			term.setEigenvalue(idf * term.getWeight());
+			squareSum += term.getEigenvalue() * term.getEigenvalue();
 		}
+		doc.setEigenvaluePart(Math.sqrt(squareSum));
 	}
 	
 	/**
@@ -222,15 +225,12 @@ public class SimilarityService {
 	 * @return
 	 */
 	public double computeDocSimilarity(Document a, Document b){
-		double sumAA=0, sumBB=0, sumAB=0;
+		double sumAB=0;
 		for(Term termB : b.getTerms()){
 			Term termA = a.getTerm(termB.getText());
-			sumBB += termB.getEigenvalue() * termB.getEigenvalue();
 			sumAB += (termA==null ? 0 : termA.getEigenvalue() * termB.getEigenvalue());
 		}
-		for(Term termA : a.getTerms())
-			sumAA += termA.getEigenvalue() * termA.getEigenvalue();
-		return sumAB / (Math.sqrt(sumAA) * Math.sqrt(sumBB));
+		return sumAB / (a.getEigenvaluePart() * b.getEigenvaluePart());
 	}
 	
 	/**
