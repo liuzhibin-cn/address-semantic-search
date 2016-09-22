@@ -1,5 +1,6 @@
 package com.rrs.rd.address.demo;
 
+import java.io.File;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -13,11 +14,10 @@ import org.apache.velocity.runtime.RuntimeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.rrs.rd.address.persist.AddressEntity;
 import com.rrs.rd.address.persist.AddressPersister;
-import com.rrs.rd.address.persist.dao.AddressDao;
 import com.rrs.rd.address.similarity.SimilarDocResult;
 import com.rrs.rd.address.similarity.SimilarityComputer;
+import com.rrs.rd.address.utils.FileUtil;
 
 public class HttpDemoServiceImpl implements HttpDemoService {
 	private final static Logger LOG = LoggerFactory.getLogger(HttpDemoServiceImpl.class);
@@ -46,13 +46,16 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 			vm = "templates/find-addr-error.vm";
 		}
 		
+		File file = new File(HttpDemoServiceImpl.class.getClassLoader().getResource(vm).getPath()); 
+		String vmContent = FileUtil.readTextFile(file, "utf-8");
+		
         StringWriter writer = new StringWriter();
         try {
             VelocityContext context = new VelocityContext();
             for (String name : model.keySet()) {
                 context.put(name, model.get(name));
             }
-            Velocity.evaluate(context, writer, "", vm);
+            Velocity.evaluate(context, writer, "", vmContent);
             return writer.toString();
         } catch (Exception ex) {
             LOG.error("[addr] [find-similar] [error] Velocity template evaluate error: " + ex.getMessage(), ex);
