@@ -11,6 +11,9 @@
 	.bot10 { margin-bottom:10px; }
 	.em1 { color:red; } 
 	.em2 { color:orange; }
+	.c { text-align:center; }
+	table.c td, table.c th { text-align:center; }
+	tr.c td, tr.c th { text-align:center; }
 	h3 { font-size:14px; font-weight:600; color:blue; }
 </style>
 </head>
@@ -19,7 +22,7 @@
 <div>
 	<h3>与【$!{inputAddress.rawText}】相似的地址</h3>
 	<table>
-		<tr style='text-align:center'>
+		<tr class=c>
 			<th>相似度</th>
 			<th>地址ID</th>
 			<th>详细地址</th>
@@ -32,10 +35,10 @@
 		</tr>
 		#end
 	</table>
-	<span>用时:</span><span class="em1">$!{elapsedTime}毫秒</span>
-	<span class="left10">[$!{inputAddress.province.name} $!{inputAddress.city.name} $!{inputAddress.county.name}]共</span>
+	<span>[$!{inputAddress.province.name} $!{inputAddress.city.name} $!{inputAddress.county.name}]共</span>
 	<span class="em1">$!{totalDocCount}</span>
-	<span>条历史地址</span>
+	<span>条历史地址。</span>
+	<span class="left10">搜索用时:</span><span class="em1">$!{elapsedTime}毫秒</span>
 </div>
 
 <div class="top20">
@@ -48,9 +51,9 @@
 	#if($utils.notEmpty($inputAddress.roadNum))<span class="left10">[门牌号:</span><span class="em1">$!{inputAddress.roadNum}</span>]#end
 	#if($utils.notEmpty($inputAddress.text))<span class="left10">[其它:</span><span class="em1">$!{inputAddress.text}</span>]#end
 	#if($utils.notEmpty($inputAddress.buildingNum))<span class="left10">[楼号/房间号:</span><span class="em1">$!{inputAddress.buildingNum}</span>]#end
-	<table class="top5">
-		<tr><td>词语</td>#foreach($term in ${inputDocument.terms})<td class="em2">$!{term.text}</td>#end</tr>
-		<tr><td>特征值</td>#foreach($term in ${inputDocument.terms})<td class="em2">$utils.round($term.eigenvalue, 4)</td>#end</tr>
+	<table class="top5 c">
+		<tr><th>词语</th>#foreach($term in ${inputDocument.terms})<td class="em1 c">$!{term.text}</td>#end</tr>
+		<tr><th>特征值</th>#foreach($term in ${inputDocument.terms})<td class=c>$utils.round($term.eigenvalue, 4)</td>#end</tr>
 	</table>
 </div>
 
@@ -58,9 +61,9 @@
 	<h3>相似地址分词详情</h3>
 	#foreach($vo in ${similarVOs})
 	<span>$!{vo.address.rawText}</span>
-	<table class="bot10">
-		<tr><td>词语</td>#foreach($term in ${vo.document.terms})<td>$!{term.text}</td>#end</tr>
-		<tr><td>特征值</td>#foreach($term in ${vo.document.terms})<td>$utils.round($term.eigenvalue, 4)</td>#end</tr>
+	<table class="bot10 c">
+		<tr><th>词语</th>#foreach($term in ${vo.document.terms})<td>$!{term.text}</td>#end</tr>
+		<tr><th>特征值</th>#foreach($term in ${vo.document.terms})<td>$utils.round($term.eigenvalue, 4)</td>#end</tr>
 	</table>
 	#end
 </div>
