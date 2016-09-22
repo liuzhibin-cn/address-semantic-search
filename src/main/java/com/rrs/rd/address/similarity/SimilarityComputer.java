@@ -351,7 +351,7 @@ public class SimilarityComputer {
 		return silimarDocs;
 	}
 	
-	private List<Document> loadDocunentsFromCache(AddressEntity address){
+	public List<Document> loadDocunentsFromCache(AddressEntity address){
 		String cacheKey = buildCacheKey(address);
 		if(cacheKey==null) return null;
 		

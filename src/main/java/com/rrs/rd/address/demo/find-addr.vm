@@ -9,7 +9,9 @@
 	.top5 { margin-top:5px; }
 	.top20 { margin-top:20px; }
 	.bot10 { margin-bottom:10px; }
-	h3 { font-size:14px; font-weight:600; }
+	.em1 { color:red; } 
+	.em2 { color:orange; }
+	h3 { font-size:14px; font-weight:600; color:blue; }
 </style>
 </head>
 <body style="padding:5px 20px 0 20px;">
@@ -30,22 +32,25 @@
 		</tr>
 		#end
 	</table>
-	<span>用时：$!{elapsedTime}毫秒</span>
+	<span>用时:</span><span class="em1">$!{elapsedTime}毫秒</span>
+	<span class="left10">[$!{inputAddress.province.name} $!{inputAddress.city.name} $!{inputAddress.county.name}]共</span>
+	<span class="em1">$!{totalDocCount}</span>
+	<span>条历史地址</span>
 </div>
 
 <div class="top20">
 	<h3>地址解析情况</h3>
 	<span>$!{inputAddress.rawText}</span><span class="left10">&gt;&gt;</span>
-	<span class="left10">[省市区:$!{inputAddress.province.name} $!{inputAddress.city.name} $!{inputAddress.county.name}]</span>
-	#if($utils.notEmpty($inputAddress.towns))<span class="left10">[街道/乡镇:#foreach($town in ${inputAddress.towns})$!{town} #end]</span>#end
-	#if($utils.notEmpty($inputAddress.village))<span class="left10">[村庄:$!{inputAddress.village}]</span>#end
-	#if($utils.notEmpty($inputAddress.road))<span class="left10">[道路:$!{inputAddress.road}]</span>#end
-	#if($utils.notEmpty($inputAddress.roadNum))<span class="left10">门牌号[$!{inputAddress.roadNum}]</span>#end
-	#if($utils.notEmpty($inputAddress.text))<span class="left10">[其它:$!{inputAddress.text}]</span>#end
-	#if($utils.notEmpty($inputAddress.buildingNum))<span class="left10">[楼号/房间号:$!{inputAddress.buildingNum}]</span>#end
+	<span class="left10">[省市区:</span><span class="em1">$!{inputAddress.province.name} $!{inputAddress.city.name} $!{inputAddress.county.name}</span>]
+	#if($utils.notEmpty($inputAddress.towns))<span class="left10">[街道/乡镇:</span><span class="em1">#foreach($town in ${inputAddress.towns})$!{town} #end</span>]#end
+	#if($utils.notEmpty($inputAddress.village))<span class="left10">[村庄:</span><span class="em1">$!{inputAddress.village}</span>]#end
+	#if($utils.notEmpty($inputAddress.road))<span class="left10">[道路:</span><span class="em1">$!{inputAddress.road}</span>]#end
+	#if($utils.notEmpty($inputAddress.roadNum))<span class="left10">[门牌号:</span><span class="em1">$!{inputAddress.roadNum}</span>]#end
+	#if($utils.notEmpty($inputAddress.text))<span class="left10">[其它:</span><span class="em1">$!{inputAddress.text}</span>]#end
+	#if($utils.notEmpty($inputAddress.buildingNum))<span class="left10">[楼号/房间号:</span><span class="em1">$!{inputAddress.buildingNum}</span>]#end
 	<table class="top5">
-		<tr><td>词语</td>#foreach($term in ${inputDocument.terms})<td>$!{term.text}</td>#end</tr>
-		<tr><td>特征值</td>#foreach($term in ${inputDocument.terms})<td>$utils.round($term.eigenvalue, 4)</td>#end</tr>
+		<tr><td>词语</td>#foreach($term in ${inputDocument.terms})<td class="em2">$!{term.text}</td>#end</tr>
+		<tr><td>特征值</td>#foreach($term in ${inputDocument.terms})<td class="em2">$utils.round($term.eigenvalue, 4)</td>#end</tr>
 	</table>
 </div>
 

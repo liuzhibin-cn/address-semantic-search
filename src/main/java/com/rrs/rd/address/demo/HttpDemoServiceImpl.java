@@ -82,6 +82,7 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 		model.put("inputAddress", inputAddr);
 		Document inputDoc = computer.analyseAndComputeTermEigenvalue(inputAddr);
 		model.put("inputDocument", inputDoc);
+		model.put("totalDocCount", computer.loadDocunentsFromCache(inputAddr).size());
 		
 		List<SimilarAddressVO> vos = new ArrayList<SimilarAddressVO>(similarDocs.size());
 		for(SimilarDocResult doc : similarDocs){
