@@ -38,17 +38,17 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 		Map<String, Object> model = new HashMap<String, Object>();
 		model.put("addressText", addrText);
 		
-		String vm = "templates/find-addr.vm";
+		String vm = "find-addr.vm";
 		try{
 			this.findSimilarAddress(addrText, model);
 		}catch(RuntimeException rex){
 			LOG.error("[addr] [find-similar] [error] " + rex.getMessage());
 			model.put("rex", rex);
-			vm = "templates/find-addr-error.vm";
+			vm = "find-addr-error.vm";
 		}catch(Exception ex){
 			LOG.error("[addr] [find-similar] [error] " + ex.getMessage(), ex);
 			model.put("ex", ex);
-			vm = "templates/find-addr-error.vm";
+			vm = "find-addr-error.vm";
 		}
 		 
 		String vmContent = FileUtil.readClassPathFile(vm, "utf-8");
@@ -57,6 +57,7 @@ public class HttpDemoServiceImpl implements HttpDemoService {
         StringWriter writer = new StringWriter();
         try {
             VelocityContext context = new VelocityContext();
+            context.put("utils", new VelocityUtils());
             for (String name : model.keySet()) {
                 context.put(name, model.get(name));
             }

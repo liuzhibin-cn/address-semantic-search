@@ -63,8 +63,16 @@
             	<directory>src/main/resources</directory>
             	<includes>
             		<include>sql-mapper/*.xml</include>
-            		<include>templates/*.vm</include>
+            		<!-- <include>templates/*.vm</include> -->
             		<include>dubbo.xsd</include>
+            	</includes>
+            	<filtering>false</filtering>
+            </resource>
+            <resource>
+            	<directory>src/main/java/com/rrs/rd/address/demo</directory>
+            	<targetPath>com/rrs/rd/address/demo</targetPath>
+            	<includes>
+            		<include>*.vm</include>
             	</includes>
             	<filtering>false</filtering>
             </resource>
