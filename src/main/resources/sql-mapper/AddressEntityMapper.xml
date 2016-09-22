@@ -35,7 +35,7 @@ from `addr_address`
 	</select>
 	<select id="find" resultMap="AddressEntityResult">
 select `id`,`province_id`,`city_id`,`county_id`,`text`,`town`,`village`,`road`,`road_num`,`building_num`,`hash`
-from `addr_address` where province_id=#{provinceId} and city_id=#{cityId} and county_id=#{countyId}
+from `addr_address` where province_id=#{provinceId} and city_id=#{cityId} <if test="countyId&gt;0">and county_id=#{countyId}</if>
 	</select>
 	
 	<select id="get" parameterType="Integer" resultMap="AddressEntityResult">

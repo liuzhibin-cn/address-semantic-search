@@ -36,19 +36,35 @@ public class VectorBuilder {
 		RegionEntity root = addrService.rootRegion();
 		for(RegionEntity province : root.getChildren()){
 			for(RegionEntity city : province.getChildren()){
-				for(RegionEntity county : city.getChildren()){
+				if(city.getChildren()==null){
 					long start = System.currentTimeMillis();
 					Date startDate = new Date();
 					try{
-						List<AddressEntity> addresses = addrService.loadAddresses(province.getId(), city.getId(), county.getId());
-						simiService.buildDocVectorCache(province.getId() + "-" + city.getId() + "-" + county.getId(), addresses);
+						List<AddressEntity> addresses = addrService.loadAddresses(province.getId(), city.getId(), 0);
+						simiService.buildDocVectorCache(province.getId() + "-" + city.getId(), addresses);
 						System.out.println("> [" + format.format(startDate) + " -> " + format.format(new Date()) + "] "
-							+ province.getName() + "-" + city.getName() + "-" + county.getName() + ", " + addresses.size() + " addresses, " 
+							+ province.getName() + "-" + city.getName() + ", " + addresses.size() + " addresses, " 
 							+ "elapsed: " + (System.currentTimeMillis()-start)/1000.0 + "s.");
 					}catch(Exception ex){
 						System.out.println("> [" + format.format(startDate) + " -> " + format.format(new Date()) + "] "
 							+ province.getName() + "-" + city.getName() + " error: " + ex.getMessage());
 						ex.printStackTrace(System.out);
+					}
+				}else{
+					for(RegionEntity county : city.getChildren()){
+						long start = System.currentTimeMillis();
+						Date startDate = new Date();
+						try{
+							List<AddressEntity> addresses = addrService.loadAddresses(province.getId(), city.getId(), county.getId());
+							simiService.buildDocVectorCache(province.getId() + "-" + city.getId() + "-" + county.getId(), addresses);
+							System.out.println("> [" + format.format(startDate) + " -> " + format.format(new Date()) + "] "
+								+ province.getName() + "-" + city.getName() + "-" + county.getName() + ", " + addresses.size() + " addresses, " 
+								+ "elapsed: " + (System.currentTimeMillis()-start)/1000.0 + "s.");
+						}catch(Exception ex){
+							System.out.println("> [" + format.format(startDate) + " -> " + format.format(new Date()) + "] "
+								+ province.getName() + "-" + city.getName() + " error: " + ex.getMessage());
+							ex.printStackTrace(System.out);
+						}
 					}
 				}
 			}
