@@ -42,6 +42,7 @@
 	</bean>
 	<bean id="demoService" class="com.rrs.rd.address.demo.HttpDemoServiceImpl" init-method="init">
 		<property name="computer" ref="computer" />
+		<property name="interpreter" ref="interpreter" />
 		<property name="persister" ref="persister" />
 	</bean>
 	<bean id="computer" class="com.rrs.rd.address.similarity.SimilarityComputer">

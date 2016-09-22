@@ -90,7 +90,7 @@ public class SimilarityComputer {
 		
 		List<Document> docs = new ArrayList<Document>(addresses.size());
 		for(AddressEntity addr : addresses){
-			docs.add(this.analyse(addr));
+			docs.add(analyse(addr));
 		}
 		
 		return docs;
@@ -115,11 +115,11 @@ public class SimilarityComputer {
 		//2.1 地址解析后已经识别出来的部分，直接作为词语生成Term。包括：省、地级市、区县、街道/镇/乡、村、道路、门牌号(roadNum)。
 		//省市区如果匹配不准确，结果误差就很大，因此加大省市区权重。但实际上计算IDF时省份、城市的IDF基本都为0。
 		if(addr.hasProvince()) 
-			this.addTerm(addr.getProvince().getName(), HIGH_TERM_WEIGHT, terms, doneTokens, addr.getProvince());
+			addTerm(addr.getProvince().getName(), HIGH_TERM_WEIGHT, terms, doneTokens, addr.getProvince());
 		if(addr.hasCity()) 
-			this.addTerm(addr.getCity().getName(), HIGH_TERM_WEIGHT, terms, doneTokens, addr.getCity());
+			addTerm(addr.getCity().getName(), HIGH_TERM_WEIGHT, terms, doneTokens, addr.getCity());
 		if(addr.hasCounty()) 
-			this.addTerm(addr.getCounty().getName(), HIGH_TERM_WEIGHT, terms, doneTokens, addr.getCounty());
+			addTerm(addr.getCounty().getName(), HIGH_TERM_WEIGHT, terms, doneTokens, addr.getCounty());
 		String residentDistrict = null, town = null;
 		for(int i=0; addr.getTowns()!=null && i<addr.getTowns().size(); i++){
 			if(addr.getTowns().get(i).endsWith("街道")) {
@@ -134,20 +134,20 @@ public class SimilarityComputer {
 			}
 		}
 		if(residentDistrict!=null) //街道准确率很低，很多人随便选择街道，因此将街道权重降低
-			this.addTerm(residentDistrict, LOW_TERM_WEIGHT, terms, doneTokens, null);
+			addTerm(residentDistrict, LOW_TERM_WEIGHT, terms, doneTokens, null);
 		if(town!=null) //目前情况下，对农村地区，物流公司的片区规划粒度基本不可能比乡镇更小，因此加大乡镇权重
-			this.addTerm(town, HIGH_TERM_WEIGHT, terms, doneTokens, null);
+			addTerm(town, HIGH_TERM_WEIGHT, terms, doneTokens, null);
 		if(!addr.getVillage().isEmpty()) //同上，村庄的识别度比较高，加大权重
-			this.addTerm(addr.getVillage(), HIGH_TERM_WEIGHT, terms, doneTokens, null);
+			addTerm(addr.getVillage(), HIGH_TERM_WEIGHT, terms, doneTokens, null);
 		if(!addr.getRoad().isEmpty()) //对于城市地址，道路识别度比较高，加大权重
-			this.addTerm(addr.getRoad(), HIGH_TERM_WEIGHT, terms, doneTokens, null);
+			addTerm(addr.getRoad(), HIGH_TERM_WEIGHT, terms, doneTokens, null);
 		//两个地址在道路(road)一样的情况下，门牌号(roadNum)的识别作用就非常大，但如果道路不一样，则门牌号的识别作用就很小。
 		//为了强化门牌号的作用，但又需要避免产生干扰，因此将门牌号的权重设置为一个中值，而不是高值。
 		if(!addr.getRoadNum().isEmpty())
-			this.addTerm(addr.getRoadNum(), MIDDLE_TERM_WEIGHT, terms, doneTokens, null);
+			addTerm(addr.getRoadNum(), MIDDLE_TERM_WEIGHT, terms, doneTokens, null);
 		//2.2 地址文本分词后的token
 		for(String token : tokens)
-			this.addTerm(token, DEFAULT_TERM_WEIGHT, terms, doneTokens, null);
+			addTerm(token, DEFAULT_TERM_WEIGHT, terms, doneTokens, null);
 		
 		//3. 对词语权重进行一次加权
 		double sum = 0;
@@ -187,9 +187,9 @@ public class SimilarityComputer {
 	 */
 	public void computeTermEigenvalue(List<Document> docs){
 		if(docs==null) return;
-		Map<String, Integer> idrc = this.statInverseDocRefers(docs);
+		Map<String, Integer> idrc = statInverseDocRefers(docs);
 		for(Document doc: docs){
-			this.computeTermEigenvalue(doc, docs.size(), idrc);
+			computeTermEigenvalue(doc, docs.size(), idrc);
 		}
 	}
 	
@@ -282,7 +282,7 @@ public class SimilarityComputer {
 		//解析地址
 		if(addressText==null || addressText.trim().isEmpty())
 			throw new IllegalArgumentException("Null or empty address text! Please provider a valid address.");
-		AddressEntity targetAddr = this.interpreter.interpretAddress(addressText);
+		AddressEntity targetAddr = interpreter.interpretAddress(addressText);
 		if(targetAddr==null){
 			LOG.warn("[addr] [find-similar] [addr-err] null << " + addressText);
 			throw new RuntimeException("Can't interpret address!");
@@ -301,15 +301,15 @@ public class SimilarityComputer {
 		String cacheKey = targetAddr.getProvince().getId() + "-" +targetAddr.getCity().getId();
 		if(targetAddr.getCity().getChildren()!=null)
 			cacheKey = cacheKey + "-" + targetAddr.getCounty().getId();
-		if(!this.cacheVectorsInMemory)
-			allDocs = this.loadDocVectorCache(cacheKey);
+		if(!cacheVectorsInMemory)
+			allDocs = loadDocVectorCache(cacheKey);
 		else{
 			allDocs = VECTORS_CACHE.get(cacheKey);
 			if(allDocs==null){
 				synchronized (VECTORS_CACHE) {
 					allDocs = VECTORS_CACHE.get(cacheKey);
 					if(allDocs==null){
-						allDocs = this.loadDocVectorCache(cacheKey);
+						allDocs = loadDocVectorCache(cacheKey);
 						VECTORS_CACHE.put(cacheKey, allDocs);
 					}
 				}
@@ -321,25 +321,25 @@ public class SimilarityComputer {
 		}
 		
 		//为词语计算特征值
-		Document targetDoc = this.analyse(targetAddr);
+		Document targetDoc = analyse(targetAddr);
 		Map<String, Integer> idrs = IDRS_CACHE.get(cacheKey);
 		if(idrs==null){
 			synchronized (IDRS_CACHE) {
 				idrs = IDRS_CACHE.get(cacheKey);
 				if(idrs==null){
-					idrs = this.statInverseDocRefers(allDocs);
+					idrs = statInverseDocRefers(allDocs);
 					IDRS_CACHE.put(cacheKey, idrs);
 				}
 			}
 		}
-		this.computeTermEigenvalue(targetDoc, allDocs.size(), idrs);
+		computeTermEigenvalue(targetDoc, allDocs.size(), idrs);
 		
 		//对应地址库中每条地址计算相似度，并保留相似度最高的topN条地址
 		if(topN<=0) topN=5;
 		List<SimilarDocResult> silimarDocs = new ArrayList<SimilarDocResult>(topN);
 		for(Document doc : allDocs){
 			startCompute = System.currentTimeMillis();
-			double similarity = this.computeDocSimilarity(targetDoc, doc);
+			double similarity = computeDocSimilarity(targetDoc, doc);
 			elapsedCompute += System.currentTimeMillis() - startCompute;
 			//保存topN相似地址
 			if(silimarDocs.size()<topN) {
@@ -357,7 +357,7 @@ public class SimilarityComputer {
 		}
 		
 		//按相似度从高到低排序
-		this.sortDesc(silimarDocs);
+		sortDesc(silimarDocs);
 		
 		LOG.info("[addr] [find-similar] [perf] elapsed " + (System.currentTimeMillis() - start)
 				+ "ms (com=" + elapsedCompute + "ms), " + addressText);
@@ -391,7 +391,7 @@ public class SimilarityComputer {
 	private List<Document> loadDocVectorCache(String key){
 		List<Document> docs = new ArrayList<Document>();
 		
-		String filePath = this.getCacheFolder() + "/" + key + ".vt";
+		String filePath = getCacheFolder() + "/" + key + ".vt";
 		File file = new File(filePath);
 		if(!file.exists()) return docs;
 		try {
@@ -400,7 +400,7 @@ public class SimilarityComputer {
             BufferedReader br = new BufferedReader(sr);
             String line = null;
             while((line = br.readLine()) != null){
-                Document doc = this.deserialize(line);
+                Document doc = deserialize(line);
                 if(doc==null) continue;
                 docs.add(doc);
             }
@@ -418,12 +418,12 @@ public class SimilarityComputer {
 		long start = System.currentTimeMillis();
 		
 		if(addresses==null || addresses.isEmpty()) return;
-		List<Document> docs = this.analyse(addresses);
+		List<Document> docs = analyse(addresses);
 		if(docs==null || docs.isEmpty()) return;
 		
-		this.computeTermEigenvalue(docs);
+		computeTermEigenvalue(docs);
 
-		String filePath = this.getCacheFolder() + "/" + key + ".vt";
+		String filePath = getCacheFolder() + "/" + key + ".vt";
 		File file = new File(filePath);
 		try {
 			if(file.exists()) file.delete();
@@ -439,7 +439,7 @@ public class SimilarityComputer {
 			outStream = new FileOutputStream(file);
 			bufferedStream = new BufferedOutputStream(outStream);
 			for(Document doc : docs){
-				bufferedStream.write((this.serialize(doc)).getBytes("utf8"));
+				bufferedStream.write((serialize(doc)).getBytes("utf8"));
 				bufferedStream.write('\n');
 			}
 			bufferedStream.flush();
@@ -464,16 +464,16 @@ public class SimilarityComputer {
 	}
 	
 	public void setCacheVectorsInMemory(boolean value){
-		this.cacheVectorsInMemory = value;
+		cacheVectorsInMemory = value;
 	}
 	public void setInterpreter(AddressInterpreter value){
-		this.interpreter = value;
+		interpreter = value;
 	}
 	public void setCacheFolder(String value){
-		this.cacheFolder = value;
+		cacheFolder = value;
 	}
 	public String getCacheFolder(){
-		String path = this.cacheFolder;
+		String path = cacheFolder;
 		if(path==null || path.trim().isEmpty()) path = DEFAULT_CACHE_FOLDER;
 		File file = new File(path);
 		if(!file.exists()) file.mkdirs();

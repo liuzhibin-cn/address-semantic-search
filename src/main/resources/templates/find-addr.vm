@@ -1,24 +1,70 @@
 <html>
 <head>
-	<title>Search similar address</title>
+<title>Search similar address</title>
+<style>
+	body, td, th, div, p { font-size:12px; }
+	td, th { border-collapse:collapse; border-left:1px solid #888; border-top: 1px solid #888; padding:2px 0 2px 5px; }
+	table { border-collapse:collapse; border-right:1px solid #888; border-bottom: 1px solid #888; }
+	.pad-left { margin-left:20px; }
+</style>
 </head>
 <body style="padding:10px;">
-	<style>
-		body, td, th, div, p { font-size:12px; }
-		td, th { border-left:1px solid #888; border-top: 1px solid #888; padding:2px 0 2px 5px; }
-		table { border-right:1px solid #888; border-bottom: 1px solid #888; }
-	</style>
-	
-	<div>
-		与【$!{sourceAddress}】相似的地址：
-		<table style='width:750px' cellspacing=0 cellpadding=0>
-			<tr style='text-align:center'><th style='width:130px;'>相似度</th><th>详细地址</th></tr>
-			#foreach($addr in ${similarAddresses})
-			<tr><td>$!{addr.similarity}</td><td>$!{addr.address.rawText}</td></tr>
-			#end
-		</table>
-		用时：$!{elapsedTime}毫秒
-	</div>
-	
+
+<div>
+	<h3>与【$!{inputAddress.rawText}】相似的地址</h3>
+	<table style='width:750px'>
+		<tr style='text-align:center'>
+			<th style='width:130px;'>相似度</th>
+			<th style="width:80px;">地址ID</th>
+			<th>详细地址</th>
+		</tr>
+		#foreach($vo in ${similarVOs})
+		<tr>
+			<td>$!{vo.similarity}</td>
+			<td>$!{vo.address.id}</td>
+			<td>$!{vo.address.rawText}</td>
+		</tr>
+		#end
+	</table>
+	<span>用时：$!{elapsedTime}毫秒</span>
+</div>
+
+<div style="margin-top:20px;">
+	<h3>地址解析情况</h3><br />
+	<span>$!{inputAddress.rawText} &gt;&gt;</span>
+	<span class="pad-left">省市区：$!{inputAddress.province.name} $!{inputAddress.city.name} $!{inputAddress.county.name} </span><br />
+	#if(${inputAddress.towns})<span class="pad-left">街道/乡镇：#foreach($town in ${inputAddress.towns})$!{town} #end</span>#end
+	#if(${inputAddress.village})<span class="pad-left">村庄：$!{inputAddress.village}</span>#end
+	#if(${inputAddress.road})<span class="pad-left">道路：$!{inputAddress.road}</span>#end
+	#if(${inputAddress.roadNum})<span class="pad-left">门牌号：$!{inputAddress.roadNum}</span>#end
+	#if(${inputAddress.text})<span class="pad-left">其它：$!{inputAddress.text}</span>#end
+	#if(${inputAddress.buildingNum})<span class="pad-left">楼号/房间号：$!{inputAddress.buildingNum}</span>#end
+</div>
+
+<div style="margin-top:20px;">
+	<h3>分词详情</h3><br />
+	<span>输入地址：</span>
+	<table style="margin-bottom:10px;">
+		<tr>
+			<td rowspan=2>$!{inputAddress.rawText}</td>
+			#foreach($term in ${inputDocument.terms})<td>$!{term.text}</td>#end
+		</tr>
+		<tr>
+			#foreach($term in ${inputDocument.terms})<td>$!{term.eigenvalue}</td>#end
+		</tr>
+	</table>
+	<span>相似地址：</span>
+	<table cellspacing=0 cellpadding=0>
+		#foreach($vo in ${similarVOs})
+		<tr>
+			<td rowspan=2>$!{vo.address.rawText}</td>
+			#foreach($term in ${vo.document.terms})<td>$!{term.text}</td>#end
+		</tr>
+		<tr>
+			#foreach($term in ${vo.document.terms})<td>$!{term.eigenvalue}</td>#end
+		</tr>
+		#end
+	</table>
+</div>
 </body>
 </html>

@@ -1,6 +1,5 @@
 package com.rrs.rd.address.demo;
 
-import java.io.File;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,7 +13,10 @@ import org.apache.velocity.runtime.RuntimeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.rrs.rd.address.interpret.AddressInterpreter;
+import com.rrs.rd.address.persist.AddressEntity;
 import com.rrs.rd.address.persist.AddressPersister;
+import com.rrs.rd.address.similarity.Document;
 import com.rrs.rd.address.similarity.SimilarDocResult;
 import com.rrs.rd.address.similarity.SimilarityComputer;
 import com.rrs.rd.address.utils.FileUtil;
@@ -23,6 +25,7 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 	private final static Logger LOG = LoggerFactory.getLogger(HttpDemoServiceImpl.class);
 	private SimilarityComputer computer = null;
 	private AddressPersister persisiter = null;
+	private AddressInterpreter interpreter = null;
 	
 	public void init(){
 		Properties properties = new Properties();
@@ -33,6 +36,8 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 	
 	public String find(String addrText){
 		Map<String, Object> model = new HashMap<String, Object>();
+		model.put("addressText", addrText);
+		
 		String vm = "templates/find-addr.vm";
 		try{
 			this.findSimilarAddress(addrText, model);
@@ -70,13 +75,18 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 		List<SimilarDocResult> similarDocs = computer.findSimilarAddress(addrText, 5);
 		model.put("elapsedTime", System.currentTimeMillis() - startAt);
 		
+		AddressEntity inputAddr = interpreter.interpretAddress(addrText);
+		model.put("inputAddress", inputAddr);
+		Document inputDoc = computer.analyse(inputAddr);
+		model.put("inputDocument", inputDoc);
+		
 		List<SimilarAddressVO> vos = new ArrayList<SimilarAddressVO>(similarDocs.size());
 		for(SimilarDocResult doc : similarDocs){
 			SimilarAddressVO vo = new SimilarAddressVO(doc);
 			vo.setAddress(persisiter.getAddress(doc.getDocument().getId()));
 			vos.add(vo);
 		}
-		model.put("similarAddresses", vos);
+		model.put("similarVOs", vos);
 		
 		if(LOG.isInfoEnabled()){
 			LOG.info("> Similar address for {" + addrText + "}: ");

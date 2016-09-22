@@ -1,9 +1,11 @@
 <html>
-<head><title>Search similar address</title></head>
-<body style="padding:10px;">
+<head>
+<title>Search similar address</title>
 <style> body, pre { font-size:12px; } </style>
-#if(${rex!=null}) <span>$!{rex.message}</span> #end
-#if(${ex!=null})
+</head>
+<body style="padding:10px;">
+#if(${rex}) <span>$!{rex.message}</span> #end
+#if(${ex})
 	<span>$!{ex.message}</span><br /><br />
 	$!{ex.class.name}
     #foreach($ste in $ex.stackTrace)
