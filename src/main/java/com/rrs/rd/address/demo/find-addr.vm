@@ -3,8 +3,8 @@
 <title>Search similar address</title>
 <style>
 	body, td, th, div, p, h3 { font-size:12px; margin:0; padding:0; }
-	td, th { border-collapse:collapse; border-left:1px solid #888; border-top: 1px solid #888; padding:1px 4px 1px 4px; }
-	table { border-collapse:collapse; border-right:1px solid #888; border-bottom: 1px solid #888; }
+	td, th { border-collapse:collapse; border-left:1px solid #bbb; border-top: 1px solid #bbb; padding:1px 4px 1px 4px; }
+	table { border-collapse:collapse; border-right:1px solid #bbb; border-bottom: 1px solid #bbb; }
 	.left10 { margin-left:10px; }
 	.top5 { margin-top:5px; }
 	.top20 { margin-top:20px; }
@@ -15,6 +15,7 @@
 	table.c td, table.c th { text-align:center; }
 	tr.c td, tr.c th { text-align:center; }
 	h3 { font-size:14px; font-weight:600; color:blue; }
+	
 </style>
 </head>
 <body style="padding:5px 20px 0 20px;">
@@ -37,7 +38,7 @@
 	</table>
 	<span>[$!{inputAddress.province.name} $!{inputAddress.city.name} $!{inputAddress.county.name}]共</span>
 	<span class="em1">$!{totalDocCount}</span>
-	<span>条历史地址。</span>
+	<span>条历史地址</span>
 	<span class="left10">搜索用时:</span><span class="em1">$!{elapsedTime}毫秒</span>
 </div>
 

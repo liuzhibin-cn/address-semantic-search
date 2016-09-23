@@ -68,8 +68,8 @@ public class SimilarityComputer {
 	
 	private static String DEFAULT_CACHE_FOLDER = "~/.vector_cache";
 	private static double DEFAULT_TERM_WEIGHT = 1; //正常权重值
-	private static double HIGH_TERM_WEIGHT = 5; //权重高值
-	private static double MIDDLE_TERM_WEIGHT = 3; //权重中值
+	private static double HIGH_TERM_WEIGHT = 3; //权重高值
+	private static double MIDDLE_TERM_WEIGHT = 1.8; //权重中值
 	private static double LOW_TERM_WEIGHT = 0.5; //权重低值
 	
 	private AddressInterpreter interpreter = null;
