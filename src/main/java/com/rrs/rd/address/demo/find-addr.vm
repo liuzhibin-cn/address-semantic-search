@@ -21,7 +21,7 @@
 <body style="padding:5px 20px 0 20px;">
 
 <div>
-	<h3>与【$!{inputAddress.rawText}】相似的地址</h3>
+	<h3>与【$!{inputAddress.rawText}】相似的地址：</h3>
 	<table>
 		<tr class=c>
 			<th>相似度</th>
@@ -43,7 +43,7 @@
 </div>
 
 <div class="top20">
-	<h3>地址解析情况</h3>
+	<h3>输入地址的解析情况：</h3>
 	<span>$!{inputAddress.rawText}</span><span class="left10">&gt;&gt;</span>
 	<span class="left10">[省市区:</span><span class="em1">$!{inputAddress.province.name} $!{inputAddress.city.name} $!{inputAddress.county.name}</span>]
 	#if($utils.notEmpty($inputAddress.towns))<span class="left10">[街道/乡镇:</span><span class="em1">#foreach($town in ${inputAddress.towns})$!{town} #end</span>]#end
@@ -59,7 +59,7 @@
 </div>
 
 <div class="top20">
-	<h3>相似地址分词详情</h3>
+	<h3>相似地址的解析情况：</h3>
 	#foreach($vo in ${similarVOs})
 	<span>$!{vo.address.rawText}</span>
 	<table class="bot10 c">
