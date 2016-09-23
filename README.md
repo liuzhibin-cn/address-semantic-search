@@ -89,7 +89,7 @@ bin/start.sh
 
 服务启动成功后，通过`http://localhost:8000/test/address/find/北京海淀区苏州街29号院18号楼维亚大厦`访问demo服务。
 Demo服务运行效果如下：
-![使用相似度搜索匹配地址Demo Service](demo-service-screen.png)
+![使用相似度搜索匹配地址Demo Service](demo-screenshot.png)
 
 Demo服务使用的Dubbox的REST接口，服务启动时会监听2个端口：`8080`和`8000`。
 如果需要修改为其他端口号，请修改以下文件：
