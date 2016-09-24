@@ -5,7 +5,7 @@
 ### 问题描述
 物流行业需要根据地址确定揽收、派送所属片区，将订单分派给片区负责作业。传统方案**重度依赖GIS服务**，一般做法是将详细地址传给GIS，由GIS返回片区ID。
 
-<pre style="white-space:pre-wrap; word-wrap:break-word;">GIS服务处理流程：
+<pre>GIS服务处理流程：
 1. 在地图上人工预先维护好片区划分（GIS记录片区边界经纬度）
 2. 通过详细地址解析出距离该地址最近的POI
    这一步骤只能使用文本匹配算法，通过关键字、相似度等方式将输入地址与GIS地址库中的地址（即POI）进行匹配。
@@ -22,7 +22,7 @@ GIS一般都使用第三方服务，涉及到第三方服务本身、网络、�
 
 本项目研究使用文本相似度，基于历史地址库进行地址解析和匹配。
 
-<pre style="white-space:pre-wrap; word-wrap:break-word;">
+<pre>
 注意事项
 1. 历史数据量的大小是影响精确度的重要因素
   1.1 历史数据量越大，精确度越高。历史数据量小于一定程度，匹配结果的准确性会非常低。
@@ -44,7 +44,7 @@ GIS一般都使用第三方服务，涉及到第三方服务本身、网络、�
  
 ### 标准TF-IDF算法
 **TC: Term Count**，词数，某个词在文档中出现的次数。<br />
-**TF: Term Frequency**，词频, 某个词在文档中出现的频率，_TF = 该词在文档中出现的次数 / 该文档的总词数_。<br />
+**TF: Term Frequency**，词频，某个词在文档中出现的频率，_TF = 该词在文档中出现的次数 / 该文档的总词数_。<br />
 **IDF: Inverse Document Frequency**，逆文档词频，_IDF = log( 文档总数 / ( 包含该词的文档数 + 1 ) )_。分母加1是为了防止分母出现0的情况。<br />
 **TF-IDF**: 词语的特征值，_TF-IDF = TF * IDF_。 
 
@@ -80,7 +80,7 @@ git clone https://github.com/liuzhibin-cn/address-similarity.git /your/src/path/
 
 修改`pom.xml`文件，在`profile`节点`test`下面设置数据库连接信息。
 
-执行maven命令编译打包（项目开发和测试环境使用的JDK1.8，在JDK1.8以下版本上需要修改个别参数）：
+执行maven命令编译打包_（项目开发和测试环境使用的JDK1.8，项目使用的Dubbox也是在1.8版本下源码编译的）_：
 ```shell
 mvn clean package -P test
 ```

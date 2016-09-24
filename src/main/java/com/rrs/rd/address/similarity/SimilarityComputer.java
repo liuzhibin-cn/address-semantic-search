@@ -67,10 +67,10 @@ public class SimilarityComputer {
 	private final static Logger LOG = LoggerFactory.getLogger(SimilarityComputer.class);
 	
 	private static String DEFAULT_CACHE_FOLDER = "~/.vector_cache";
-	private static double DEFAULT_TERM_WEIGHT = 1; //正常权重值
-	private static double HIGH_TERM_WEIGHT = 3; //权重高值
-	private static double MIDDLE_TERM_WEIGHT = 1.8; //权重中值
-	private static double LOW_TERM_WEIGHT = 0.5; //权重低值
+	private static double DEFAULT_BOOST = 1; //正常权重
+	private static double HIGH_BOOST = 3; //加权高值
+	private static double MID_BOOST = 1.8; //加权中值
+	private static double LOW_BOOST = 0.5; //降权
 	
 	private AddressInterpreter interpreter = null;
 	private Segmenter segmenter = new IKAnalyzerSegmenter();
@@ -115,11 +115,11 @@ public class SimilarityComputer {
 		//2.1 地址解析后已经识别出来的部分，直接作为词语生成Term。包括：省、地级市、区县、街道/镇/乡、村、道路、门牌号(roadNum)。
 		//省市区如果匹配不准确，结果误差就很大，因此加大省市区权重。但实际上计算IDF时省份、城市的IDF基本都为0。
 		if(addr.hasProvince()) 
-			addTerm(addr.getProvince().getName(), HIGH_TERM_WEIGHT, terms, doneTokens, addr.getProvince());
+			addTerm(addr.getProvince().getName(), HIGH_BOOST, terms, doneTokens, addr.getProvince());
 		if(addr.hasCity()) 
-			addTerm(addr.getCity().getName(), HIGH_TERM_WEIGHT, terms, doneTokens, addr.getCity());
+			addTerm(addr.getCity().getName(), HIGH_BOOST, terms, doneTokens, addr.getCity());
 		if(addr.hasCounty()) 
-			addTerm(addr.getCounty().getName(), HIGH_TERM_WEIGHT, terms, doneTokens, addr.getCounty());
+			addTerm(addr.getCounty().getName(), HIGH_BOOST, terms, doneTokens, addr.getCounty());
 		String residentDistrict = null, town = null;
 		for(int i=0; addr.getTowns()!=null && i<addr.getTowns().size(); i++){
 			if(addr.getTowns().get(i).endsWith("街道")) {
@@ -134,20 +134,20 @@ public class SimilarityComputer {
 			}
 		}
 		if(residentDistrict!=null) //街道准确率很低，很多人随便选择街道，因此将街道权重降低
-			addTerm(residentDistrict, LOW_TERM_WEIGHT, terms, doneTokens, null);
+			addTerm(residentDistrict, LOW_BOOST, terms, doneTokens, null);
 		if(town!=null) //目前情况下，对农村地区，物流公司的片区规划粒度基本不可能比乡镇更小，因此加大乡镇权重
-			addTerm(town, HIGH_TERM_WEIGHT, terms, doneTokens, null);
+			addTerm(town, HIGH_BOOST, terms, doneTokens, null);
 		if(!addr.getVillage().isEmpty()) //同上，村庄的识别度比较高，加大权重
-			addTerm(addr.getVillage(), HIGH_TERM_WEIGHT, terms, doneTokens, null);
+			addTerm(addr.getVillage(), HIGH_BOOST, terms, doneTokens, null);
 		if(!addr.getRoad().isEmpty()) //对于城市地址，道路识别度比较高，加大权重
-			addTerm(addr.getRoad(), HIGH_TERM_WEIGHT, terms, doneTokens, null);
+			addTerm(addr.getRoad(), HIGH_BOOST, terms, doneTokens, null);
 		//两个地址在道路(road)一样的情况下，门牌号(roadNum)的识别作用就非常大，但如果道路不一样，则门牌号的识别作用就很小。
 		//为了强化门牌号的作用，但又需要避免产生干扰，因此将门牌号的权重设置为一个中值，而不是高值。
 		if(!addr.getRoadNum().isEmpty())
-			addTerm(addr.getRoadNum(), MIDDLE_TERM_WEIGHT, terms, doneTokens, null);
+			addTerm(addr.getRoadNum(), MID_BOOST, terms, doneTokens, null);
 		//2.2 地址文本分词后的token
 		for(String token : tokens)
-			addTerm(token, DEFAULT_TERM_WEIGHT, terms, doneTokens, null);
+			addTerm(token, DEFAULT_BOOST, terms, doneTokens, null);
 		
 		//3. 对词语权重进行一次加权
 		double sum = 0;

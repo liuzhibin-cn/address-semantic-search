@@ -19,10 +19,10 @@
 			<id>test</id>
 			<properties>
 				<db.host>127.0.0.1</db.host>
-				<db.name>addr_match</db.name>
-				<db.user>addr_match</db.user>
-				<db.password>cfds123!@#</db.password>
-				<cache.path>/data/address-search/cache</cache.path>
+				<db.name>my_research</db.name>
+				<db.user>root</db.user>
+				<db.password>dev</db.password>
+				<cache.path>/Users/richie/Documents/workspace_eclipse/cache-folder</cache.path>
 				<cache.vectors.in.memory>true</cache.vectors.in.memory>
 			</properties>
 		</profile>

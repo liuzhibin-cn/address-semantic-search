@@ -35,6 +35,7 @@ public class VectorBuilder {
 		
 		RegionEntity root = persister.rootRegion();
 		for(RegionEntity province : root.getChildren()){
+			if(province.getId()!=110000) continue; //TODO: test only. 仅测试北京的地址
 			for(RegionEntity city : province.getChildren()){
 				if(city.getChildren()==null){
 					long start = System.currentTimeMillis();

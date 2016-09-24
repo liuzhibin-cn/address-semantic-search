@@ -5,7 +5,10 @@ package com.rrs.rd.address.similarity;
  * @author Richie 刘志斌 yudi@sina.com
  */
 public class Term {
+	private TermType type;
 	private String text;
+	
+	//to remove
 	private double weight = 0;
 	private double eigenvalue = 0;
 	
