@@ -7,20 +7,30 @@ package com.rrs.rd.address.similarity;
 public class Term {
 	private TermType type;
 	private String text;
+	private double idf;
 	
 	//to remove
 	private double weight = 0;
 	private double eigenvalue = 0;
 	
-	public Term(String text, double freq){
+	public Term(TermType type, String text){
+		this.type = type;
 		this.text = text;
-		this.weight = freq;
 	}
 	
-	public Term(String text, double freq, double value){
-		this.text = text;
-		this.weight = freq;
-		this.eigenvalue = value;
+//	public Term(String text, double freq){
+//		this.text = text;
+//		this.weight = freq;
+//	}
+	
+//	public Term(String text, double freq, double value){
+//		this.text = text;
+//		this.weight = freq;
+//		this.eigenvalue = value;
+//	}
+	
+	public TermType getType(){
+		return this.type;
 	}
 	
 	/**
@@ -29,6 +39,14 @@ public class Term {
 	 */
 	public String getText() {
 		return text;
+	}
+	
+	public double getIdf(){
+		return this.idf;
+	}
+	
+	public void setIdf(double value){
+		this.idf = value;
 	}
 	
 	/**

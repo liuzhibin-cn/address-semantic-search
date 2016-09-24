@@ -42,7 +42,9 @@ public class VectorBuilder {
 					Date startDate = new Date();
 					try{
 						List<AddressEntity> addresses = persister.loadAddresses(province.getId(), city.getId(), 0);
-						computer.buildDocumentFileCache(province.getId() + "-" + city.getId(), addresses);
+						if(addresses==null || addresses.isEmpty()) continue;
+						
+						computer.buildDocumentFileCache(computer.buildCacheKey(addresses.get(0)), addresses);
 						System.out.println("> [" + format.format(startDate) + " -> " + format.format(new Date()) + "] "
 							+ province.getName() + "-" + city.getName() + ", " + addresses.size() + " addresses, " 
 							+ "elapsed: " + (System.currentTimeMillis()-start)/1000.0 + "s.");
@@ -57,7 +59,8 @@ public class VectorBuilder {
 						Date startDate = new Date();
 						try{
 							List<AddressEntity> addresses = persister.loadAddresses(province.getId(), city.getId(), county.getId());
-							computer.buildDocumentFileCache(province.getId() + "-" + city.getId() + "-" + county.getId(), addresses);
+							if(addresses==null || addresses.isEmpty()) continue;
+							computer.buildDocumentFileCache(computer.buildCacheKey(addresses.get(0)), addresses);
 							System.out.println("> [" + format.format(startDate) + " -> " + format.format(new Date()) + "] "
 								+ province.getName() + "-" + city.getName() + "-" + county.getName() + ", " + addresses.size() + " addresses, " 
 								+ "elapsed: " + (System.currentTimeMillis()-start)/1000.0 + "s.");

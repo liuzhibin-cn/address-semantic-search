@@ -78,11 +78,11 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 		List<SimilarDocResult> similarDocs = computer.findSimilarAddress(addrText, 5);
 		model.put("elapsedTime", System.currentTimeMillis() - startAt);
 		
-		AddressEntity inputAddr = interpreter.interpretAddress(addrText);
-		model.put("inputAddress", inputAddr);
-		Document inputDoc = computer.analyseAndComputeTermEigenvalue(inputAddr);
-		model.put("inputDocument", inputDoc);
-		model.put("totalDocCount", computer.loadDocunentsFromCache(inputAddr).size());
+		AddressEntity queryAddr = interpreter.interpretAddress(addrText);
+		model.put("queryAddr", queryAddr);
+		Document queryDoc = computer.analyse(queryAddr);
+		model.put("queryDoc", queryDoc);
+		model.put("totalDocCount", computer.loadDocunentsFromCache(queryAddr).size());
 		
 		List<SimilarAddressVO> vos = new ArrayList<SimilarAddressVO>(similarDocs.size());
 		for(SimilarDocResult doc : similarDocs){

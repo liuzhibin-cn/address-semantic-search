@@ -21,7 +21,7 @@
 <body style="padding:5px 20px 0 20px;">
 
 <div>
-	<h3>与【$!{inputAddress.rawText}】相似的地址：</h3>
+	<h3>与【$!{queryAddr.rawText}】相似的地址：</h3>
 	<table>
 		<tr class=c>
 			<th>相似度</th>
@@ -36,7 +36,7 @@
 		</tr>
 		#end
 	</table>
-	<span>[$!{inputAddress.province.name} $!{inputAddress.city.name} $!{inputAddress.county.name}]共</span>
+	<span>[$!{queryAddr.province.name} $!{queryAddr.city.name} $!{queryAddr.county.name}]共</span>
 	<span class="em1">$!{totalDocCount}</span>
 	<span>条历史地址</span>
 	<span class="left10">搜索用时:</span><span class="em1">$!{elapsedTime}毫秒</span>
@@ -44,17 +44,17 @@
 
 <div class="top20">
 	<h3>输入地址的解析情况：</h3>
-	<span>$!{inputAddress.rawText}</span><span class="left10">&gt;&gt;</span>
-	<span class="left10">[省市区:</span><span class="em1">$!{inputAddress.province.name} $!{inputAddress.city.name} $!{inputAddress.county.name}</span>]
-	#if($utils.notEmpty($inputAddress.towns))<span class="left10">[街道/乡镇:</span><span class="em1">#foreach($town in ${inputAddress.towns})$!{town} #end</span>]#end
-	#if($utils.notEmpty($inputAddress.village))<span class="left10">[村庄:</span><span class="em1">$!{inputAddress.village}</span>]#end
-	#if($utils.notEmpty($inputAddress.road))<span class="left10">[道路:</span><span class="em1">$!{inputAddress.road}</span>]#end
-	#if($utils.notEmpty($inputAddress.roadNum))<span class="left10">[门牌号:</span><span class="em1">$!{inputAddress.roadNum}</span>]#end
-	#if($utils.notEmpty($inputAddress.text))<span class="left10">[其它:</span><span class="em1">$!{inputAddress.text}</span>]#end
-	#if($utils.notEmpty($inputAddress.buildingNum))<span class="left10">[楼号/房间号:</span><span class="em1">$!{inputAddress.buildingNum}</span>]#end
+	<span>$!{queryAddr.rawText}</span><span class="left10">&gt;&gt;</span>
+	<span class="left10">[省市区:</span><span class="em1">$!{queryAddr.province.name} $!{queryAddr.city.name} $!{queryAddr.county.name}</span>]
+	#if($utils.notEmpty($queryAddr.towns))<span class="left10">[街道/乡镇:</span><span class="em1">#foreach($town in ${queryAddr.towns})$!{town} #end</span>]#end
+	#if($utils.notEmpty($queryAddr.village))<span class="left10">[村庄:</span><span class="em1">$!{queryAddr.village}</span>]#end
+	#if($utils.notEmpty($queryAddr.road))<span class="left10">[道路:</span><span class="em1">$!{queryAddr.road}</span>]#end
+	#if($utils.notEmpty($queryAddr.roadNum))<span class="left10">[门牌号:</span><span class="em1">$!{queryAddr.roadNum}</span>]#end
+	#if($utils.notEmpty($queryAddr.text))<span class="left10">[其它:</span><span class="em1">$!{queryAddr.text}</span>]#end
+	#if($utils.notEmpty($queryAddr.buildingNum))<span class="left10">[楼号/房间号:</span><span class="em1">$!{queryAddr.buildingNum}</span>]#end
 	<table class="top5 c">
-		<tr><th>词语</th>#foreach($term in ${inputDocument.terms})<td class="em1 c">$!{term.text}</td>#end</tr>
-		<tr><th>特征值</th>#foreach($term in ${inputDocument.terms})<td class=c>$utils.round($term.eigenvalue, 4)</td>#end</tr>
+		<tr><th>词条</th>#foreach($term in ${queryDoc.terms})<td class="em1 c">$!{term.text}</td>#end</tr>
+		<tr><th>类型</th>#foreach($term in ${queryDoc.terms})<td class=c>$term.type</td>#end</tr>
 	</table>
 </div>
 
@@ -63,8 +63,8 @@
 	#foreach($vo in ${similarVOs})
 	<span>$!{vo.address.rawText}</span>
 	<table class="bot10 c">
-		<tr><th>词语</th>#foreach($term in ${vo.document.terms})<td>$!{term.text}</td>#end</tr>
-		<tr><th>特征值</th>#foreach($term in ${vo.document.terms})<td>$utils.round($term.eigenvalue, 4)</td>#end</tr>
+		<tr><th>词条</th>#foreach($term in ${vo.document.terms})<td>$!{term.text}</td>#end</tr>
+		<tr><th>类型</th>#foreach($term in ${vo.document.terms})<td>$term.type</td>#end</tr>
 	</table>
 	#end
 </div>

@@ -89,6 +89,7 @@ public class AddressInterpreter {
 					numFail++;
 					continue;
 				}
+				addresses.add(address);
 			}catch(Exception ex){
 				LOG.error("[addr-imp] [error] " + addrText + ": " + ex.getMessage(), ex);
 			}
