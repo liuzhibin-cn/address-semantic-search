@@ -1,7 +1,7 @@
 package com.rrs.rd.address.similarity;
 
 /**
- * 词语。
+ * 词条。
  * @author Richie 刘志斌 yudi@sina.com
  */
 public class Term {
@@ -9,32 +9,21 @@ public class Term {
 	private String text;
 	private double idf;
 	
-	//to remove
-	private double weight = 0;
-	private double eigenvalue = 0;
-	
 	public Term(TermType type, String text){
 		this.type = type;
 		this.text = text;
 	}
 	
-//	public Term(String text, double freq){
-//		this.text = text;
-//		this.weight = freq;
-//	}
-	
-//	public Term(String text, double freq, double value){
-//		this.text = text;
-//		this.weight = freq;
-//		this.eigenvalue = value;
-//	}
-	
+	/**
+	 * 词条类型。
+	 * @return
+	 */
 	public TermType getType(){
 		return this.type;
 	}
 	
 	/**
-	 * 词语文本。
+	 * 词条文本。
 	 * @return
 	 */
 	public String getText() {
@@ -47,30 +36,6 @@ public class Term {
 	
 	public void setIdf(double value){
 		this.idf = value;
-	}
-	
-	/**
-	 * 词语权重（类TF值）。
-	 * @return
-	 */
-	public double getWeight(){
-		return this.weight;
-	}
-	
-	public void setWeight(double freq){
-		this.weight = freq;
-	}
-	
-	/**
-	 * 词语特征值（类TF-IDF值）。
-	 * @return
-	 */
-	public double getEigenvalue() {
-		return eigenvalue;
-	}
-	
-	public void setEigenvalue(double value){
-		this.eigenvalue = value;
 	}
 	
 	@Override

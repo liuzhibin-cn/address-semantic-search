@@ -31,28 +31,28 @@ import com.rrs.rd.address.similarity.segment.IKAnalyzerSegmenter;
  * TC: 词数 Term Count，某个词在文档中出现的次数。<br />
  * TF: 词频 Term Frequency, 某个词在文档中出现的频率，TF = 该词在文档中出现的次数 / 该文档的总词数。<br />
  * IDF: 逆文档词频 Inverse Document Frequency，IDF = log( 文档总数 / ( 包含该词的文档数 + 1 ) )。分母加1是为了防止分母出现0的情况。<br />
- * TF-IDF: 词语的特征值，TF-IDF = TF * IDF。 
+ * TF-IDF: 词条的特征值，TF-IDF = TF * IDF。 
  * </p>
  * 
  * <p>
  * <strong>基于标准TF-IDF算法的调整</strong>：<br />
- * 计算地址相似度时，将标准TF-IDF算法中的词频TF改为了自定义的词语权重值，因为：<br />
+ * 计算地址相似度时，将标准TF-IDF算法中的词频TF改为了自定义的词条权重值，因为：<br />
  * 1. 地址不同于文章，文章是纯自然语言，而地址是格式规范性较强的短语；<br />
  * 2. 地址的特征并不是通过特征词的重复得以强化，而是通过特定组成部分强化的，例如道路名+门牌号、小区名等；<br />
  * </p>
  * 
  * <p>
  * <strong>地址相似度计算逻辑</strong>：<br />
- * 1. 对地址解析后剩余的，无法进一步解析的{@link AddressEntity#getText() text}进行分词，这部分词语采用正常权重值；<br />
- * 2. 在词语列表的前面按次序添加省份、地级市、区县、街道/乡镇、村庄、道路、门牌号等词语，这部分词语采用自定义权重值；<br />
+ * 1. 对地址解析后剩余的，无法进一步解析的{@link AddressEntity#getText() text}进行分词，这部分词条采用正常权重值；<br />
+ * 2. 在词条列表的前面按次序添加省份、地级市、区县、街道/乡镇、村庄、道路、门牌号等词条，这部分词条采用自定义权重值；<br />
  * &nbsp;&nbsp;&nbsp;&nbsp;采用权重高值部分：省份、地级市、区县、乡镇、村庄、道路<br />
  * &nbsp;&nbsp;&nbsp;&nbsp;采用权重中值部分：门牌号<br />
  * &nbsp;&nbsp;&nbsp;&nbsp;采用权重低值部分：街道<br />
  * 步骤1、2由方法{@link #analyse(AddressEntity)}完成。<br />
- * 3. 在全部文档中为所有词语统计逆文档引用情况，由方法{@link #statInverseDocRefers(List)}完成；<br />
- * 4. 为文档中的每个词语计算特征值，由方法{@link #computeTermEigenvalue(Document, int, Map)}完成；<br />
+ * 3. 在全部文档中为所有词条统计逆文档引用情况，由方法{@link #statInverseDocRefers(List)}完成；<br />
+ * 4. 为文档中的每个词条计算特征值，由方法{@link #computeTermEigenvalue(Document, int, Map)}完成；<br />
  * 5. 为两个文档计算余弦相似度，由方法{@link #computeDocSimilarity(Document, Document)}完成；<br />
- * &nbsp;&nbsp;&nbsp;&nbsp;文档特征向量的维度，取两个文档汇总后的独立词语个数。
+ * &nbsp;&nbsp;&nbsp;&nbsp;文档特征向量的维度，取两个文档汇总后的独立词条个数。
  * </p>
  * 
  * <p>
@@ -81,7 +81,7 @@ public class SimilarityComputer {
 	private static Map<String, Map<String, Double>> IDF_CACHE = new HashMap<String, Map<String, Double>>();
 	
 	/**
-	 * 分词，设置词语权重。
+	 * 分词，设置词条权重。
 	 * @param addresses
 	 * @return
 	 */
@@ -97,7 +97,7 @@ public class SimilarityComputer {
 	}
 	
 	/**
-	 * 分词，设置词语权重。
+	 * 分词，设置词条权重。
 	 * @param addr
 	 * @return
 	 */
@@ -112,7 +112,7 @@ public class SimilarityComputer {
 		//2. 生成term
 		Set<String> doneTokens = new HashSet<String>(tokens.size()+6);
 		List<Term> terms = new ArrayList<Term>(tokens.size()+6);
-		//2.1 地址解析后已经识别出来的部分，直接作为词语生成Term。包括：省、地级市、区县、街道/镇/乡、村、道路、门牌号(roadNum)。
+		//2.1 地址解析后已经识别出来的部分，直接作为词条生成Term。包括：省、地级市、区县、街道/镇/乡、村、道路、门牌号(roadNum)。
 		//省市区如果匹配不准确，结果误差就很大，因此加大省市区权重。但实际上计算IDF时省份、城市的IDF基本都为0。
 		if(addr.hasProvince()) 
 			addTerm(addr.getProvince().getName(), TermType.Province, terms, doneTokens, addr.getProvince());
@@ -149,22 +149,15 @@ public class SimilarityComputer {
 		for(String token : tokens)
 			addTerm(token, TermType.Text, terms, doneTokens, null);
 		
-//		//3. 对词语权重进行一次加权
-//		double sum = 0;
-//		for(Term term : terms)
-//			sum += term.getWeight();
-//		for(Term term : terms)
-//			term.setWeight(term.getWeight()/sum);
-//		
 		doc.setTerms(terms);
 		
 		return doc;
 	}
 	
 	/**
-	 * 为所有文档的全部词语统计逆向引用情况。
+	 * 为所有文档的全部词条统计逆向引用情况。
 	 * @param docs 所有文档。
-	 * @return 全部词语的逆向引用情况，key为词语，value为该词语在多少个文档中出现过。
+	 * @return 全部词条的逆向引用情况，key为词条，value为该词条在多少个文档中出现过。
 	 */
 	private Map<String, Integer> statInverseDocRefers(List<Document> docs){
 		Map<String, Integer> idrc = new HashMap<String, Integer>(); 
@@ -180,55 +173,6 @@ public class SimilarityComputer {
 		}
 		return idrc;
 	}
-	
-//	/**
-//	 * 为文档中的每个词语计算特征值，类似词语的TF-IDF值。
-//	 * @param docs
-//	 */
-//	private void computeTermEigenvalue(List<Document> docs){
-//		if(docs==null) return;
-//		Map<String, Integer> idrc = statInverseDocRefers(docs);
-//		for(Document doc: docs){
-//			computeTermEigenvalue(doc, docs.size(), idrc);
-//		}
-//	}
-//	
-//	/**
-//	 * 为文档中的每个词语计算特征值，类似词语的TF-IDF值。
-//	 * @param doc 需要计算词语特征值的文档。
-//	 * @param totalDocs 总文档数。
-//	 * @param idrc 所有文档全部词语逆向引用统计情况，必须是方法{@link #statInverseDocRefers(List)}的返回值。
-//	 */
-//	private void computeTermEigenvalue(Document doc, int totalDocs, Map<String, Integer> idrc){
-//		if(doc.getTerms()==null) return;
-//		double squareSum = 0; //预计算向量特征值的一部分
-//		for(Term term : doc.getTerms()){
-//			int thisTermRefCount = 1;
-//			//注意：
-//			//为全部文档执行分词、计算TF-IDF时，任何一个词语肯定会包含在termRefStat中，即：term在idrc中一定存在。
-//			//但是为某一特定文档搜索相似文档时，它的词语不一定包含在termRefStat中，即：term可能不存在于idrc中。
-//			if(idrc.containsKey(term.getText()))
-//				thisTermRefCount = idrc.get(term.getText());
-//			double idf = Math.log( totalDocs * 1.0 / ( thisTermRefCount + 1 ) );
-//			if(idf<0) idf = 0;
-//			term.setEigenvalue(idf * term.getWeight());
-//			squareSum += term.getEigenvalue() * term.getEigenvalue(); //预计算向量特征值的一部分
-//		}
-//		doc.setEigenvaluePart(Math.sqrt(squareSum)); //预计算向量特征值的一部分
-//	}
-//	
-//	public Document analyseAndComputeTermEigenvalue(AddressEntity address){
-//		//从文件缓存或内存缓存获取所有文档。
-//		List<Document> docs = loadDocunentsFromCache(address);
-//		if(docs.isEmpty()) {
-//			throw new RuntimeException("No history data for: " 
-//				+ address.getProvince().getName() + address.getCity().getName() );
-//		}
-//		//为词语计算特征值
-//		Document doc = analyse(address);
-//		computeTermEigenvalue(doc, docs.size(), IDF_CACHE.get(buildCacheKey(address)));
-//		return doc;
-//	}
 	
 	/**
 	 * 计算2个文档的相似度。
@@ -284,7 +228,6 @@ public class SimilarityComputer {
 		for(int i=0; i<doc.getTerms().size(); i++){
 			Term term = doc.getTerms().get(i);
 			if(i>0) sb.append("||");
-			//sb.append(term.getText()).append("--").append(term.getEigenvalue());
 			sb.append(term.getType().getValue()).append("--").append(term.getText());
 		}
 		return sb.toString();
@@ -303,16 +246,13 @@ public class SimilarityComputer {
 		String[] t2 = t1[1].split("\\|\\|");
 		if(t2.length<=0) return doc;
 		List<Term> terms = new ArrayList<Term>(t2.length);
-		//double squareSum = 0; //预计算向量特征值的一部分
 		for(String termStr : t2){
 			String[] t3 = termStr.split("\\-\\-");
 			if(t3.length!=2) continue;
 			Term term = new Term(TermType.toEnum(Byte.parseByte(t3[0])), t3[1]);
 			terms.add(term);
-			//squareSum += term.getEigenvalue() * term.getEigenvalue(); //预计算向量特征值的一部分
 		}
 		doc.setTerms(terms);
-		//doc.setEigenvaluePart(Math.sqrt(squareSum)); //预计算向量特征值的一部分
 		
 		return doc;
 	}
@@ -344,7 +284,7 @@ public class SimilarityComputer {
 				+ queryAddr.getProvince().getName() + queryAddr.getCity().getName() );
 		}
 		
-		//为词语计算特征值
+		//为词条计算特征值
 		Document queryDoc = analyse(queryAddr);
 		Map<String, Double> idfCache = IDF_CACHE.get(buildCacheKey(queryAddr));
 		for(Term term : queryDoc.getTerms()){
@@ -354,7 +294,6 @@ public class SimilarityComputer {
 			}
 			term.setIdf(idf);
 		}
-		//computeTermEigenvalue(queryDoc, allDocs.size(), IDF_CACHE.get(buildCacheKey(queryAddr)));
 		
 		//对应地址库中每条地址计算相似度，并保留相似度最高的topN条地址
 		if(topN<=0) topN=5;
@@ -494,8 +433,6 @@ public class SimilarityComputer {
 		List<Document> docs = analyse(addresses);
 		if(docs==null || docs.isEmpty()) return;
 		
-		//computeTermEigenvalue(docs);
-
 		String filePath = getCacheFolder() + "/" + key + ".vt";
 		File file = new File(filePath);
 		try {

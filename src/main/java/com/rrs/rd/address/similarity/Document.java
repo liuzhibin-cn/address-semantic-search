@@ -12,7 +12,6 @@ public class Document {
 	private int id;
 	private List<Term> terms = null;
 	private Map<String, Term> termsMap = null;
-	private double eigenvaluePart = 0;
 	
 	public Document() {}
 	
@@ -49,13 +48,6 @@ public class Document {
 	
 	public void setTerms(List<Term> value){
 		this.terms = value;
-	}
-	
-	public double getEigenvaluePart(){
-		return this.eigenvaluePart;
-	}
-	public void setEigenvaluePart(double value){
-		this.eigenvaluePart = value;
 	}
 	
 	/**
