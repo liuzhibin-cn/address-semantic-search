@@ -22,6 +22,11 @@ import com.rrs.rd.address.similarity.SimilarDocResult;
 import com.rrs.rd.address.similarity.SimilarityComputer;
 import com.rrs.rd.address.utils.FileUtil;
 
+/**
+ * Demo服务实现。
+ * @author Richie 刘志斌 yudi@sina.com
+ * 2016年9月25日
+ */
 public class HttpDemoServiceImpl implements HttpDemoService {
 	private final static Logger LOG = LoggerFactory.getLogger(HttpDemoServiceImpl.class);
 	private SimilarityComputer computer = null;

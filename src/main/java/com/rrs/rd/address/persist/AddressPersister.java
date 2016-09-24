@@ -19,7 +19,7 @@ import com.rrs.rd.address.utils.LogUtil;
 import com.rrs.rd.address.utils.StringUtil;
 
 /**
- * {@link AddressEntity}和{@link RegionEntity}的数据持久化操作逻辑。
+ * {@link AddressEntity}和{@link RegionEntity}的数据持久化操作。
  * @author Richie 刘志斌 yudi@sina.com
  */
 public class AddressPersister implements ApplicationContextAware {

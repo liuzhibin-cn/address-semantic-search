@@ -4,6 +4,11 @@ import org.apache.velocity.util.StringUtils;
 
 import com.rrs.rd.address.utils.StringUtil;
 
+/**
+ * Velocity扩展工具类。
+ * @author Richie 刘志斌 yudi@sina.com
+ * 2016年9月25日
+ */
 public class VelocityUtils extends StringUtils {
 	public boolean isEmpty(String str){
 		return str==null || str.trim().isEmpty();

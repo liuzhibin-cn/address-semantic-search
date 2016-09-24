@@ -15,7 +15,8 @@ import com.rrs.rd.address.persist.RegionType;
 import com.rrs.rd.address.utils.StringUtil;
 
 /**
- * {@link AddressEntity}和{@link RegionEntity}的操作逻辑。
+ * 地址解析操作。
+ * <p>从地址文本中解析出省、市、区、街道、乡镇、道路等地址组成部分。</p>
  * @author Richie 刘志斌 yudi@sina.com
  */
 public class AddressInterpreter {

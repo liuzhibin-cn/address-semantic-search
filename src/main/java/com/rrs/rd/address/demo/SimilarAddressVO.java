@@ -4,7 +4,7 @@ import com.rrs.rd.address.persist.AddressEntity;
 import com.rrs.rd.address.similarity.SimilarDocResult;
 
 /**
- * HTML展示时的View Object对象。
+ * Demo服务进行HTML展示时的VO对象。
  * @author Richie 刘志斌 yudi@sina.com
  * 2016年9月22日
  */

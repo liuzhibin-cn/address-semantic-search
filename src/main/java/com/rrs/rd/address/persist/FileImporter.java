@@ -13,7 +13,7 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 import com.rrs.rd.address.interpret.AddressInterpreter;
 
 /**
- * 地址导入工具类。
+ * 地址导入。
  * @author Richie 刘志斌 yudi@sina.com
  */
 public class FileImporter {
