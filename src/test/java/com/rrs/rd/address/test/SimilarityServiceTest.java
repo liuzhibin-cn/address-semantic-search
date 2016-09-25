@@ -26,7 +26,7 @@ public class SimilarityServiceTest extends TestBase {
 		SimilarityComputer service = context.getBean(SimilarityComputer.class);
 		
 		String str = service.serialize(doc);
-		assertEquals("11981$$1--山东省||2--青岛市||3--李沧区||10--李沧街道||20--北崂路", str);
+		assertEquals("11981$1山东省|2青岛市|3李沧区|S李沧街道|R北崂路", str);
 		
 		Document deserialized = service.deserialize(str);
 		

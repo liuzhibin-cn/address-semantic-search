@@ -34,6 +34,13 @@ public class AddressInterpretTest extends TestBase {
 		assertEquals("乡镇错误", "郭镇", addr.getTowns().get(1));
 		assertEquals("村庄错误", "盐桥村", addr.getVillage());
 		
+		addr = interpreter.interpretAddress("北京北京海淀区北京市海淀区万寿路翠微西里13号楼1403室");
+		assertNotNull("解析失败", addr);
+		LOG.info("> " + addr.getRawText() + " --> " + addr);
+		assertEquals("详细地址错误", "翠微西里", addr.getText());
+		assertEquals("道路错误", "万寿路", addr.getRoad());
+		assertEquals("房间号错误", "13号楼1403室", addr.getBuildingNum());
+		
 		addr = interpreter.interpretAddress("海南海南省直辖市县定安县见龙大道财政局宿舍楼702");
 		assertNotNull("解析失败", addr);
 		LOG.info("> " + addr.getRawText() + " --> " + addr);

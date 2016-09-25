@@ -1,11 +1,7 @@
 package com.rrs.rd.address.interpret;
 
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -30,8 +26,6 @@ public class AddressInterpreter {
 	private List<String> invalidRegionNames;
 	private static char[] specialCharsToBeRemoved = " \r\n\t,，;；:：·.．。！、\"'“”|_-\\/{}【】〈〉<>[]「」".toCharArray();
 	
-//	private static Set<Character> CN_NUM_CHAR1;
-//	private static Set<Character> CN_NUM_CHAR2;
 	private static Pattern BRACKET_PATTERN = Pattern.compile("(?<bracket>([\\(（\\{\\<〈\\[【「][^\\)）\\}\\>〉\\]】」]*[\\)）\\}\\>〉\\]】」]))");
 	
 	/**
@@ -59,18 +53,6 @@ public class AddressInterpreter {
 	private static final Pattern P_ROAD = Pattern.compile("^(?<road>([\u4e00-\u9fa5]{2,4}(路|街坊|街|道|大街|大道)))(?<ex>[甲乙丙丁])?(?<roadnum>[0-9０１２３４５６７８９一二三四五六七八九十]+(号院|号楼|号大院|号|號|巷|弄|院|区|条|\\#院|\\#))?");
 	
 	private AddressPersister persister;
-	
-	static{
-//		CN_NUM_CHAR1 = new HashSet<Character>();
-//		String cnNum = "０１２３４５６７８９";
-//		for(int i=0; i<cnNum.length(); i++){
-//			CN_NUM_CHAR1.add(cnNum.charAt(i));
-//		}
-//		cnNum = "一二三四五六七八九十零";
-//		for(int i=0; i<cnNum.length(); i++){
-//			CN_NUM_CHAR2.add(cnNum.charAt(i));
-//		}
-	}
 	
 	//***************************************************************************************
 	// AddressService对外提供的服务接口
@@ -282,14 +264,16 @@ public class AddressInterpreter {
 				}
 				//特殊情况处理：
 				//无法匹配到地级市，尝试一次匹配区县
-				for(RegionEntity theCity : cities){
-					if(simpleExtractRegion(addr, RegionType.County, theCity.getChildren(), isTrial)){
-						addr.setCity(theCity);
-						addr.setCityInferred(true);
-						if(!isTrial && LOG.isDebugEnabled())
-							LOG.debug("[addr-inter] [ex-regn] [no-city] "
-									+ StringUtil.head(addr.getRawText(), addr.getRawText().length() - addr.getText().length())
-									+ ", try " + addr.getProvince().getName() + " " + addr.getCity().getName() + " " + addr.getCounty().getName());
+				if(!addr.hasCity()){
+					for(RegionEntity theCity : cities){
+						if(simpleExtractRegion(addr, RegionType.County, theCity.getChildren(), isTrial)){
+							addr.setCity(theCity);
+							addr.setCityInferred(true);
+							if(!isTrial && LOG.isDebugEnabled())
+								LOG.debug("[addr-inter] [ex-regn] [no-city] "
+										+ StringUtil.head(addr.getRawText(), addr.getRawText().length() - addr.getText().length())
+										+ ", try " + addr.getProvince().getName() + " " + addr.getCity().getName() + " " + addr.getCounty().getName());
+						}
 					}
 				}
 			}

@@ -20,6 +20,7 @@ import com.rrs.rd.address.interpret.AddressInterpreter;
 import com.rrs.rd.address.persist.AddressEntity;
 import com.rrs.rd.address.persist.RegionEntity;
 import com.rrs.rd.address.similarity.segment.SimpleSegmenter;
+import com.rrs.rd.address.utils.StringUtil;
 
 /**
  * 相似度算法相关逻辑。
@@ -186,10 +187,8 @@ public class SimilarityComputer {
 		double tfb = 1 / Math.log(b.getTerms().size());
 		for(Term termA : a.getTerms()){
 			tfidfa = tfa * termA.getIdf() * getBoostValue(termA.getType());
-			//tfidfa = tfa * termA.getIdf();
 			Term termB = b.getTerm(termA.getText());
 			tfidfb = termB==null ? 0 : tfb * termA.getIdf() * getBoostValue(termB.getType());
-			//tfidfb = termB==null ? 0 : tfb * termA.getIdf();
 			sumAA += tfidfa * tfidfa;
 			sumAB += tfidfa * tfidfb;
 			sumBB += tfidfb * tfidfb;
@@ -249,7 +248,7 @@ public class SimilarityComputer {
 		for(int i=0; i<doc.getTerms().size(); i++){
 			Term term = doc.getTerms().get(i);
 			if(i>0) sb.append('|');
-			sb.append(term.getType().getValue()).append('-').append(term.getText());
+			sb.append(term.getType().getValue()).append(term.getText());
 		}
 		return sb.toString();
 	}
@@ -268,9 +267,7 @@ public class SimilarityComputer {
 		if(t2.length<=0) return doc;
 		List<Term> terms = new ArrayList<Term>(t2.length);
 		for(String termStr : t2){
-			String[] t3 = termStr.split("\\-");
-			if(t3.length!=2) continue;
-			Term term = new Term(TermType.toEnum(t3[0].charAt(0)), t3[1]);
+			Term term = new Term(TermType.toEnum(termStr.charAt(0)), StringUtil.substring(termStr, 1));
 			terms.add(term);
 		}
 		doc.setTerms(terms);
