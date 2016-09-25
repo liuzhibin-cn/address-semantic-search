@@ -1,7 +1,11 @@
 package com.rrs.rd.address.interpret;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -26,6 +30,8 @@ public class AddressInterpreter {
 	private List<String> invalidRegionNames;
 	private static char[] specialCharsToBeRemoved = " \r\n\t,，;；:：·.．。！、\"'“”|_-\\/{}【】〈〉<>[]「」".toCharArray();
 	
+//	private static Set<Character> CN_NUM_CHAR1;
+//	private static Set<Character> CN_NUM_CHAR2;
 	private static Pattern BRACKET_PATTERN = Pattern.compile("(?<bracket>([\\(（\\{\\<〈\\[【「][^\\)）\\}\\>〉\\]】」]*[\\)）\\}\\>〉\\]】」]))");
 	
 	/**
@@ -50,9 +56,21 @@ public class AddressInterpreter {
 	 * 匹配镇、乡、街道的模式
 	 */
 	private static final Pattern P_TOWN = Pattern.compile("^((?<j>[\u4e00-\u9fa5]{2,4}街道)*(?<z>[\u4e00-\u9fa5]{1,4}镇(?!(公路|大街|大道|路|街|乡|村|镇)))*(?<x>[^乡]{2,4}乡(?!(公路|大街|大道|路|街|村|镇)))*(?<c>[^村]{1,4}村(?!(公路|大街|大道|路|街道|镇|乡)))*)");
-	private static final Pattern P_ROAD = Pattern.compile("^(?<road>([\u4e00-\u9fa5]{2,4}(路|街|道|大街|大道)))(?<roadnum>[0-9]+(号|弄)?)?");
+	private static final Pattern P_ROAD = Pattern.compile("^(?<road>([\u4e00-\u9fa5]{2,4}(路|街坊|街|道|大街|大道)))(?<ex>[甲乙丙丁])?(?<roadnum>[0-9０１２３４５６７８９一二三四五六七八九十]+(号院|号楼|号大院|号|號|巷|弄|院|区|条|\\#院|\\#))?");
 	
 	private AddressPersister persister;
+	
+	static{
+//		CN_NUM_CHAR1 = new HashSet<Character>();
+//		String cnNum = "０１２３４５６７８９";
+//		for(int i=0; i<cnNum.length(); i++){
+//			CN_NUM_CHAR1.add(cnNum.charAt(i));
+//		}
+//		cnNum = "一二三四五六七八九十零";
+//		for(int i=0; i<cnNum.length(); i++){
+//			CN_NUM_CHAR2.add(cnNum.charAt(i));
+//		}
+	}
 	
 	//***************************************************************************************
 	// AddressService对外提供的服务接口
@@ -621,10 +639,17 @@ public class AddressInterpreter {
 		if(addr.getRoad().length()>0) return true; //已经提取出道路，不再执行
 		Matcher matcher = P_ROAD.matcher(addr.getText());
 		if(matcher.find()){
-			String road = matcher.group("road"), roadNum = matcher.group("roadnum");
+			String road = matcher.group("road"), ex = matcher.group("ex"), roadNum = matcher.group("roadnum");
+			roadNum = (ex==null ? "" : ex) + (roadNum==null ? "" : roadNum);
+			String leftText = StringUtil.substring(addr.getText(), road.length() + roadNum.length());
+			if(leftText.startsWith("小区")) return false;
 			addr.setRoad(road);
-			addr.setRoadNum(roadNum);
-			addr.setText(StringUtil.substring(addr.getText(), road.length() + (roadNum==null ? 0 : roadNum.length())));
+			if(roadNum.length()==1){ //仅包含【甲乙丙丁】单个汉字，不能作为门牌号
+				addr.setText(roadNum + leftText);
+			}else{
+				addr.setRoadNum(roadNum);
+				addr.setText(leftText);
+			}
 			return true;
 		}
 		return false;

@@ -81,4 +81,13 @@ public class BasicFuncTest {
 				System.out.println("> " + (i+1) + ":" + m.group(i));
 		}
 	}
+	
+	@Test
+	public void testCnChars(){
+		String str = "一二三四五六七八九十";
+		for(int i=0; i<str.length(); i++){
+			char c = str.charAt(i);
+			System.out.println((long)c + ": " + c);
+		}
+	}
 }
