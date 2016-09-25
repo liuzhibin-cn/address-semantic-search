@@ -42,8 +42,8 @@
 
 <div class="top20">
 	<h3>Explain for query document:</h3>
-	<span>$!{r.addr.rawText}</span>
-	<span class="left10 em2">TF = $utils.round($r.docExplain.tf, 4)</span>
+	<span>[$!{r.addr.rawText}</span>
+	<span class="left10 em2">TF = $utils.round($r.docExplain.tf, 4)</span>]
 	<span class=left10>&gt;&gt;</span>
 	<span class=left10>[</span><span class="em1">$!{r.addr.province.name} $!{r.addr.city.name} $!{r.addr.county.name}</span>]
 	#if($utils.notEmpty($r.addr.towns))<span class="left10">[</span><span class="em1">#foreach($town in ${r.addr.towns})$!{town} #end</span>]#end

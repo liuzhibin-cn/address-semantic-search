@@ -44,10 +44,6 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 		String vm = "find-addr.vm";
 		try{
 			this.findSimilarAddress(addrText, model);
-		}catch(RuntimeException rex){
-			LOG.error("[addr] [find-similar] [error] " + rex.getMessage());
-			model.put("rex", rex);
-			vm = "find-addr-error.vm";
 		}catch(Exception ex){
 			LOG.error("[addr] [find-similar] [error] " + ex.getMessage(), ex);
 			model.put("ex", ex);

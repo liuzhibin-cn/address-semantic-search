@@ -12,46 +12,46 @@ import java.util.EnumSet;
  * 2016年9月25日
  */
 public enum TermType {
-	Undefined((byte)0),
+	Undefined('0'),
 	/**
 	 * 省
 	 */
-	Province((byte)1),
+	Province('1'),
 	/**
 	 * 地级市
 	 */
-	City((byte)2),
+	City('2'),
 	/**
 	 * 区县
 	 */
-	County((byte)3),
+	County('3'),
 	/**
 	 * 街道
 	 */
-	Street((byte)10),
+	Street('S'),
 	/**
 	 * 乡镇
 	 */
-	Town((byte)11),
+	Town('T'),
 	/**
 	 * 村
 	 */
-	Village((byte)12),
+	Village('V'),
 	/**
 	 * 道路
 	 */
-	Road((byte)20),
+	Road('R'),
 	/**
 	 * 门牌号
 	 */
-	RoadNum((byte)21),
+	RoadNum('N'),
 	/**
 	 * 其他地址文本
 	 */
-	Text((byte)100);
+	Text('X');
 	
-	private byte value;
-	TermType(byte val){
+	private char value;
+	TermType(char val){
 		this.value = val;
 	}
 	
@@ -59,11 +59,11 @@ public enum TermType {
 	 * 枚举值。
 	 * @return
 	 */
-	public byte getValue(){
+	public char getValue(){
 		return this.value;
 	}
 	
-	public static TermType toEnum(byte val){
+	public static TermType toEnum(char val){
 		EnumSet<TermType> enums = EnumSet.allOf(TermType.class);
 		for(TermType tt : enums){
 			if(tt.getValue() == val) return tt;

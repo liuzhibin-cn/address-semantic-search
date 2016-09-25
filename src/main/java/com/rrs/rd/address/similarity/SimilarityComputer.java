@@ -10,10 +10,8 @@ import java.io.InputStreamReader;
 import java.io.OutputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +19,7 @@ import org.slf4j.LoggerFactory;
 import com.rrs.rd.address.interpret.AddressInterpreter;
 import com.rrs.rd.address.persist.AddressEntity;
 import com.rrs.rd.address.persist.RegionEntity;
-import com.rrs.rd.address.similarity.segment.IKAnalyzerSegmenter;
+import com.rrs.rd.address.similarity.segment.SimpleSegmenter;
 
 /**
  * 相似度算法相关逻辑。
@@ -68,12 +66,13 @@ public class SimilarityComputer {
 	
 	private static String DEFAULT_CACHE_FOLDER = "~/.vector_cache";
 	private static double DEFAULT_BOOST = 1; //正常权重
-	private static double HIGH_BOOST = 3; //加权高值
-	private static double MID_BOOST = 1.8; //加权中值
+	private static double HIGH_BOOST = 2; //加权高值
+	private static double MID_BOOST = 1.5; //加权中值
 	private static double LOW_BOOST = 0.5; //降权
 	
 	private AddressInterpreter interpreter = null;
-	private Segmenter segmenter = new IKAnalyzerSegmenter();
+	//private Segmenter segmenter = new IKAnalyzerSegmenter();
+	private Segmenter segmenter = new SimpleSegmenter();
 	private List<String> defaultTokens = new ArrayList<String>(0);
 	private String cacheFolder;
 	private boolean cacheVectorsInMemory = false;
@@ -110,16 +109,16 @@ public class SimilarityComputer {
 		}
 		
 		//2. 生成term
-		Set<String> doneTokens = new HashSet<String>(tokens.size()+6);
+		//Set<String> doneTokens = new HashSet<String>(tokens.size()+6);
 		List<Term> terms = new ArrayList<Term>(tokens.size()+6);
 		//2.1 地址解析后已经识别出来的部分，直接作为词条生成Term。包括：省、地级市、区县、街道/镇/乡、村、道路、门牌号(roadNum)。
 		//省市区如果匹配不准确，结果误差就很大，因此加大省市区权重。但实际上计算IDF时省份、城市的IDF基本都为0。
 		if(addr.hasProvince()) 
-			addTerm(addr.getProvince().getName(), TermType.Province, terms, doneTokens, addr.getProvince());
+			addTerm(addr.getProvince().getName(), TermType.Province, terms, addr.getProvince());
 		if(addr.hasCity()) 
-			addTerm(addr.getCity().getName(), TermType.City, terms, doneTokens, addr.getCity());
+			addTerm(addr.getCity().getName(), TermType.City, terms, addr.getCity());
 		if(addr.hasCounty()) 
-			addTerm(addr.getCounty().getName(), TermType.County, terms, doneTokens, addr.getCounty());
+			addTerm(addr.getCounty().getName(), TermType.County, terms, addr.getCounty());
 		String residentDistrict = null, town = null;
 		for(int i=0; addr.getTowns()!=null && i<addr.getTowns().size(); i++){
 			if(addr.getTowns().get(i).endsWith("街道")) {
@@ -134,20 +133,20 @@ public class SimilarityComputer {
 			}
 		}
 		if(residentDistrict!=null) //街道准确率很低，很多人随便选择街道，因此将街道权重降低
-			addTerm(residentDistrict, TermType.Street, terms, doneTokens, null);
+			addTerm(residentDistrict, TermType.Street, terms, null);
 		if(town!=null) //目前情况下，对农村地区，物流公司的片区规划粒度基本不可能比乡镇更小，因此加大乡镇权重
-			addTerm(town, TermType.Town, terms, doneTokens, null);
+			addTerm(town, TermType.Town, terms, null);
 		if(!addr.getVillage().isEmpty()) //同上，村庄的识别度比较高，加大权重
-			addTerm(addr.getVillage(), TermType.Village, terms, doneTokens, null);
+			addTerm(addr.getVillage(), TermType.Village, terms, null);
 		if(!addr.getRoad().isEmpty()) //对于城市地址，道路识别度比较高，加大权重
-			addTerm(addr.getRoad(), TermType.Road, terms, doneTokens, null);
+			addTerm(addr.getRoad(), TermType.Road, terms, null);
 		//两个地址在道路(road)一样的情况下，门牌号(roadNum)的识别作用就非常大，但如果道路不一样，则门牌号的识别作用就很小。
 		//为了强化门牌号的作用，但又需要避免产生干扰，因此将门牌号的权重设置为一个中值，而不是高值。
 		if(!addr.getRoadNum().isEmpty())
-			addTerm(addr.getRoadNum(), TermType.RoadNum, terms, doneTokens, null);
+			addTerm(addr.getRoadNum(), TermType.RoadNum, terms, null);
 		//2.2 地址文本分词后的token
 		for(String token : tokens)
-			addTerm(token, TermType.Text, terms, doneTokens, null);
+			addTerm(token, TermType.Text, terms, null);
 		
 		doc.setTerms(terms);
 		
@@ -204,7 +203,8 @@ public class SimilarityComputer {
 		List<TermExplain> termsExplain = new ArrayList<TermExplain>(explain.getDoc().getTerms().size());
 		for(Term term : explain.getDoc().getTerms()){
 			TermExplain te = new TermExplain(term);
-			te.setIdf(idfs.get(term.getText()));
+			if(idfs.containsKey(term.getText()))
+				te.setIdf(idfs.get(term.getText()));
 			te.setBoost(getBoostValue(term.getType()));
 			if(queryDoc==null){
 				te.setTfidf(explain.getTf() * te.getIdf() * te.getBoost());
@@ -245,11 +245,11 @@ public class SimilarityComputer {
 	 */
 	public String serialize(Document doc){
 		StringBuilder sb = new StringBuilder();
-		sb.append(doc.getId()).append("$$");
+		sb.append(doc.getId()).append('$');
 		for(int i=0; i<doc.getTerms().size(); i++){
 			Term term = doc.getTerms().get(i);
-			if(i>0) sb.append("||");
-			sb.append(term.getType().getValue()).append("--").append(term.getText());
+			if(i>0) sb.append('|');
+			sb.append(term.getType().getValue()).append('-').append(term.getText());
 		}
 		return sb.toString();
 	}
@@ -261,16 +261,16 @@ public class SimilarityComputer {
 	 */
 	public Document deserialize(String str){
 		if(str==null || str.trim().isEmpty()) return null;
-		String[] t1 = str.trim().split("\\$\\$");
+		String[] t1 = str.trim().split("\\$");
 		if(t1.length!=2) return null;
 		Document doc = new Document(Integer.parseInt(t1[0]));
-		String[] t2 = t1[1].split("\\|\\|");
+		String[] t2 = t1[1].split("\\|");
 		if(t2.length<=0) return doc;
 		List<Term> terms = new ArrayList<Term>(t2.length);
 		for(String termStr : t2){
-			String[] t3 = termStr.split("\\-\\-");
+			String[] t3 = termStr.split("\\-");
 			if(t3.length!=2) continue;
-			Term term = new Term(TermType.toEnum(Byte.parseByte(t3[0])), t3[1]);
+			Term term = new Term(TermType.toEnum(t3[0].charAt(0)), t3[1]);
 			terms.add(term);
 		}
 		doc.setTerms(terms);
@@ -498,12 +498,14 @@ public class SimilarityComputer {
 				+ docs.size() + " docs, elapsed " + (System.currentTimeMillis() - start)/1000.0 + "s.");
 	}
 	
-	private void addTerm(String text, TermType type, List<Term> terms, Set<String> doneTokens, RegionEntity region){
+	private void addTerm(String text, TermType type, List<Term> terms, RegionEntity region){
 		String termText = text;
 		if(termText.length()>=4 && region!=null && region.orderedNameAndAlias()!=null && !region.orderedNameAndAlias().isEmpty()){
 			termText = region.orderedNameAndAlias().get(region.orderedNameAndAlias().size()-1);
 		}
-		if(doneTokens.contains(termText)) return;
+		for(Term term : terms){
+			if(term.getText().equals(termText)) return;
+		}
 		terms.add(new Term(type, termText));
 	}
 	

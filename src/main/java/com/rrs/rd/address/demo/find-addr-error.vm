@@ -4,9 +4,7 @@
 <style> body, pre { font-size:14px; } </style>
 </head>
 <body style="padding:10px;">
-#if(${rex}) <span style="color:red; font-size:16px;">$!{rex.message}</span> #end
-#if(${ex})
-<pre>$utils.stackTrace($ex)</pre>
-#end
+#if($ex && $ex.message) <span style="color:red; font-size:16px;">$!{ex.message}</span> #end
+#if($ex)<pre>$utils.stackTrace($ex)</pre>#end
 </body>
 </html>
