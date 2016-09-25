@@ -20,31 +20,11 @@
 		extension="com.alibaba.dubbo.rpc.protocol.rest.support.LoggingFilter" />
 	<dubbo:service interface="com.rrs.rd.address.demo.HttpDemoService" ref="demoService" 
 		register="false" protocol="rest" />
-
-	<!-- bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
-	    <constructor-arg index="0" ref="sqlSessionFactory" />
-	    <constructor-arg index="1" value="BATCH" />
-	</bean>
-	<tx:annotation-driven transaction-manager="txManager"/>
-	<bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
-		<property name="dataSource" ref="datasource"/>
-	</bean -->
-	
-	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
-		<property name="mapperLocations" value="classpath:sql-mapper/*Mapper.xml" />
-		<property name="dataSource" ref="datasource" />
-		<property name="typeHandlers">
-			<array>
-				<bean class="com.rrs.common.dao.ListOnSimicolonSeparatedStringColumnTypeHandler" />
-				<bean class="com.rrs.rd.address.persist.dao.RegionTypeTypeHandler" />
-			</array>
-		</property>
-	</bean>
 	<bean id="demoService" class="com.rrs.rd.address.demo.HttpDemoServiceImpl" init-method="init">
 		<property name="computer" ref="computer" />
-		<property name="interpreter" ref="interpreter" />
 		<property name="persister" ref="persister" />
 	</bean>
+	
 	<bean id="computer" class="com.rrs.rd.address.similarity.SimilarityComputer">
 		<property name="interpreter" ref="interpreter" />
 		<property name="cacheFolder" value="${cache.path}" />
@@ -76,6 +56,8 @@
 		<property name="addressDao" ref="addressDao" />
 		<property name="regionDao" ref="regionDao" />
 	</bean>
+	
+	<!-- DAOs -->
 	<bean id="addressDao" class="org.mybatis.spring.mapper.MapperFactoryBean">
 		<property name="mapperInterface" value="com.rrs.rd.address.persist.dao.AddressDao" />
 		<!-- property name="sqlSessionTemplate" ref="sqlSession" / -->
@@ -86,4 +68,24 @@
 		<!-- property name="sqlSessionTemplate" ref="sqlSession" / -->
 		<property name="sqlSessionFactory" ref="sqlSessionFactory" />
 	</bean>
+	
+	<bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+		<property name="mapperLocations" value="classpath:sql-mapper/*Mapper.xml" />
+		<property name="dataSource" ref="datasource" />
+		<property name="typeHandlers">
+			<array>
+				<bean class="com.rrs.common.dao.ListOnSimicolonSeparatedStringColumnTypeHandler" />
+				<bean class="com.rrs.rd.address.persist.dao.RegionTypeTypeHandler" />
+			</array>
+		</property>
+	</bean>
+	
+	<!-- bean id="sqlSession" class="org.mybatis.spring.SqlSessionTemplate">
+	    <constructor-arg index="0" ref="sqlSessionFactory" />
+	    <constructor-arg index="1" value="BATCH" />
+	</bean>
+	<tx:annotation-driven transaction-manager="txManager"/>
+	<bean id="txManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+		<property name="dataSource" ref="datasource"/>
+	</bean -->
 </beans>

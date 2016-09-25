@@ -10,61 +10,67 @@
 	.top20 { margin-top:20px; }
 	.bot10 { margin-bottom:10px; }
 	.em1 { color:red; } 
-	.em2 { color:orange; }
+	.em2, td.hit { color:orange; }
 	.c { text-align:center; }
 	table.c td, table.c th { text-align:center; }
 	tr.c td, tr.c th { text-align:center; }
 	h3 { font-size:14px; font-weight:600; color:blue; }
-	
 </style>
 </head>
 <body style="padding:5px 20px 0 20px;">
 
 <div>
-	<h3>与【$!{queryAddr.rawText}】相似的地址：</h3>
+	<h3>Most similar documents for: [$!{r.addr.rawText}]</h3>
 	<table>
 		<tr class=c>
-			<th>相似度</th>
-			<th>地址ID</th>
-			<th>详细地址</th>
+			<th>Similarity</th>
+			<th>Addr ID</th>
+			<th>Addr Text</th>
 		</tr>
-		#foreach($vo in ${similarVOs})
+		#foreach($vo in ${r.similarDocs})
 		<tr>
 			<td>$!{vo.similarity}</td>
-			<td>$!{vo.address.id}</td>
-			<td>$!{vo.address.rawText}</td>
+			<td>$!{vo.addr.id}</td>
+			<td>$!{vo.addr.rawText}</td>
 		</tr>
 		#end
 	</table>
-	<span>[$!{queryAddr.province.name} $!{queryAddr.city.name} $!{queryAddr.county.name}]共</span>
 	<span class="em1">$!{totalDocCount}</span>
-	<span>条历史地址</span>
-	<span class="left10">搜索用时:</span><span class="em1">$!{elapsedTime}毫秒</span>
+	<span> history addresses under: [$!{r.addr.province.name} $!{r.addr.city.name} $!{r.addr.county.name}]</span>
+	<span class="left10">Elapsed time:</span><span class="em1">$!{elapsedTime}ms.</span>
 </div>
 
 <div class="top20">
-	<h3>输入地址的解析情况：</h3>
-	<span>$!{queryAddr.rawText}</span><span class="left10">&gt;&gt;</span>
-	<span class="left10">[省市区:</span><span class="em1">$!{queryAddr.province.name} $!{queryAddr.city.name} $!{queryAddr.county.name}</span>]
-	#if($utils.notEmpty($queryAddr.towns))<span class="left10">[街道/乡镇:</span><span class="em1">#foreach($town in ${queryAddr.towns})$!{town} #end</span>]#end
-	#if($utils.notEmpty($queryAddr.village))<span class="left10">[村庄:</span><span class="em1">$!{queryAddr.village}</span>]#end
-	#if($utils.notEmpty($queryAddr.road))<span class="left10">[道路:</span><span class="em1">$!{queryAddr.road}</span>]#end
-	#if($utils.notEmpty($queryAddr.roadNum))<span class="left10">[门牌号:</span><span class="em1">$!{queryAddr.roadNum}</span>]#end
-	#if($utils.notEmpty($queryAddr.text))<span class="left10">[其它:</span><span class="em1">$!{queryAddr.text}</span>]#end
-	#if($utils.notEmpty($queryAddr.buildingNum))<span class="left10">[楼号/房间号:</span><span class="em1">$!{queryAddr.buildingNum}</span>]#end
+	<h3>Explain for query document:</h3>
+	<span>$!{r.addr.rawText}</span>
+	<span class="left10 em2">TF = $utils.round($r.docExplain.tf, 4)</span>
+	<span class=left10>&gt;&gt;</span>
+	<span class=left10>[</span><span class="em1">$!{r.addr.province.name} $!{r.addr.city.name} $!{r.addr.county.name}</span>]
+	#if($utils.notEmpty($r.addr.towns))<span class="left10">[</span><span class="em1">#foreach($town in ${r.addr.towns})$!{town} #end</span>]#end
+	#if($utils.notEmpty($r.addr.village))<span class="left10">[</span><span class="em1">$!{r.addr.village}</span>]#end
+	#if($utils.notEmpty($r.addr.road))<span class="left10">[</span><span class="em1">$!{r.addr.road}</span>]#end
+	#if($utils.notEmpty($r.addr.roadNum))<span class="left10">[</span><span class="em1">$!{r.addr.roadNum}</span>]#end
+	#if($utils.notEmpty($r.addr.text))<span class="left10">[</span><span class="em1">$!{r.addr.text}</span>]#end
+	#if($utils.notEmpty($r.addr.buildingNum))<span class="left10">[</span><span class="em1">$!{r.addr.buildingNum}</span>]#end
 	<table class="top5 c">
-		<tr><th>词条</th>#foreach($term in ${queryDoc.terms})<td class="em1 c">$!{term.text}</td>#end</tr>
-		<tr><th>类型</th>#foreach($term in ${queryDoc.terms})<td class=c>$term.type</td>#end</tr>
+		<tr><th>Term</th>#foreach($exp in ${r.docExplain.termsExplain})<td class="em1 c">$!{exp.term.text}</td>#end</tr>
+		<tr><th>Type</th>#foreach($exp in ${r.docExplain.termsExplain})<td class=c>$!{exp.term.type}</td>#end</tr>
+		<tr><th>IDF</th>#foreach($exp in ${r.docExplain.termsExplain})<td>$utils.round($exp.idf, 4)</td>#end</tr>
+		<tr><th>Boost</th>#foreach($exp in ${r.docExplain.termsExplain})<td>$!{exp.boost}</td>#end</tr>
+		<tr><th>TF-IDF</th>#foreach($exp in ${r.docExplain.termsExplain})<td>$utils.round($exp.tfidf, 4)</td>#end</tr>
 	</table>
 </div>
 
 <div class="top20">
-	<h3>相似地址的解析情况：</h3>
-	#foreach($vo in ${similarVOs})
-	<span>$!{vo.address.rawText}</span>
+	<h3>Explain for similar documents:</h3>
+	#foreach($vo in ${r.similarDocs})
+	<span>$!{vo.addr.id}: $!{vo.addr.rawText}</span><span class="left10 em2">TF = $utils.round($vo.docExplain.tf, 4)</span>
 	<table class="bot10 c">
-		<tr><th>词条</th>#foreach($term in ${vo.document.terms})<td>$!{term.text}</td>#end</tr>
-		<tr><th>类型</th>#foreach($term in ${vo.document.terms})<td>$term.type</td>#end</tr>
+		<tr><th>Term</th>#foreach($exp in ${vo.docExplain.termsExplain})<td class='$utils.hitClass($exp)'>$!{exp.term.text}</td>#end</tr>
+		<tr><th>Type</th>#foreach($exp in ${vo.docExplain.termsExplain})<td class='$utils.hitClass($exp)'>$!{exp.term.type}</td>#end</tr>
+		<tr><th>IDF</th>#foreach($exp in ${vo.docExplain.termsExplain})<td class='$utils.hitClass($exp)'>$utils.round($exp.idf, 4)</td>#end</tr>
+		<tr><th>Boost</th>#foreach($exp in ${vo.docExplain.termsExplain})<td class='$utils.hitClass($exp)'>$!{exp.boost}</td>#end</tr>
+		<tr><th>TF-IDF</th>#foreach($exp in ${vo.docExplain.termsExplain})<td class='$utils.hitClass($exp)'>$utils.round($exp.tfidf, 4)</td>#end</tr>
 	</table>
 	#end
 </div>

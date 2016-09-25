@@ -1,8 +1,10 @@
 package com.rrs.rd.address.demo;
 
+import java.util.List;
+
 import org.apache.velocity.util.StringUtils;
 
-import com.rrs.rd.address.utils.StringUtil;
+import com.rrs.rd.address.similarity.TermExplain;
 
 /**
  * Velocity扩展工具类。
@@ -13,15 +15,19 @@ public class VelocityUtils extends StringUtils {
 	public boolean isEmpty(String str){
 		return str==null || str.trim().isEmpty();
 	}
+	public boolean notEmpty(List<Object> list){
+		return !(list==null || list.isEmpty());
+	}
 	public boolean notEmpty(String str){
 		return !isEmpty(str);
-	}
-	public String left(String str, int len){
-		return StringUtil.head(str, len);
 	}
 	public double round(double value, int precision){
 		if(precision<0) precision=0;
 		long p = Math.round(Math.pow(10, precision));
 		return Math.round(value * p) * 1.0 / p;
+	}
+	public String hitClass(TermExplain te){
+		if(te==null) return "";
+		return te.getHit() ? "hit" : "";
 	}
 }

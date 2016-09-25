@@ -19,6 +19,11 @@ public class Document {
 		this.id = id;
 	}
 	
+	protected Document(int id, List<Term> terms){
+		this.id = id;
+		this.terms = terms;
+	}
+	
 	public int getId(){
 		return this.id;
 	}

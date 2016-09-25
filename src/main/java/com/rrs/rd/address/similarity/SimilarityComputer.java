@@ -187,14 +187,35 @@ public class SimilarityComputer {
 		double tfb = 1 / Math.log(b.getTerms().size());
 		for(Term termA : a.getTerms()){
 			tfidfa = tfa * termA.getIdf() * getBoostValue(termA.getType());
+			//tfidfa = tfa * termA.getIdf();
 			Term termB = b.getTerm(termA.getText());
 			tfidfb = termB==null ? 0 : tfb * termA.getIdf() * getBoostValue(termB.getType());
+			//tfidfb = termB==null ? 0 : tfb * termA.getIdf();
 			sumAA += tfidfa * tfidfa;
 			sumAB += tfidfa * tfidfb;
 			sumBB += tfidfb * tfidfb;
 		}
 		if(sumBB==0) return 0;
 		return sumAB / ( Math.sqrt(sumAA * sumBB) );
+	}
+	
+	public void explain(DocumentExplain explain, Map<String, Double> idfs, Document queryDoc){ 
+		explain.setTf(1 / Math.log(explain.getDoc().getTerms().size()));
+		List<TermExplain> termsExplain = new ArrayList<TermExplain>(explain.getDoc().getTerms().size());
+		for(Term term : explain.getDoc().getTerms()){
+			TermExplain te = new TermExplain(term);
+			te.setIdf(idfs.get(term.getText()));
+			te.setBoost(getBoostValue(term.getType()));
+			if(queryDoc==null){
+				te.setTfidf(explain.getTf() * te.getIdf() * te.getBoost());
+			}
+			if(queryDoc!=null && queryDoc.containsTerm(term.getText())){
+				te.setHit(true);
+				te.setTfidf(explain.getTf() * te.getIdf() * te.getBoost());
+			}
+			termsExplain.add(te);
+		}
+		explain.setTermsExplain(termsExplain);
 	}
 	
 	private double getBoostValue(TermType type){
@@ -257,7 +278,7 @@ public class SimilarityComputer {
 		return doc;
 	}
 	
-	public List<SimilarDocResult> findSimilarAddress(String addressText, int topN){
+	public SimilarityResult findSimilarAddress(String addressText, int topN, boolean needExplain){
 		long start = System.currentTimeMillis(), startCompute = 0, elapsedCompute = 0;
 		
 		//解析地址
@@ -297,33 +318,46 @@ public class SimilarityComputer {
 		
 		//对应地址库中每条地址计算相似度，并保留相似度最高的topN条地址
 		if(topN<=0) topN=5;
-		List<SimilarDocResult> silimarDocs = new ArrayList<SimilarDocResult>(topN);
+		List<SimilarDocument> similarDocs = new ArrayList<SimilarDocument>(topN);
 		for(Document doc : allDocs){
 			startCompute = System.currentTimeMillis();
 			double similarity = computeDocSimilarity(queryDoc, doc);
 			elapsedCompute += System.currentTimeMillis() - startCompute;
 			//保存topN相似地址
-			if(silimarDocs.size()<topN) {
-				silimarDocs.add(new SimilarDocResult(doc, similarity));
+			if(similarDocs.size()<topN) {
+				similarDocs.add(new SimilarDocument(doc, similarity));
 				continue;
 			}
 			int index = 0;
 			for(int i=1; i<topN; i++){
-				if(silimarDocs.get(i).getSimilarity() < silimarDocs.get(index).getSimilarity())
+				if(similarDocs.get(i).getSimilarity() < similarDocs.get(index).getSimilarity())
 					index = i;
 			}
-			if(silimarDocs.get(index).getSimilarity() < similarity){
-				silimarDocs.set(index, new SimilarDocResult(doc, similarity));
+			if(similarDocs.get(index).getSimilarity() < similarity){
+				similarDocs.set(index, new SimilarDocument(doc, similarity));
+			}
+		}
+		
+		DocumentExplain queryDocExplain = null;
+		if(needExplain){
+			queryDocExplain = new DocumentExplain(queryDoc);
+			explain(queryDocExplain, idfCache, null);
+			for(SimilarDocument simiDoc : similarDocs){
+				DocumentExplain de = new DocumentExplain(simiDoc.getDoc());
+				explain(de, idfCache, queryDoc);
+				simiDoc.setDocExplain(de);
 			}
 		}
 		
 		//按相似度从高到低排序
-		sortDesc(silimarDocs);
+		sortDesc(similarDocs);
+		
+		SimilarityResult result = new SimilarityResult(queryDoc, queryAddr, queryDocExplain, similarDocs);
 		
 		LOG.info("[addr] [find-similar] [perf] elapsed " + (System.currentTimeMillis() - start)
 				+ "ms (com=" + elapsedCompute + "ms), " + addressText);
 		
-		return silimarDocs;
+		return result;
 	}
 	
 	public List<Document> loadDocunentsFromCache(AddressEntity address){
@@ -383,14 +417,14 @@ public class SimilarityComputer {
 	 * @param topDocs
 	 * @param topSimilarities
 	 */
-	private void sortDesc(List<SimilarDocResult> docs){
+	private void sortDesc(List<SimilarDocument> docs){
 		boolean exchanged = true;
 		int endIndex = docs.size() - 1;
 		while(exchanged){
 			exchanged = false;
 			for(int i=1; i<=endIndex; i++){
 				if(docs.get(i-1).getSimilarity() < docs.get(i).getSimilarity()){
-					SimilarDocResult temp = docs.get(i-1);
+					SimilarDocument temp = docs.get(i-1);
 					docs.set(i-1, docs.get(i));
 					docs.set(i, temp);
 					exchanged = true;

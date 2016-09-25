@@ -5,12 +5,13 @@ package com.rrs.rd.address.similarity;
  * @author Richie 刘志斌 yudi@sina.com
  * 2016年9月21日
  */
-public class SimilarDocResult {
-	private Document document;
+public class SimilarDocument {
+	private Document doc;
+	private DocumentExplain docExplain;
 	private double similarity;
 	
-	public SimilarDocResult(Document document, double similarity){
-		this.document = document;
+	public SimilarDocument(Document document, double similarity){
+		this.doc = document;
 		this.similarity = similarity;
 	}
 	
@@ -18,8 +19,15 @@ public class SimilarDocResult {
 	 * 相似的文档对象。
 	 * @return
 	 */
-	public Document getDocument(){
-		return this.document;
+	public Document getDoc(){
+		return this.doc;
+	}
+	
+	public DocumentExplain getDocExplain(){
+		return this.docExplain;
+	}
+	public void setDocExplain(DocumentExplain value){
+		this.docExplain = value;
 	}
 	
 	/**

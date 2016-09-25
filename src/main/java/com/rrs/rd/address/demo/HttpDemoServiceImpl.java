@@ -14,12 +14,9 @@ import org.apache.velocity.runtime.RuntimeConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.rrs.rd.address.interpret.AddressInterpreter;
-import com.rrs.rd.address.persist.AddressEntity;
 import com.rrs.rd.address.persist.AddressPersister;
-import com.rrs.rd.address.similarity.Document;
-import com.rrs.rd.address.similarity.SimilarDocResult;
 import com.rrs.rd.address.similarity.SimilarityComputer;
+import com.rrs.rd.address.similarity.SimilarityResult;
 import com.rrs.rd.address.utils.FileUtil;
 
 /**
@@ -31,7 +28,6 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 	private final static Logger LOG = LoggerFactory.getLogger(HttpDemoServiceImpl.class);
 	private SimilarityComputer computer = null;
 	private AddressPersister persisiter = null;
-	private AddressInterpreter interpreter = null;
 	
 	public void init(){
 		Properties properties = new Properties();
@@ -80,27 +76,21 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 	
 	private void findSimilarAddress(String addrText, Map<String, Object> model){
 		long startAt = System.currentTimeMillis();
-		List<SimilarDocResult> similarDocs = computer.findSimilarAddress(addrText, 5);
-		model.put("elapsedTime", System.currentTimeMillis() - startAt);
+		SimilarityResult result = computer.findSimilarAddress(addrText, 5, true);
 		
-		AddressEntity queryAddr = interpreter.interpretAddress(addrText);
-		model.put("queryAddr", queryAddr);
-		Document queryDoc = computer.analyse(queryAddr);
-		model.put("queryDoc", queryDoc);
-		model.put("totalDocCount", computer.loadDocunentsFromCache(queryAddr).size());
-		
-		List<SimilarAddressVO> vos = new ArrayList<SimilarAddressVO>(similarDocs.size());
-		for(SimilarDocResult doc : similarDocs){
-			SimilarAddressVO vo = new SimilarAddressVO(doc);
-			vo.setAddress(persisiter.getAddress(doc.getDocument().getId()));
-			vos.add(vo);
+		List<SimilarAddressVO> vos = new ArrayList<SimilarAddressVO>(result.getSimilarDocs().size());
+		for(int i=0; i<result.getSimilarDocs().size(); i++){
+			SimilarAddressVO vo = new SimilarAddressVO(result.getSimilarDocs().get(i));
+			vo.setAddress(persisiter.getAddress(result.getSimilarDocs().get(i).getDoc().getId()));
+			result.getSimilarDocs().set(i, vo);
 		}
-		model.put("similarVOs", vos);
+		model.put("elapsedTime", System.currentTimeMillis() - startAt);
+		model.put("r", result);
 		
 		if(LOG.isInfoEnabled()){
 			LOG.info("> Similar address for {" + addrText + "}: ");
 			for(SimilarAddressVO vo : vos) 
-				LOG.info(">     " + vo.getSimilarity() +"; " + vo.getAddress().getId() + ": " + vo.getAddress().getRawText());
+				LOG.info(">     " + vo.getSimilarity() +"; " + vo.getAddr().getId() + ": " + vo.getAddr().getRawText());
 		}
 	}
 	
@@ -109,8 +99,5 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 	}
 	public void setPersister(AddressPersister value){
 		this.persisiter = value;
-	}
-	public void setInterpreter(AddressInterpreter value){
-		this.interpreter = value;
 	}
 }
