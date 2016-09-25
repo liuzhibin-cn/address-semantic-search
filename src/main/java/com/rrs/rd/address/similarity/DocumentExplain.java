@@ -4,7 +4,8 @@ import java.util.List;
 
 public class DocumentExplain {
 	private Document doc;
-	private double tf;
+	private double tf = 0;
+	private double density = 0;
 	private List<TermExplain> terms;
 	
 	public DocumentExplain(Document doc){
@@ -20,6 +21,13 @@ public class DocumentExplain {
 	}
 	public void setTf(double value){
 		this.tf = value;
+	}
+	
+	public double getDensity(){
+		return this.density;
+	}
+	public void setDensity(double value){
+		this.density = value;
 	}
 	
 	public List<TermExplain> getTermsExplain(){

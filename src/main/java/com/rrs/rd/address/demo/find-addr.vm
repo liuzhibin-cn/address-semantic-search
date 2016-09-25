@@ -56,7 +56,7 @@
 		<tr><th>Term</th>#foreach($exp in ${r.docExplain.termsExplain})<td class="em1 c">$!{exp.term.text}</td>#end</tr>
 		<tr><th>Type</th>#foreach($exp in ${r.docExplain.termsExplain})<td class=c>$!{exp.term.type}</td>#end</tr>
 		<tr><th>IDF</th>#foreach($exp in ${r.docExplain.termsExplain})<td>$utils.round($exp.idf, 4)</td>#end</tr>
-		<tr><th>Boost</th>#foreach($exp in ${r.docExplain.termsExplain})<td>$!{exp.boost}</td>#end</tr>
+		<tr><th>Boost</th>#foreach($exp in ${r.docExplain.termsExplain})<td>$utils.round($exp.boost, 4)</td>#end</tr>
 		<tr><th>TF-IDF</th>#foreach($exp in ${r.docExplain.termsExplain})<td>$utils.round($exp.tfidf, 4)</td>#end</tr>
 	</table>
 </div>
@@ -64,12 +64,15 @@
 <div class="top20">
 	<h3>Explain for similar documents:</h3>
 	#foreach($vo in ${r.similarDocs})
-	<span>$!{vo.addr.id}: $!{vo.addr.rawText}</span><span class="left10 em2">TF = $utils.round($vo.docExplain.tf, 4)</span>
+	<span>$!{vo.addr.id}: $!{vo.addr.rawText}</span>
+	<span class="left10 em1">Similarity=$utils.round($vo.similarity, 4)</span>,
+	<span class="left10 em2">TF = $utils.round($vo.docExplain.tf, 4)</span>,
+	<span class="left10 em2">Density=$utils.round($vo.docExplain.density, 4)</span>
 	<table class="bot10 c">
 		<tr><th>Term</th>#foreach($exp in ${vo.docExplain.termsExplain})<td class='$utils.hitClass($exp)'>$!{exp.term.text}</td>#end</tr>
 		<tr><th>Type</th>#foreach($exp in ${vo.docExplain.termsExplain})<td class='$utils.hitClass($exp)'>$!{exp.term.type}</td>#end</tr>
 		<tr><th>IDF</th>#foreach($exp in ${vo.docExplain.termsExplain})<td class='$utils.hitClass($exp)'>$utils.round($exp.idf, 4)</td>#end</tr>
-		<tr><th>Boost</th>#foreach($exp in ${vo.docExplain.termsExplain})<td class='$utils.hitClass($exp)'>$!{exp.boost}</td>#end</tr>
+		<tr><th>Boost</th>#foreach($exp in ${vo.docExplain.termsExplain})<td class='$utils.hitClass($exp)'>$utils.round($exp.boost, 4)</td>#end</tr>
 		<tr><th>TF-IDF</th>#foreach($exp in ${vo.docExplain.termsExplain})<td class='$utils.hitClass($exp)'>$utils.round($exp.tfidf, 4)</td>#end</tr>
 	</table>
 	#end

@@ -66,13 +66,13 @@ public class SimilarityComputer {
 	private final static Logger LOG = LoggerFactory.getLogger(SimilarityComputer.class);
 	
 	private static String DEFAULT_CACHE_FOLDER = "~/.vector_cache";
-	private static double DEFAULT_BOOST = 1; //正常权重
-	private static double HIGH_BOOST = 2; //加权高值
-	private static double MID_BOOST = 1.5; //加权中值
-	private static double LOW_BOOST = 0.5; //降权
+	private static double BOOST_M = 1; //正常权重
+	private static double BOOST_L = 2; //加权高值
+	private static double BOOST_XL = 3; //加权高值
+	private static double BOOST_S = 0.5; //降权
+	private static double BOOST_XS = 0.1; //加权中值
 	
 	private AddressInterpreter interpreter = null;
-	//private Segmenter segmenter = new IKAnalyzerSegmenter();
 	private Segmenter segmenter = new SimpleSegmenter();
 	private List<String> defaultTokens = new ArrayList<String>(0);
 	private String cacheFolder;
@@ -139,12 +139,22 @@ public class SimilarityComputer {
 			addTerm(town, TermType.Town, terms, null);
 		if(!addr.getVillage().isEmpty()) //同上，村庄的识别度比较高，加大权重
 			addTerm(addr.getVillage(), TermType.Village, terms, null);
-		if(!addr.getRoad().isEmpty()) //对于城市地址，道路识别度比较高，加大权重
-			addTerm(addr.getRoad(), TermType.Road, terms, null);
+		Term roadTerm = null;
+		if(!addr.getRoad().isEmpty()) { //对于城市地址，道路识别度比较高，加大权重
+			roadTerm = addTerm(addr.getRoad(), TermType.Road, terms, null);
+			if(!TermType.Road.equals(roadTerm.getType())){
+				LOG.warn("[addr] [find-similar] add road term failed: " + doc.getId() + ", " + addr.getRoad());
+				roadTerm = null;
+			}
+		}
 		//两个地址在道路(road)一样的情况下，门牌号(roadNum)的识别作用就非常大，但如果道路不一样，则门牌号的识别作用就很小。
 		//为了强化门牌号的作用，但又需要避免产生干扰，因此将门牌号的权重设置为一个中值，而不是高值。
-		if(!addr.getRoadNum().isEmpty())
-			addTerm(addr.getRoadNum(), TermType.RoadNum, terms, null);
+		if(!addr.getRoadNum().isEmpty()) {
+			Term roadNumTerm = addTerm(addr.getRoadNum(), TermType.RoadNum, terms, null);
+			if(TermType.RoadNum.equals(roadNumTerm.getType())){
+				roadNumTerm.setRef(roadTerm);
+			}
+		}
 		//2.2 地址文本分词后的token
 		for(String token : tokens)
 			addTerm(token, TermType.Text, terms, null);
@@ -185,16 +195,57 @@ public class SimilarityComputer {
 		double sumAB=0, sumAA=0, sumBB=0, tfidfa=0, tfidfb=0;
 		double tfa = 1 / Math.log(a.getTerms().size());
 		double tfb = 1 / Math.log(b.getTerms().size());
+		int textTermCount = 0;
 		for(Term termA : a.getTerms()){
-			tfidfa = tfa * termA.getIdf() * getBoostValue(termA.getType());
+			if(TermType.Text.equals(termA.getType())) textTermCount++;
+			tfidfa = tfa * termA.getIdf() * getBoostValue(false, a, termA, null, null);
 			Term termB = b.getTerm(termA.getText());
-			tfidfb = termB==null ? 0 : tfb * termA.getIdf() * getBoostValue(termB.getType());
+			if(termB==null && TermType.RoadNum.equals(termA.getType())){
+				//从b中找门牌号词条
+				for(Term t : b.getTerms()){
+					if(TermType.RoadNum.equals(t.getType())){
+						if(t.getRef()!=null && t.getRef().equals(termA.getRef())){ //道路相同
+							termB = t;
+						}
+						break;
+					}
+				}
+			}
+			tfidfb = termB==null ? 0 : tfb * termA.getIdf() * getBoostValue(true, a, termA, b, termB);
 			sumAA += tfidfa * tfidfa;
 			sumAB += tfidfa * tfidfb;
 			sumBB += tfidfb * tfidfb;
 		}
 		if(sumBB==0) return 0;
-		return sumAB / ( Math.sqrt(sumAA * sumBB) );
+		
+		//计算稠密度
+		//例如：
+		//查询文档a的文本词条为：【翠微西里】
+		//地址库文档词条为：【翠微北里12号翠微嘉园B座西801】
+		//地址库词条能匹配上【翠微西里】的每一个词条，但不是连续匹配，中间间隔了其他词条，稠密度不够，这类文档应当比能够连续匹配上查询文档的权重低
+		//稠密度 = 0.9 + Math.sqrt( numMatch / length ) / 10;
+		//matchCount / length 的取值范围0-1，求平方根是为了平滑差异，除以10是为了将差异范围控制在0-0.1以内。
+		double density = 1;
+		if(textTermCount>=2){ //Text类型词条数只有1个无法运用稠密度
+			int startIndex=-1, endIndex=-1, numMatch=0;
+			for(int i=0; i<b.getTerms().size(); i++){
+				Term termB = b.getTerms().get(i);
+				if(!TermType.Text.equals(termB.getType())) continue;
+				if(!a.containsTerm(termB.getText())) continue;
+				numMatch++;
+				if(startIndex==-1){
+					startIndex = endIndex = i;
+					continue;
+				}
+				endIndex=i;
+			}
+			int length = endIndex - startIndex + 1;
+			if(numMatch>=2) {//匹配上的词条数低于2个无法运用稠密度
+				density = 0.9 + Math.sqrt(numMatch * 1.0 / length) / 10;
+			}
+		}
+		
+		return sumAB * density / ( Math.sqrt(sumAA * sumBB) );
 	}
 	
 	public void explain(DocumentExplain explain, Map<String, Double> idfs, Document queryDoc){ 
@@ -204,37 +255,140 @@ public class SimilarityComputer {
 			TermExplain te = new TermExplain(term);
 			if(idfs.containsKey(term.getText()))
 				te.setIdf(idfs.get(term.getText()));
-			te.setBoost(getBoostValue(term.getType()));
+			if(queryDoc==null) { //对查询文档执行explain，查询文档即explain.getDoc()
+				te.setBoost(getBoostValue(false, explain.getDoc(), term, null, null));
+			}else{ //对地址库文档执行explain，查询文档为queryDoc，地址库文档为explain.getDoc()
+				te.setBoost(getBoostValue(true, queryDoc, queryDoc.getTerm(term.getText()), explain.getDoc(), term));
+			}
 			if(queryDoc==null){
 				te.setTfidf(explain.getTf() * te.getIdf() * te.getBoost());
 			}
 			if(queryDoc!=null && queryDoc.containsTerm(term.getText())){
 				te.setHit(true);
 				te.setTfidf(explain.getTf() * te.getIdf() * te.getBoost());
+			} else if(queryDoc!=null && TermType.RoadNum.equals(term.getType())){
+				Term queryRoadNum = null;
+				for(Term t : queryDoc.getTerms()){
+					if(TermType.RoadNum.equals(t.getType())){
+						queryRoadNum = t;
+						break;
+					}
+				}
+				if(queryRoadNum!=null && queryRoadNum.getRef()!=null && queryRoadNum.getRef().equals(term.getRef())){
+					te.setHit(true);
+					te.setTfidf(explain.getTf() * te.getIdf() * te.getBoost());
+				}
 			}
+			
+			//计算稠密度
+			double density = 1;
+			if(queryDoc!=null){
+				int textTermCount = 0;
+				for(Term termA : queryDoc.getTerms()){
+					if(TermType.Text.equals(termA.getType())) textTermCount++;
+				}
+				if(textTermCount>=2){
+					int startIndex=-1, endIndex=-1, matchCount=0;
+					for(int i=0; i<explain.getDoc().getTerms().size(); i++){
+						Term termB = explain.getDoc().getTerms().get(i);
+						if(!TermType.Text.equals(termB.getType())) continue;
+						if(!queryDoc.containsTerm(termB.getText())) continue;
+						matchCount++;
+						if(startIndex==-1){
+							startIndex = endIndex = i;
+							continue;
+						}
+						endIndex=i;
+					}
+					int length = endIndex - startIndex + 1;
+					if(matchCount>=2) {//匹配上的词条数低于2个无法运用稠密度
+						density = 0.9 + Math.sqrt(matchCount * 1.0 / length) / 10;
+					}
+				}
+			}
+			explain.setDensity(density);
+			
 			termsExplain.add(te);
 		}
 		explain.setTermsExplain(termsExplain);
 	}
 	
-	private double getBoostValue(TermType type){
-		double value = DEFAULT_BOOST;
+	private double getBoostValue(boolean forDoc, Document queryDoc, Term queryTerm, Document doc, Term term){
+		//forDoc==true, 为地址库文档计算boost，queryDoc, doc, term肯定不为null，但queryTerm可能为null（执行explain时）；
+		//forDoc==false, 为查询文档计算boost，queryDoc, queryTerm肯定不为null，doc, term肯定是null；
+		double value = BOOST_M;
+		if(forDoc && TermType.RoadNum.equals(term.getType())){
+			//道路门牌号特殊处理
+			Term queryRoadNumTerm = null, roadTerm = term.getRef();;
+			for(Term qt : queryDoc.getTerms()){
+				if(TermType.RoadNum.equals(qt.getType())){
+					queryRoadNumTerm = qt;
+					continue;
+				}
+			}
+			Term queryRoadTerm = queryRoadNumTerm == null ? null : queryRoadNumTerm.getRef();
+			if(queryRoadTerm!=null && roadTerm!=null && queryRoadTerm.equals(roadTerm)){
+				//道路一样，根据门牌号间隔情况动态加权
+				if(queryRoadNumTerm!=null){
+					int queryRoadNum = translateRoadNum(queryRoadNumTerm);
+					int docRoadNum = translateRoadNum(term);
+					if(queryRoadNum>0 && docRoadNum>0){
+						return ( 1 / Math.sqrt(Math.sqrt( Math.abs(queryRoadNum - docRoadNum) + 1 )) ) * BOOST_L;
+					}
+				}
+				//道路号一样，但无法根据门牌号间隔加权，则门牌号降权
+				//这会将机会让给那些可以按门牌号间隔加权的文档优先匹配（包括门牌号数字一样的情况）
+				return BOOST_S;
+			}
+			return BOOST_XS; //与查询文档道路不一样，则对门牌号降权处理
+		}
+		TermType type = forDoc ? term.getType() : queryTerm.getType();
 		switch(type){
 			case Province:
 			case City:
 			case County:
 			case Road:
-				value = HIGH_BOOST;
+				value = BOOST_XL; //省市区、道路出现频次高，IDF值较低，因此给予比较高的加权权重
+				break;
+			case Town:
+			case Village:
+				value = BOOST_L; //乡镇、村庄出现频次低，本身IDF值高，因此给予中等加权
 				break;
 			case Street: 
-				value = LOW_BOOST;
+				value = BOOST_S; //一般人对于城市街道范围概念不强，在地址中随意选择街道的可能性较高，因此降权处理
 				break;
 			case RoadNum:
-				value = MID_BOOST;
+				value = BOOST_L; //仅查询文档会执行此处逻辑，地址库文档的门牌号已经在上面处理完毕
 				break;
 			default:
 		}
 		return value;
+	}
+	
+	public int translateRoadNum(Term term){
+		if(term==null || !TermType.RoadNum.equals(term.getType())) return 0;
+		StringBuilder sb = new StringBuilder();
+		for(int i=0; i<term.getText().length(); i++){
+			char c = term.getText().charAt(i);
+			if(c>='0' && c<='9') {
+				sb.append(c);
+				continue;
+			}
+			switch(c){
+				case '０': sb.append(0); continue;
+				case '１': sb.append(1); continue;
+				case '２': sb.append(2); continue;
+				case '３': sb.append(3); continue;
+				case '４': sb.append(4); continue;
+				case '５': sb.append(5); continue;
+				case '６': sb.append(6); continue;
+				case '７': sb.append(7); continue;
+				case '８': sb.append(8); continue;
+				case '９': sb.append(9); continue;
+			}
+		}
+		if(sb.length()>0) return Integer.parseInt(sb.toString());
+		return 0;
 	}
 	
 	/**
@@ -445,6 +599,18 @@ public class SimilarityComputer {
             while((line = br.readLine()) != null){
                 Document doc = deserialize(line);
                 if(doc==null) continue;
+                Term road=null, roadNum=null;
+                for(Term t : doc.getTerms()){
+                	if(TermType.Road.equals(t.getType())){
+                		road = t;
+                		continue;
+                	}
+                	if(TermType.RoadNum.equals(t.getType())){
+                		roadNum = t;
+                		continue;
+                	}
+                }
+                if(roadNum!=null) roadNum.setRef(road);
                 docs.add(doc);
             }
             br.close();
@@ -495,15 +661,17 @@ public class SimilarityComputer {
 				+ docs.size() + " docs, elapsed " + (System.currentTimeMillis() - start)/1000.0 + "s.");
 	}
 	
-	private void addTerm(String text, TermType type, List<Term> terms, RegionEntity region){
+	private Term addTerm(String text, TermType type, List<Term> terms, RegionEntity region){
 		String termText = text;
 		if(termText.length()>=4 && region!=null && region.orderedNameAndAlias()!=null && !region.orderedNameAndAlias().isEmpty()){
 			termText = region.orderedNameAndAlias().get(region.orderedNameAndAlias().size()-1);
 		}
 		for(Term term : terms){
-			if(term.getText().equals(termText)) return;
+			if(term.getText().equals(termText)) return term;
 		}
-		terms.add(new Term(type, termText));
+		Term newTerm = new Term(type, termText);
+		terms.add(newTerm);
+		return newTerm;
 	}
 	
 	public void setCacheVectorsInMemory(boolean value){

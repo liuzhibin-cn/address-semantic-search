@@ -8,6 +8,7 @@ public class Term {
 	private TermType type;
 	private String text;
 	private double idf;
+	private Term ref = null;
 	
 	public Term(TermType type, String text){
 		this.type = type;
@@ -36,6 +37,13 @@ public class Term {
 	
 	public void setIdf(double value){
 		this.idf = value;
+	}
+	
+	public Term getRef(){
+		return this.ref;
+	}
+	public void setRef(Term value){
+		this.ref = value;
 	}
 	
 	@Override
