@@ -33,6 +33,13 @@ public class DocumentExplain {
 	public List<TermExplain> getTermsExplain(){
 		return this.terms;
 	}
+	public TermExplain getTermExplain(String term){
+		if(term==null || term.isEmpty() || this.terms==null) return null;
+		for(TermExplain exp : this.terms) {
+			if(exp.getTerm().getText().equals(term)) return exp;
+		}
+		return null;
+	}
 	public void setTermsExplain(List<TermExplain> value){
 		this.terms = value;
 	}

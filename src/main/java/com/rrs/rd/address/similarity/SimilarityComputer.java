@@ -187,36 +187,79 @@ public class SimilarityComputer {
 	/**
 	 * 计算2个文档的相似度。
 	 * <p>采用余弦相似度，0 &lt;= 返回值 &lt;= 1，值越大表示相似度越高，返回值为1则表示完全相同。</p>
-	 * @param a
-	 * @param b
+	 * @param qryDoc
+	 * @param doc
 	 * @return
 	 */
-	public double computeDocSimilarity(Document a, Document b){
-		double sumAB=0, sumAA=0, sumBB=0, tfidfa=0, tfidfb=0;
-		double tfa = 1 / Math.log(a.getTerms().size());
-		double tfb = 1 / Math.log(b.getTerms().size());
+	public double computeDocSimilarity(Document qryDoc, Document doc, DocumentExplain qryExp, DocumentExplain docExp, Map<String, Double> idfs){
+		double sumQD=0, sumQQ=0, sumDD=0, tfidfQry=0, tfidfDoc=0;
+		double tfQry = 1 / Math.log(qryDoc.getTerms().size());
+		double tfDoc = 1 / Math.log(doc.getTerms().size());
+		
+		boolean isFirstTime = !(qryExp!=null && qryExp.getTf()>0);
+		if(isFirstTime && qryExp!=null) { //只在查询文档第一次执行该方法时才执行下面逻辑
+			qryExp.setTf(tfQry);
+			qryExp.setTermsExplain(new ArrayList<TermExplain>(qryDoc.getTerms().size()));
+			for(Term term : qryDoc.getTerms()){
+				TermExplain termExp = new TermExplain(term);
+				if(idfs!=null && idfs.containsKey(term.getText()))
+					termExp.setIdf(idfs.get(term.getText()));
+				qryExp.getTermsExplain().add(termExp);
+			}
+		}
+		if(docExp!=null) {
+			docExp.setTf(tfDoc);
+			docExp.setTermsExplain(new ArrayList<TermExplain>(doc.getTerms().size()));
+			for(Term term : doc.getTerms()){
+				TermExplain termExp = new TermExplain(term);
+				if(idfs!=null && idfs.containsKey(term.getText()))
+					termExp.setIdf(idfs.get(term.getText()));
+				docExp.getTermsExplain().add(termExp);
+			}
+		}
+		
 		int textTermCount = 0;
-		for(Term termA : a.getTerms()){
-			if(TermType.Text.equals(termA.getType())) textTermCount++;
-			tfidfa = tfa * termA.getIdf() * getBoostValue(false, a, termA, null, null);
-			Term termB = b.getTerm(termA.getText());
-			if(termB==null && TermType.RoadNum.equals(termA.getType())){
+		double boostDoc = 0, boostQry = 0;
+		for(Term qryTerm : qryDoc.getTerms()) {
+			if(TermType.Text.equals(qryTerm.getType())) textTermCount++;
+			boostQry = getBoostValue(false, qryDoc, qryTerm, null, null);
+			tfidfQry = tfQry * qryTerm.getIdf() * boostQry;
+			Term docTerm = doc.getTerm(qryTerm.getText());
+			if(docTerm==null && TermType.RoadNum.equals(qryTerm.getType())){
 				//从b中找门牌号词条
-				for(Term t : b.getTerms()){
+				for(Term t : doc.getTerms()){
 					if(TermType.RoadNum.equals(t.getType())){
-						if(t.getRef()!=null && t.getRef().equals(termA.getRef())){ //道路相同
-							termB = t;
+						if(t.getRef()!=null && t.getRef().equals(qryTerm.getRef())){ //道路相同
+							docTerm = t;
 						}
 						break;
 					}
 				}
 			}
-			tfidfb = termB==null ? 0 : tfb * termA.getIdf() * getBoostValue(true, a, termA, b, termB);
-			sumAA += tfidfa * tfidfa;
-			sumAB += tfidfa * tfidfb;
-			sumBB += tfidfb * tfidfb;
+			boostDoc = docTerm==null ? 0 : getBoostValue(true, qryDoc, qryTerm, doc, docTerm);
+			tfidfDoc = tfDoc * qryTerm.getIdf() * boostDoc;
+			
+			if(isFirstTime && qryExp!=null){
+				TermExplain termExp = qryExp.getTermExplain(qryTerm.getText());
+				if(termExp!=null){
+					termExp.setBoost(boostQry);
+					termExp.setTfidf(tfidfQry);
+				}
+			}
+			if(docExp!=null && docTerm!=null){
+				TermExplain termExp = docExp.getTermExplain(docTerm.getText());
+				if(termExp!=null){
+					termExp.setHit(true);
+					termExp.setBoost(boostDoc);
+					termExp.setTfidf(tfidfDoc);
+				}
+			}
+			
+			sumQQ += tfidfQry * tfidfQry;
+			sumQD += tfidfQry * tfidfDoc;
+			sumDD += tfidfDoc * tfidfDoc;
 		}
-		if(sumBB==0) return 0;
+		if(sumDD==0) return 0;
 		
 		//计算稠密度
 		//例如：
@@ -227,92 +270,38 @@ public class SimilarityComputer {
 		//matchCount / length 的取值范围0-1，求平方根是为了平滑差异，除以10是为了将差异范围控制在0-0.1以内。
 		double density = 1;
 		if(textTermCount>=2){ //Text类型词条数只有1个无法运用稠密度
-			int startIndex=-1, endIndex=-1, numMatch=0;
-			for(int i=0; i<b.getTerms().size(); i++){
-				Term termB = b.getTerms().get(i);
+			int start = -1, end = -1, matchNum = 0;
+			for(int i=0; i<doc.getTerms().size(); i++){
+				Term termB = doc.getTerms().get(i);
 				if(!TermType.Text.equals(termB.getType())) continue;
-				if(!a.containsTerm(termB.getText())) continue;
-				numMatch++;
-				if(startIndex==-1){
-					startIndex = endIndex = i;
+				if(!qryDoc.containsTerm(termB.getText())) continue;
+				matchNum++;
+				if(start==-1){
+					start = end = i;
 					continue;
 				}
-				endIndex=i;
+				end=i;
 			}
-			int length = endIndex - startIndex + 1;
-			if(numMatch>=2) {//匹配上的词条数低于2个无法运用稠密度
-				density = 0.9 + Math.sqrt(numMatch * 1.0 / length) / 10;
+			int length = end - start + 1;
+			if(matchNum>=2) {//匹配上的词条数低于2个无法运用稠密度
+				density = 0.9 + Math.sqrt(matchNum * 1.0 / length) / 10;
 			}
 		}
 		
-		return sumAB * density / ( Math.sqrt(sumAA * sumBB) );
+		if(docExp!=null) docExp.setDensity(density);
+		
+		return sumQD * density / ( Math.sqrt(sumQQ * sumDD) );
 	}
 	
-	public void explain(DocumentExplain explain, Map<String, Double> idfs, Document queryDoc){ 
-		explain.setTf(1 / Math.log(explain.getDoc().getTerms().size()));
-		List<TermExplain> termsExplain = new ArrayList<TermExplain>(explain.getDoc().getTerms().size());
-		for(Term term : explain.getDoc().getTerms()){
-			TermExplain te = new TermExplain(term);
-			if(idfs.containsKey(term.getText()))
-				te.setIdf(idfs.get(term.getText()));
-			if(queryDoc==null) { //对查询文档执行explain，查询文档即explain.getDoc()
-				te.setBoost(getBoostValue(false, explain.getDoc(), term, null, null));
-			}else{ //对地址库文档执行explain，查询文档为queryDoc，地址库文档为explain.getDoc()
-				te.setBoost(getBoostValue(true, queryDoc, queryDoc.getTerm(term.getText()), explain.getDoc(), term));
-			}
-			if(queryDoc==null){
-				te.setTfidf(explain.getTf() * te.getIdf() * te.getBoost());
-			}
-			if(queryDoc!=null && queryDoc.containsTerm(term.getText())){
-				te.setHit(true);
-				te.setTfidf(explain.getTf() * te.getIdf() * te.getBoost());
-			} else if(queryDoc!=null && TermType.RoadNum.equals(term.getType())){
-				Term queryRoadNum = null;
-				for(Term t : queryDoc.getTerms()){
-					if(TermType.RoadNum.equals(t.getType())){
-						queryRoadNum = t;
-						break;
-					}
-				}
-				if(queryRoadNum!=null && queryRoadNum.getRef()!=null && queryRoadNum.getRef().equals(term.getRef())){
-					te.setHit(true);
-					te.setTfidf(explain.getTf() * te.getIdf() * te.getBoost());
-				}
-			}
-			
-			//计算稠密度
-			double density = 1;
-			if(queryDoc!=null){
-				int textTermCount = 0;
-				for(Term termA : queryDoc.getTerms()){
-					if(TermType.Text.equals(termA.getType())) textTermCount++;
-				}
-				if(textTermCount>=2){
-					int startIndex=-1, endIndex=-1, matchCount=0;
-					for(int i=0; i<explain.getDoc().getTerms().size(); i++){
-						Term termB = explain.getDoc().getTerms().get(i);
-						if(!TermType.Text.equals(termB.getType())) continue;
-						if(!queryDoc.containsTerm(termB.getText())) continue;
-						matchCount++;
-						if(startIndex==-1){
-							startIndex = endIndex = i;
-							continue;
-						}
-						endIndex=i;
-					}
-					int length = endIndex - startIndex + 1;
-					if(matchCount>=2) {//匹配上的词条数低于2个无法运用稠密度
-						density = 0.9 + Math.sqrt(matchCount * 1.0 / length) / 10;
-					}
-				}
-			}
-			explain.setDensity(density);
-			
-			termsExplain.add(te);
-		}
-		explain.setTermsExplain(termsExplain);
-	}
-	
+	/**
+	 * 计算词条加权权重boost值。
+	 * @param forDoc true:为地址库文档词条计算boost；false:为查询文档词条计算boost。
+	 * @param queryDoc 查询文档。
+	 * @param queryTerm 查询文档词条。
+	 * @param doc 地址库文档。
+	 * @param term 地址库文档词条。
+	 * @return
+	 */
 	private double getBoostValue(boolean forDoc, Document queryDoc, Term queryTerm, Document doc, Term term){
 		//forDoc==true, 为地址库文档计算boost，queryDoc, doc, term肯定不为null，但queryTerm可能为null（执行explain时）；
 		//forDoc==false, 为查询文档计算boost，queryDoc, queryTerm肯定不为null，doc, term肯定是null；
@@ -368,6 +357,11 @@ public class SimilarityComputer {
 		return value;
 	}
 	
+	/**
+	 * 将道路门牌号中的数字提取出来。
+	 * @param text 道路门牌号，例如40号院、甲一号院等。
+	 * @return 返回门牌号数字。
+	 */
 	public int translateRoadNum(String text){
 		if(text==null || text.isEmpty()) return 0;
 		StringBuilder sb = new StringBuilder();
@@ -469,6 +463,13 @@ public class SimilarityComputer {
 		return doc;
 	}
 	
+	/**
+	 * 搜索相似地址。
+	 * @param addressText 详细地址文本，开头部分必须包含省、市、区。
+	 * @param topN 返回多少条最相似地址。
+	 * @param needExplain 是否返回详细执行计划。
+	 * @return
+	 */
 	public SimilarityResult findSimilarAddress(String addressText, int topN, boolean needExplain){
 		long start = System.currentTimeMillis(), startCompute = 0, elapsedCompute = 0;
 		
@@ -509,14 +510,25 @@ public class SimilarityComputer {
 		
 		//对应地址库中每条地址计算相似度，并保留相似度最高的topN条地址
 		if(topN<=0) topN=5;
+		DocumentExplain qryExp = null;
+		if(needExplain) qryExp = new DocumentExplain(queryDoc);
+		
 		List<SimilarDocument> similarDocs = new ArrayList<SimilarDocument>(topN);
 		for(Document doc : allDocs){
 			startCompute = System.currentTimeMillis();
-			double similarity = computeDocSimilarity(queryDoc, doc);
+			
+			DocumentExplain docExp = null;
+			if(needExplain) docExp = new DocumentExplain(doc);
+			
+			double similarity = computeDocSimilarity(queryDoc, doc, qryExp, docExp, idfCache);
 			elapsedCompute += System.currentTimeMillis() - startCompute;
+			
+			SimilarDocument simiDoc = new SimilarDocument(doc, similarity);
+			simiDoc.setDocExplain(docExp);
+			
 			//保存topN相似地址
 			if(similarDocs.size()<topN) {
-				similarDocs.add(new SimilarDocument(doc, similarity));
+				similarDocs.add(simiDoc);
 				continue;
 			}
 			int index = 0;
@@ -525,25 +537,14 @@ public class SimilarityComputer {
 					index = i;
 			}
 			if(similarDocs.get(index).getSimilarity() < similarity){
-				similarDocs.set(index, new SimilarDocument(doc, similarity));
-			}
-		}
-		
-		DocumentExplain queryDocExplain = null;
-		if(needExplain){
-			queryDocExplain = new DocumentExplain(queryDoc);
-			explain(queryDocExplain, idfCache, null);
-			for(SimilarDocument simiDoc : similarDocs){
-				DocumentExplain de = new DocumentExplain(simiDoc.getDoc());
-				explain(de, idfCache, queryDoc);
-				simiDoc.setDocExplain(de);
+				similarDocs.set(index, simiDoc);
 			}
 		}
 		
 		//按相似度从高到低排序
 		sortDesc(similarDocs);
 		
-		SimilarityResult result = new SimilarityResult(queryDoc, queryAddr, queryDocExplain, similarDocs);
+		SimilarityResult result = new SimilarityResult(queryDoc, queryAddr, qryExp, similarDocs);
 		
 		LOG.info("[addr] [find-similar] [perf] elapsed " + (System.currentTimeMillis() - start)
 				+ "ms (com=" + elapsedCompute + "ms), " + addressText);
@@ -551,6 +552,11 @@ public class SimilarityComputer {
 		return result;
 	}
 	
+	/**
+	 * 从文件或内存缓存读取加载文档。
+	 * @param address 
+	 * @return
+	 */
 	public List<Document> loadDocunentsFromCache(AddressEntity address){
 		String cacheKey = buildCacheKey(address);
 		if(cacheKey==null) return null;
