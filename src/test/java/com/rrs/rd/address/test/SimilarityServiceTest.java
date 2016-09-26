@@ -11,6 +11,43 @@ import com.rrs.rd.address.similarity.Term;
 import com.rrs.rd.address.similarity.TermType;
 
 public class SimilarityServiceTest extends TestBase {
+	@Test
+	public void testTranslateRoadNum(){
+		SimilarityComputer service = context.getBean(SimilarityComputer.class);
+		int v = service.translateRoadNum("十");
+		assertEquals(10, v);
+		v = service.translateRoadNum("甲十");
+		assertEquals(10, v);
+		v = service.translateRoadNum("十号院");
+		assertEquals(10, v);
+		v = service.translateRoadNum("十五");
+		assertEquals(15, v);
+		v = service.translateRoadNum("甲十五号院");
+		assertEquals(15, v);
+		v = service.translateRoadNum("二十");
+		assertEquals(20, v);
+		v = service.translateRoadNum("四十七");
+		assertEquals(47, v);
+		v = service.translateRoadNum("甲四十");
+		assertEquals(40, v);
+		v = service.translateRoadNum("四十号");
+		assertEquals(40, v);
+		v = service.translateRoadNum("八");
+		assertEquals(8, v);
+		v = service.translateRoadNum("甲八");
+		assertEquals(8, v);
+		v = service.translateRoadNum("八号院");
+		assertEquals(8, v);
+		v = service.translateRoadNum("甲八号院");
+		assertEquals(8, v);
+		v = service.translateRoadNum("甲76号");
+		assertEquals(76, v);
+		v = service.translateRoadNum("130");
+		assertEquals(130, v);
+		v = service.translateRoadNum("130号");
+		assertEquals(130, v);
+	}
+	
 	//TODO: 提升相似度。北京北京东城区新发地汉龙南站南B区25号
 	@Test
 	public void testSerialize(){

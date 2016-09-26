@@ -5,6 +5,7 @@ package com.rrs.rd.address.similarity;
  * @author Richie 刘志斌 yudi@sina.com
  */
 public class Term {
+	public static double ROAD_NUM_IDF = 7;
 	private TermType type;
 	private String text;
 	private double idf;
@@ -32,7 +33,10 @@ public class Term {
 	}
 	
 	public double getIdf(){
-		return this.idf;
+		if(TermType.RoadNum.equals(this.type)) //道路门牌号取固定IDF值
+			return ROAD_NUM_IDF;
+		else
+			return this.idf;
 	}
 	
 	public void setIdf(double value){

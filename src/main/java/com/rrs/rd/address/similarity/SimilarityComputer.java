@@ -70,7 +70,7 @@ public class SimilarityComputer {
 	private static double BOOST_L = 2; //加权高值
 	private static double BOOST_XL = 3; //加权高值
 	private static double BOOST_S = 0.5; //降权
-	private static double BOOST_XS = 0.1; //加权中值
+	//private static double BOOST_XS = 0.1; //加权中值
 	
 	private AddressInterpreter interpreter = null;
 	private Segmenter segmenter = new SimpleSegmenter();
@@ -316,7 +316,6 @@ public class SimilarityComputer {
 	private double getBoostValue(boolean forDoc, Document queryDoc, Term queryTerm, Document doc, Term term){
 		//forDoc==true, 为地址库文档计算boost，queryDoc, doc, term肯定不为null，但queryTerm可能为null（执行explain时）；
 		//forDoc==false, 为查询文档计算boost，queryDoc, queryTerm肯定不为null，doc, term肯定是null；
-		double value = BOOST_M;
 		if(forDoc && TermType.RoadNum.equals(term.getType())){
 			//道路门牌号特殊处理
 			Term queryRoadNumTerm = null, roadTerm = term.getRef();;
@@ -330,8 +329,8 @@ public class SimilarityComputer {
 			if(queryRoadTerm!=null && roadTerm!=null && queryRoadTerm.equals(roadTerm)){
 				//道路一样，根据门牌号间隔情况动态加权
 				if(queryRoadNumTerm!=null){
-					int queryRoadNum = translateRoadNum(queryRoadNumTerm);
-					int docRoadNum = translateRoadNum(term);
+					int queryRoadNum = translateRoadNum(queryRoadNumTerm.getText());
+					int docRoadNum = translateRoadNum(term.getText());
 					if(queryRoadNum>0 && docRoadNum>0){
 						return ( 1 / Math.sqrt(Math.sqrt( Math.abs(queryRoadNum - docRoadNum) + 1 )) ) * BOOST_L;
 					}
@@ -340,8 +339,9 @@ public class SimilarityComputer {
 				//这会将机会让给那些可以按门牌号间隔加权的文档优先匹配（包括门牌号数字一样的情况）
 				return BOOST_S;
 			}
-			return BOOST_XS; //与查询文档道路不一样，则对门牌号降权处理
+			return 0; //与查询文档道路不一样，则对门牌号降权处理
 		}
+		double value = BOOST_M;
 		TermType type = forDoc ? term.getType() : queryTerm.getType();
 		switch(type){
 			case Province:
@@ -360,16 +360,19 @@ public class SimilarityComputer {
 			case RoadNum:
 				value = BOOST_L; //仅查询文档会执行此处逻辑，地址库文档的门牌号已经在上面处理完毕
 				break;
+			case Text:
+				value = BOOST_S;
+				break;
 			default:
 		}
 		return value;
 	}
 	
-	public int translateRoadNum(Term term){
-		if(term==null || !TermType.RoadNum.equals(term.getType())) return 0;
+	public int translateRoadNum(String text){
+		if(text==null || text.isEmpty()) return 0;
 		StringBuilder sb = new StringBuilder();
-		for(int i=0; i<term.getText().length(); i++){
-			char c = term.getText().charAt(i);
+		for(int i=0; i<text.length(); i++){
+			char c = text.charAt(i);
 			if(c>='0' && c<='9') {
 				sb.append(c);
 				continue;
@@ -386,6 +389,43 @@ public class SimilarityComputer {
 				case '８': sb.append(8); continue;
 				case '９': sb.append(9); continue;
 			}
+		}
+		if(sb.length()>0) return Integer.parseInt(sb.toString());
+		boolean isTen = false;
+		for(int i=0; i<text.length(); i++){
+			char c = text.charAt(i);
+			if(isTen){
+				boolean pre = sb.length() > 0 ? true : false;
+				boolean post = (c=='一' || c=='二' || c=='三' || c=='四' || c=='五' || c=='六' || c=='七' || c=='八' || c=='九') ?
+					true : false;
+				if(pre){
+					if(post) { /*do nothing*/ }
+					else { sb.append('0'); }
+				}else{
+					if(post) { sb.append('1'); }
+					else { sb.append("10"); }
+				}
+				isTen = false;
+			}
+			switch(c){
+				case '一': sb.append(1); continue;
+				case '二': sb.append(2); continue;
+				case '三': sb.append(3); continue;
+				case '四': sb.append(4); continue;
+				case '五': sb.append(5); continue;
+				case '六': sb.append(6); continue;
+				case '七': sb.append(7); continue;
+				case '八': sb.append(8); continue;
+				case '九': sb.append(9); continue;
+				case '十':
+					isTen = true;
+					continue;
+			}
+			if(sb.length()>0) break;
+		}
+		if(isTen){
+			if(sb.length()>0) sb.append('0');
+			else sb.append("10");
 		}
 		if(sb.length()>0) return Integer.parseInt(sb.toString());
 		return 0;

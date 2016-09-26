@@ -23,7 +23,10 @@ public class TermExplain {
 	}
 	
 	public double getIdf(){
-		return this.idf;
+		if(TermType.RoadNum.equals(this.term.getType()))
+			return Term.ROAD_NUM_IDF;
+		else
+			return this.idf;
 	}
 	public void setIdf(double value){
 		this.idf = value;
