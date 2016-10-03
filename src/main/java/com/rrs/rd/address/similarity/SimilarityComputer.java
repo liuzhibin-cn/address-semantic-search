@@ -71,7 +71,8 @@ public class SimilarityComputer {
 	private static double BOOST_L = 2; //加权高值
 	private static double BOOST_XL = 3; //加权高值
 	private static double BOOST_S = 0.5; //降权
-	//private static double BOOST_XS = 0.1; //加权中值
+	
+	private static double MISSING_IDF = 4;
 	
 	private AddressInterpreter interpreter = null;
 	private Segmenter segmenter = new SimpleSegmenter();
@@ -162,10 +163,12 @@ public class SimilarityComputer {
 			addTerm(token, TermType.Text, terms, null);
 		
 		Map<String, Double> idfs = IDF_CACHE.get(this.buildCacheKey(addr));
-		for(Term t : terms){
-			Double idf = idfs.get(t.getText());
-			if(idf==null) t.setIdf(0);
-			else t.setIdf(idf.doubleValue());
+		if(idfs!=null){
+			for(Term t : terms){
+				Double idf = idfs.get(t.getText());
+				if(idf==null) t.setIdf(MISSING_IDF);
+				else t.setIdf(idf.doubleValue());
+			}
 		}
 		
 		doc.setTerms(terms);
@@ -637,30 +640,42 @@ public class SimilarityComputer {
 			if(qroadnum!=null && droadnum!=null){
 				int qnum = translateRoadNum(qroadnum.getText());
 				int dnum = translateRoadNum(droadnum.getText());
+				simiDoc.addMatchedTerm(new MatchedTerm(droad));
+				simiDoc.addMatchedTerm(new MatchedTerm(droadnum));
 				if(qnum==dnum) { //道路一样，都有门牌号，门牌号一样
 					simiDoc.setExactPercent(1);
 					simiDoc.setExactValue(1);
 					simiDoc.setSimilarity(1);
-					simiDoc.addMatchedTerm(new MatchedTerm(droad));
-					simiDoc.addMatchedTerm(new MatchedTerm(droadnum));
 					query.addSimiDoc(simiDoc);
 					return;
 				} else { //道路一样，都有门牌号，门牌号不一样
-					if(simiDoc.getTextValue()>0.9){
-						simiDoc.setExactPercent(0.5);
+					if(simiDoc.getTextValue()>0.85){
+						simiDoc.setExactPercent(0.7);
 						simiDoc.setExactValue(0.95);
-						simiDoc.setTextPercent(0.5);
+						simiDoc.setTextPercent(0.3);
 					}else{
-						simiDoc.setExactPercent(0.85);
-						simiDoc.setTextPercent(0.15);
-						simiDoc.setExactValue( 0.7 + (1 / (Math.sqrt( Math.abs(qnum - dnum) + 1)) ) * 0.15 );
+						simiDoc.setExactPercent(0.92);
+						simiDoc.setExactValue( 0.85 + (1 / (Math.sqrt(Math.sqrt( Math.abs(qnum - dnum) + 1))) ) * 0.15 );
+						simiDoc.setTextPercent(0.08);
 					}
 				}
 			}else{ //道路一样，其中一个没有门牌号或两个都没有门牌号
-				simiDoc.setExactPercent(0.7);
-				simiDoc.setExactValue(0.9);
-				simiDoc.setTextPercent(0.3);
+				simiDoc.addMatchedTerm(new MatchedTerm(droad));
+				if(simiDoc.getTextValue()>0.8){
+					simiDoc.setExactPercent(0.7);
+					simiDoc.setExactValue(0.95);
+					simiDoc.setTextPercent(0.3);
+				}else{
+					simiDoc.setExactPercent(0.7);
+					simiDoc.setExactValue(0.8);
+					simiDoc.setTextPercent(0.3);
+				}
 			}
+		}
+		if(qroad!=null && droad!=null && !qroad.equals(droad)){ //道路不一样
+			simiDoc.setExactPercent(0.2);
+			simiDoc.setExactValue(0);
+			simiDoc.setTextPercent(0.8);
 		}
 		
 		simiDoc.setSimilarity(simiDoc.getExactPercent()*simiDoc.getExactValue()+simiDoc.getTextPercent()*simiDoc.getTextValue());

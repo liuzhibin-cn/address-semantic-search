@@ -32,4 +32,12 @@ public class VelocityUtils extends StringUtils {
 		if(d.getMatchedTerms().containsKey(t.getText())) return "hit";
 		return "";
 	}
+	public boolean exactPart(SimilarDoc doc){
+		if(doc==null) return false;
+		return doc.getExactPercent()>0 && doc.getExactValue()>0;
+	}
+	public boolean textPart(SimilarDoc doc){
+		if(doc==null) return false;
+		return doc.getTextPercent()>0 && doc.getTextValue()>0;
+	}
 }

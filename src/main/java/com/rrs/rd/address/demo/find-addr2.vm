@@ -63,14 +63,14 @@
 	#foreach($d in ${r.similarDocs})
 	<span>$!{d.addr.id}: $!{d.addr.rawText}</span>
 	<span class="left10 em1">Similarity=$utils.round($d.similarity, 4)</span>
-	<span class="left10 em2">Exact Percent=$utils.round($d.exactPercent, 2)</span>
-	<span class="left10 em2">Exact Value=$utils.round($d.exactValue, 4)</span>
-	<span class="left10 em2">Text Percent=$utils.round($d.textPercent, 2)</span>
-	<span class="left10 em2">Text Value=$utils.round($d.textValue, 4)</span>
+	#if($utils.exactPart($d))<span class="left10 em2">EP=$utils.round($d.exactPercent, 2)</span>
+	<span class="left10 em2">EV=$utils.round($d.exactValue, 4)</span>#end
+	#if($utils.textPart($d))<span class="left10 em2">TP=$utils.round($d.textPercent, 2)</span>
+	<span class="left10 em2">TV=$utils.round($d.textValue, 4)</span>#end
 	<table class="bot10 c">
-		<tr><th>Term</th>#foreach($t in ${d.document.terms})<td class='$utils.hitClass($d, $t)'>$!{t.text}</td>#end</tr>
-		<tr><th>Type</th>#foreach($t in ${d.document.terms})<td class='$utils.hitClass($d, $t)'>$!{t.type}</td>#end</tr>
-		<tr><th>IDF</th>#foreach($t in ${d.document.terms})<td class='$utils.hitClass($d, $t)'>$utils.round($t.idf, 4)</td>#end</tr>
+		<tr><th>Term</th>#foreach($t in ${d.document.terms})<td class='$!{utils.hitClass($d, $t)}'>$!{t.text}</td>#end</tr>
+		<tr><th>Type</th>#foreach($t in ${d.document.terms})<td class='$!{utils.hitClass($d, $t)}'>$!{t.type}</td>#end</tr>
+		<tr><th>IDF</th>#foreach($t in ${d.document.terms})<td class='$!{utils.hitClass($d, $t)}'>$utils.round($t.idf, 4)</td>#end</tr>
 		<tr><th>Rate</th>#foreach($t in ${d.document.terms})<td class='$!{utils.hitClass($d, $t)}'>$!{utils.round($d.matchedTerms.get($t.text).rate, 4)}</td>#end</tr>
 		<tr><th>Density</th>#foreach($t in ${d.document.terms})<td class='$!{utils.hitClass($d, $t)}'>$!{utils.round($d.matchedTerms.get($t.text).density, 4)}</td>#end</tr>
 		<tr><th>Boost</th>#foreach($t in ${d.document.terms})<td class='$!{utils.hitClass($d, $t)}'>$!{utils.round($d.matchedTerms.get($t.text).boost, 4)}</td>#end</tr>
