@@ -19,7 +19,7 @@ public class AddressInterpretTest extends TestBase {
 		AddressInterpreter interpreter = context.getBean(AddressInterpreter.class);
 		
 		//测试正常解析
-		AddressEntity addr = interpreter.interpretAddress("青海海西格尔木市河西街道郭镇盐桥村");
+		AddressEntity addr = interpreter.interpret("青海海西格尔木市河西街道郭镇盐桥村");
 		assertNotNull("解析失败", addr);
 		LOG.info("> " + addr.getRawText() + " --> " + addr);
 		assertNotNull("未解析出省份", addr.getProvince());
@@ -34,20 +34,34 @@ public class AddressInterpretTest extends TestBase {
 		assertEquals("乡镇错误", "郭镇", addr.getTowns().get(1));
 		assertEquals("村庄错误", "盐桥村", addr.getVillage());
 		
-		addr = interpreter.interpretAddress("北京北京海淀区北京市海淀区万寿路翠微西里13号楼1403室");
+		//测试bug加入用例
+		addr = interpreter.interpret("河北省石家庄市鹿泉市镇宁路贺庄回迁楼1号楼1单元602室");
+		assertNotNull("解析失败", addr);
+		LOG.info("> " + addr.getRawText() + " --> " + addr);
+		assertTrue(addr.hasCounty());
+		assertTrue(addr.hasCity());
+		assertEquals("区县错误", 130185, addr.getCounty().getId());
+		assertEquals("详细地址错误", "贺庄回迁楼", addr.getText());
+		assertEquals("道路错误", "镇宁路", addr.getRoad());
+		assertEquals("房间号错误", "1号楼1单元602室", addr.getBuildingNum());
+		
+		//测试bug加入用例
+		addr = interpreter.interpret("北京北京海淀区北京市海淀区万寿路翠微西里13号楼1403室");
 		assertNotNull("解析失败", addr);
 		LOG.info("> " + addr.getRawText() + " --> " + addr);
 		assertEquals("详细地址错误", "翠微西里", addr.getText());
 		assertEquals("道路错误", "万寿路", addr.getRoad());
 		assertEquals("房间号错误", "13号楼1403室", addr.getBuildingNum());
 		
-		addr = interpreter.interpretAddress("海南海南省直辖市县定安县见龙大道财政局宿舍楼702");
+		//测试bug加入用例
+		addr = interpreter.interpret("海南海南省直辖市县定安县见龙大道财政局宿舍楼702");
 		assertNotNull("解析失败", addr);
 		LOG.info("> " + addr.getRawText() + " --> " + addr);
 		assertEquals("详细地址错误", "财政局宿舍楼702", addr.getText());
 		assertEquals("道路错误", "见龙大道", addr.getRoad());
 		
-		addr = interpreter.interpretAddress("甘肃临夏临夏县先锋乡张梁村史上社17号");
+		//测试bug加入用例
+		addr = interpreter.interpret("甘肃临夏临夏县先锋乡张梁村史上社17号");
 		assertNotNull("解析失败", addr);
 		LOG.info("> " + addr.getRawText() + " --> " + addr);
 		assertEquals("详细地址错误", "史上社17号", addr.getText());
@@ -57,7 +71,7 @@ public class AddressInterpretTest extends TestBase {
 		assertEquals("村庄错误", "张梁村", addr.getVillage());
 		
 		//bug fix: 解析出来的镇为：市毛田乡，查bug用
-		addr = interpreter.interpretAddress("湖南湘潭湘乡市湖南省湘乡市毛田乡崇山村洪家组");
+		addr = interpreter.interpret("湖南湘潭湘乡市湖南省湘乡市毛田乡崇山村洪家组");
 		assertNotNull("解析失败", addr);
 		LOG.info("> " + addr.getRawText() + " --> " + addr);
 		assertEquals("详细地址错误", "洪家组", addr.getText());
@@ -69,7 +83,7 @@ public class AddressInterpretTest extends TestBase {
 		//辽宁锦州北镇市高山子镇辽宁省北镇市高山子镇南民村545号
 		
 		//镇名字中出现【镇】字
-		addr = interpreter.interpretAddress("浙江丽水缙云县壶镇镇缙云县壶镇镇 下潜村257号");
+		addr = interpreter.interpret("浙江丽水缙云县壶镇镇缙云县壶镇镇 下潜村257号");
 		assertNotNull("解析失败", addr);
 		LOG.info("> " + addr.getRawText() + " --> " + addr);
 		assertEquals("详细地址错误", "缙云县壶镇镇下潜村257号", addr.getText());
@@ -78,7 +92,7 @@ public class AddressInterpretTest extends TestBase {
 		assertEquals("乡镇错误", "壶镇镇", addr.getTowns().get(0));
 		
 		//去冗余时，秦皇岛市昌黎镇马铁庄村，不能将【昌黎】匹配成区县。
-		addr = interpreter.interpretAddress("河北秦皇岛昌黎县昌黎镇秦皇岛市昌黎镇马铁庄村");
+		addr = interpreter.interpret("河北秦皇岛昌黎县昌黎镇秦皇岛市昌黎镇马铁庄村");
 		assertNotNull("解析失败", addr);
 		LOG.info("> " + addr.getRawText() + " --> " + addr);
 		assertEquals("详细地址错误", "秦皇岛市昌黎镇马铁庄村", addr.getText());
@@ -87,7 +101,7 @@ public class AddressInterpretTest extends TestBase {
 		assertEquals("乡镇错误", "昌黎镇", addr.getTowns().get(0));
 		
 		//两个乡，解析出最后出现的（目前逻辑）
-		addr = interpreter.interpretAddress("云南文山壮族苗族自治州砚山县盘龙彝族乡盘龙乡白泥井村");
+		addr = interpreter.interpret("云南文山壮族苗族自治州砚山县盘龙彝族乡盘龙乡白泥井村");
 		assertNotNull("解析失败", addr);
 		LOG.info("> " + addr.getRawText() + " --> " + addr);
 		assertEquals("详细地址错误", "", addr.getText());
@@ -97,7 +111,7 @@ public class AddressInterpretTest extends TestBase {
 		assertEquals("村庄错误", "白泥井村", addr.getVillage());
 		
 		//两个镇，解析出最后出现的（目前逻辑）
-		addr = interpreter.interpretAddress("福建宁德福安市上白石镇潭头镇潭头村");
+		addr = interpreter.interpret("福建宁德福安市上白石镇潭头镇潭头村");
 		assertNotNull("解析失败", addr);
 		LOG.info("> " + addr.getRawText() + " --> " + addr);
 		assertEquals("详细地址错误", "", addr.getText());
@@ -107,7 +121,7 @@ public class AddressInterpretTest extends TestBase {
 		assertEquals("村庄错误", "潭头村", addr.getVillage());
 		
 		//能够正确解析出：曹镇乡、焦庄村。因为镇、乡都是关键字，容易发生错误解析情况
-		addr = interpreter.interpretAddress("河南平顶山湛河区平顶山市湛河区曹镇乡焦庄村苗桥");
+		addr = interpreter.interpret("河南平顶山湛河区平顶山市湛河区曹镇乡焦庄村苗桥");
 		assertNotNull("解析失败", addr);
 		LOG.info("> " + addr.getRawText() + " --> " + addr);
 		assertEquals("详细地址错误", "苗桥", addr.getText());
@@ -117,7 +131,7 @@ public class AddressInterpretTest extends TestBase {
 		assertEquals("道路错误", "焦庄村", addr.getVillage());
 		
 		//能够正常解析出：南村镇，强镇街。因为强镇街中包含关键字【镇】，容易发生错误解析情况
-		addr = interpreter.interpretAddress("河北石家庄长安区南村镇强镇街51号南村工商管理局");
+		addr = interpreter.interpret("河北石家庄长安区南村镇强镇街51号南村工商管理局");
 		assertNotNull("解析失败", addr);
 		LOG.info("> " + addr.getRawText() + " --> " + addr);
 		assertEquals("详细地址错误", "南村工商管理局", addr.getText());
@@ -127,7 +141,7 @@ public class AddressInterpretTest extends TestBase {
 		assertEquals("道路错误", "强镇街", addr.getRoad());
 		
 		//测试去冗余，保留完整的村委、村委会
-		addr = interpreter.interpretAddress("浙江杭州萧山区浙江省杭州市萧山区益农镇兴裕村委东150米");
+		addr = interpreter.interpret("浙江杭州萧山区浙江省杭州市萧山区益农镇兴裕村委东150米");
 		assertNotNull("解析失败", addr);
 		LOG.info("> " + addr.getRawText() + " --> " + addr);
 		assertNotNull("未解析出乡镇", addr.getTowns());
@@ -136,7 +150,7 @@ public class AddressInterpretTest extends TestBase {
 		assertEquals("详细地址错误", "村委东", addr.getText());
 		assertEquals("村庄错误", "兴裕村", addr.getVillage());
 		//测试正确提取村庄，村的名称必须是【三居洋村】，不能是【三居洋村村】
-		addr = interpreter.interpretAddress("福建三明明溪县夏阳乡三居洋村村口");
+		addr = interpreter.interpret("福建三明明溪县夏阳乡三居洋村村口");
 		assertNotNull("解析失败", addr);
 		LOG.info("> " + addr.getRawText() + " --> " + addr);
 		assertNotNull("未解析出乡镇", addr.getTowns());
@@ -146,7 +160,7 @@ public class AddressInterpretTest extends TestBase {
 		assertEquals("村庄错误", "三居洋村", addr.getVillage());
 		
 		//重复出现的乡镇
-		addr = interpreter.interpretAddress("广东湛江廉江市石岭镇，石岭镇， 外村乡凉伞树下村〈村尾钟其德家〉");
+		addr = interpreter.interpret("广东湛江廉江市石岭镇，石岭镇， 外村乡凉伞树下村〈村尾钟其德家〉");
 		assertNotNull("解析失败", addr);
 		LOG.info("> " + addr.getRawText() + " --> " + addr);
 		assertEquals("详细地址错误", "村尾钟其德家", addr.getText());
@@ -157,7 +171,7 @@ public class AddressInterpretTest extends TestBase {
 		assertEquals("村庄错误", "凉伞树下村", addr.getVillage());
 		
 		//长春下面有绿园区、汽车产业开发区，所以移除冗余时会把长春汽车产业开发区去掉
-		addr = interpreter.interpretAddress("吉林长春绿园区长春汽车产业开发区（省级）（特殊乡镇）长沈路1000号力旺格林春天");
+		addr = interpreter.interpret("吉林长春绿园区长春汽车产业开发区（省级）（特殊乡镇）长沈路1000号力旺格林春天");
 		assertNotNull("解析失败", addr);
 		LOG.info("> " + addr.getRawText() + " --> " + addr);
 		assertEquals("详细地址错误", "力旺格林春天省级特殊乡镇", addr.getText());

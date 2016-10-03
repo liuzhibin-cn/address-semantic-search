@@ -15,8 +15,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.rrs.rd.address.persist.AddressPersister;
+import com.rrs.rd.address.similarity.Query;
 import com.rrs.rd.address.similarity.SimilarityComputer;
-import com.rrs.rd.address.similarity.SimilarityResult;
 import com.rrs.rd.address.utils.FileUtil;
 
 /**
@@ -41,7 +41,7 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 		model.put("addressText", addrText);
 		
 		String path = HttpDemoServiceImpl.class.getPackage().getName().replace('.', File.separatorChar);
-		String vm = "find-addr.vm";
+		String vm = "find-addr2.vm";
 		try{
 			this.findSimilarAddress(addrText, model);
 		}catch(Exception ex){
@@ -72,16 +72,16 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 	
 	private void findSimilarAddress(String addrText, Map<String, Object> model){
 		long startAt = System.currentTimeMillis();
-		SimilarityResult result = computer.findSimilarAddress(addrText, 5, true);
+		Query q = computer.findSimilarAddress2(addrText, 5);
 		
-		List<SimilarAddressVO> vos = new ArrayList<SimilarAddressVO>(result.getSimilarDocs().size());
-		for(int i=0; i<result.getSimilarDocs().size(); i++){
-			SimilarAddressVO vo = new SimilarAddressVO(result.getSimilarDocs().get(i));
-			vo.setAddress(persisiter.getAddress(result.getSimilarDocs().get(i).getDoc().getId()));
-			result.getSimilarDocs().set(i, vo);
+		List<SimilarAddressVO> vos = new ArrayList<SimilarAddressVO>(q.getSimilarDocs().size());
+		for(int i=0; i<q.getSimilarDocs().size(); i++){
+			SimilarAddressVO vo = new SimilarAddressVO(q.getSimilarDocs().get(i));
+			vo.setAddress(persisiter.getAddress(q.getSimilarDocs().get(i).getDocument().getId()));
+			q.getSimilarDocs().set(i, vo);
 		}
 		model.put("elapsedTime", System.currentTimeMillis() - startAt);
-		model.put("r", result);
+		model.put("r", q);
 		
 		if(LOG.isInfoEnabled()){
 			LOG.info("> Similar address for {" + addrText + "}: ");

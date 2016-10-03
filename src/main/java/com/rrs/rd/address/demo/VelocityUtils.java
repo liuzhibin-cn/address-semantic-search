@@ -4,7 +4,8 @@ import java.util.List;
 
 import org.apache.velocity.util.StringUtils;
 
-import com.rrs.rd.address.similarity.TermExplain;
+import com.rrs.rd.address.similarity.SimilarDoc;
+import com.rrs.rd.address.similarity.Term;
 
 /**
  * Velocity扩展工具类。
@@ -26,8 +27,9 @@ public class VelocityUtils extends StringUtils {
 		long p = Math.round(Math.pow(10, precision));
 		return Math.round(value * p) * 1.0 / p;
 	}
-	public String hitClass(TermExplain te){
-		if(te==null) return "";
-		return te.getHit() ? "hit" : "";
+	public String hitClass(SimilarDoc d, Term t){
+		if(d==null || d.getMatchedTerms()==null || t==null) return "";
+		if(d.getMatchedTerms().containsKey(t.getText())) return "hit";
+		return "";
 	}
 }

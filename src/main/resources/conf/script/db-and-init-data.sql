@@ -12,6 +12,8 @@ CREATE TABLE `addr_address` (
   `building_num` varchar(20) NOT NULL DEFAULT '' COMMENT '几号楼+几单元+房间号',
   `hash` int(11) NOT NULL DEFAULT '0' COMMENT '地址哈希值，去重用',
   `raw_text` varchar(150) NOT NULL DEFAULT '' COMMENT '地址原文',
+  `prop1` varchar(20) NOT NULL DEFAULT '' COMMENT '扩展字段：订单号',
+  `prop2` varchar(20) NOT NULL DEFAULT '' COMMENT '扩展字段：片区ID',
   PRIMARY KEY (`id`),
   KEY `ix_hash` (`hash`),
   KEY `ix_pid_cid_did` (`province_id`,`city_id`,`county_id`)

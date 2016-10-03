@@ -36,7 +36,7 @@
 				<db.user>root</db.user>
 				<db.password>dev</db.password>
 				<cache.path>/Users/richie/Documents/workspace_eclipse/cache-folder</cache.path>
-				<cache.vectors.in.memory>false</cache.vectors.in.memory>
+				<cache.vectors.in.memory>true</cache.vectors.in.memory>
 			</properties>
 			<build>
 				<resources>

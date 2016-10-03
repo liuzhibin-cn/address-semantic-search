@@ -51,6 +51,8 @@ public class AddressEntity implements Serializable {
      * 仅保存到持久化仓库，从持久化仓库读取时不加载该属性。
      */
     private String rawText = "";
+    private String prop1 = "";
+    private String prop2 = "";
     
     public AddressEntity() { }
     public AddressEntity(String text) {
@@ -371,6 +373,34 @@ public class AddressEntity implements Serializable {
     		this.rawText = "";
     	else
     		this.rawText = value.trim();
+    }
+    
+    /**
+     * 扩展字段：订单号
+     * @return
+     */
+    public String getProp1(){
+    	return this.prop1;
+    }
+    public void setProp1(String value){
+    	if(value==null) 
+    		this.prop1="";
+    	else
+    		this.prop1=value;
+    }
+    
+    /**
+     * 扩展字段：片区ID
+     * @return
+     */
+    public String getProp2(){
+    	return this.prop2;
+    }
+    public void setProp2(String value){
+    	if(value==null) 
+    		this.prop2="";
+    	else
+    		this.prop2=value;
     }
     
     @Override

@@ -22,7 +22,19 @@
             <param name="ConversionPattern" value="%m%n" />
         </layout>
     </appender>
+    <appender name="regression" class="org.apache.log4j.RollingFileAppender">
+        <param name="File" value="log/regression.log" />
+        <param name="Append" value="true" />
+        <param name="MaxBackupIndex" value="10" />
+        <layout class="org.apache.log4j.PatternLayout">
+            <param name="ConversionPattern" value="%m%n" />
+        </layout>
+    </appender>
  
+ 	<logger name="com.rrs.rd.address.regression.test.RegressionRunTest" additivity="false">
+        <level value="INFO"/>
+        <appender-ref ref="regression"/>
+    </logger>
  	<logger name="com.rrs.rd.address.test" additivity="false">
         <level value="INFO"/>
         <appender-ref ref="console"/>

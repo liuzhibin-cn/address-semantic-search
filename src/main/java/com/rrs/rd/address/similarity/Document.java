@@ -55,6 +55,14 @@ public class Document {
 		this.terms = value;
 	}
 	
+	public int textTermNum(){
+		if(this.terms==null) return 0;
+		int num = 0;
+		for(Term t : this.terms)
+			if(TermType.Text.equals(t.getType())) num++;
+		return num;
+	}
+	
 	/**
 	 * 该文档是否包含词语term。
 	 * @param term

@@ -20,7 +20,7 @@
 <body style="padding:5px 20px 0 20px;">
 
 <div>
-	<h3>Most similar documents for: [$!{r.addr.rawText}]</h3>
+	<h3>Most similar documents for: [$!{r.queryAddr.rawText}]</h3>
 	<table>
 		<tr class=c>
 			<th>Similarity</th>
@@ -29,35 +29,31 @@
 		</tr>
 		#foreach($vo in ${r.similarDocs})
 		<tr>
-			<td>$!{vo.similarity}</td>
+			<td>$utils.round($vo.similarity, 4)</td>
 			<td>$!{vo.addr.id}</td>
 			<td>$!{vo.addr.rawText}</td>
 		</tr>
 		#end
 	</table>
 	<span class="em1">$!{totalDocCount}</span>
-	<span> history addresses under: [$!{r.addr.province.name} $!{r.addr.city.name} $!{r.addr.county.name}]</span>
+	<span> history addresses under: [$!{r.queryAddr.province.name} $!{r.queryAddr.city.name} $!{r.queryAddr.county.name}]</span>
 	<span class="left10">Elapsed time:</span><span class="em1">$!{elapsedTime}ms.</span>
 </div>
 
 <div class="top20">
 	<h3>Explain for query document:</h3>
-	<span>[$!{r.addr.rawText}</span>
-	<span class="left10 em2">TF = $utils.round($r.docExplain.tf, 4)</span>]
+	<span>[$!{r.queryAddr.rawText}</span>
 	<span class=left10>&gt;&gt;</span>
-	<span class=left10>[</span><span class="em1">$!{r.addr.province.name} $!{r.addr.city.name} $!{r.addr.county.name}</span>]
-	#if($utils.notEmpty($r.addr.towns))<span class="left10">[</span><span class="em1">#foreach($town in ${r.addr.towns})$!{town} #end</span>]#end
-	#if($utils.notEmpty($r.addr.village))<span class="left10">[</span><span class="em1">$!{r.addr.village}</span>]#end
-	#if($utils.notEmpty($r.addr.road))<span class="left10">[</span><span class="em1">$!{r.addr.road}</span>]#end
-	#if($utils.notEmpty($r.addr.roadNum))<span class="left10">[</span><span class="em1">$!{r.addr.roadNum}</span>]#end
-	#if($utils.notEmpty($r.addr.text))<span class="left10">[</span><span class="em1">$!{r.addr.text}</span>]#end
-	#if($utils.notEmpty($r.addr.buildingNum))<span class="left10">[</span><span class="em1">$!{r.addr.buildingNum}</span>]#end
+	<span class=left10>[</span><span class="em1">$!{r.queryAddr.province.name} $!{r.queryAddr.city.name} $!{r.queryAddr.county.name}</span>]
+	#if($utils.notEmpty($r.queryAddr.towns))<span class="left10">[</span><span class="em1">#foreach($town in ${r.queryAddr.towns})$!{town} #end</span>]#end
+	#if($utils.notEmpty($r.queryAddr.village))<span class="left10">[</span><span class="em1">$!{r.queryAddr.village}</span>]#end
+	#if($utils.notEmpty($r.queryAddr.road))<span class="left10">[</span><span class="em1">$!{r.queryAddr.road}</span>]#end
+	#if($utils.notEmpty($r.queryAddr.roadNum))<span class="left10">[</span><span class="em1">$!{r.queryAddr.roadNum}</span>]#end
+	#if($utils.notEmpty($r.queryAddr.text))<span class="left10">[</span><span class="em1">$!{r.queryAddr.text}</span>]#end
+	#if($utils.notEmpty($r.queryAddr.buildingNum))<span class="left10">[</span><span class="em1">$!{r.queryAddr.buildingNum}</span>]#end
 	<table class="top5 c">
-		<tr><th>Term</th>#foreach($exp in ${r.docExplain.termsExplain})<td class="em1 c">$!{exp.term.text}</td>#end</tr>
-		<tr><th>Type</th>#foreach($exp in ${r.docExplain.termsExplain})<td class=c>$!{exp.term.type}</td>#end</tr>
-		<tr><th>IDF</th>#foreach($exp in ${r.docExplain.termsExplain})<td>$utils.round($exp.idf, 4)</td>#end</tr>
-		<tr><th>Boost</th>#foreach($exp in ${r.docExplain.termsExplain})<td>$utils.round($exp.boost, 4)</td>#end</tr>
-		<tr><th>TF-IDF</th>#foreach($exp in ${r.docExplain.termsExplain})<td>$utils.round($exp.tfidf, 4)</td>#end</tr>
+		<tr><th>Term</th>#foreach($t in ${r.queryDoc.terms})<td class="em1 c">$!{t.text}</td>#end</tr>
+		<tr><th>Type</th>#foreach($t in ${r.queryDoc.terms})<td class=c>$!{t.type}</td>#end</tr>
 	</table>
 </div>
 
@@ -66,12 +62,13 @@
 	#foreach($vo in ${r.similarDocs})
 	<span>$!{vo.addr.id}: $!{vo.addr.rawText}</span>
 	<span class="left10 em1">Similarity=$utils.round($vo.similarity, 4)</span>,
-	<span class="left10 em2">TF = $utils.round($vo.docExplain.tf, 4)</span>,
-	<span class="left10 em2">Density=$utils.round($vo.docExplain.density, 4)</span>
+	<span class="left10 em2">TF = $utils.round($vo.docExplain.tf, 4)</span>
 	<table class="bot10 c">
 		<tr><th>Term</th>#foreach($exp in ${vo.docExplain.termsExplain})<td class='$utils.hitClass($exp)'>$!{exp.term.text}</td>#end</tr>
 		<tr><th>Type</th>#foreach($exp in ${vo.docExplain.termsExplain})<td class='$utils.hitClass($exp)'>$!{exp.term.type}</td>#end</tr>
 		<tr><th>IDF</th>#foreach($exp in ${vo.docExplain.termsExplain})<td class='$utils.hitClass($exp)'>$utils.round($exp.idf, 4)</td>#end</tr>
+		<tr><th>Rate</th>#foreach($exp in ${vo.docExplain.termsExplain})<td class='$utils.hitClass($exp)'>$utils.round($exp.rate, 4)</td>#end</tr>
+		<tr><th>Density</th>#foreach($exp in ${vo.docExplain.termsExplain})<td class='$utils.hitClass($exp)'>$utils.round($exp.density, 4)</td>#end</tr>
 		<tr><th>Boost</th>#foreach($exp in ${vo.docExplain.termsExplain})<td class='$utils.hitClass($exp)'>$utils.round($exp.boost, 4)</td>#end</tr>
 		<tr><th>TF-IDF</th>#foreach($exp in ${vo.docExplain.termsExplain})<td class='$utils.hitClass($exp)'>$utils.round($exp.tfidf, 4)</td>#end</tr>
 	</table>

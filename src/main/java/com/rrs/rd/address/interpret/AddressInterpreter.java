@@ -85,7 +85,7 @@ public class AddressInterpreter {
 		for(String addrText : addrTextList){
 			try{
 				if(addrText==null || addrText.trim().isEmpty()) continue;
-				AddressEntity address = interpretAddress(addrText);
+				AddressEntity address = interpret(addrText);
 				if(address==null || !address.hasCity() || !address.hasCounty()) {
 					numFail++;
 					continue;
@@ -127,7 +127,7 @@ public class AddressInterpreter {
 	 * @param addressText 地址原文。对地址的格式要求参考{@link #importAddress(String)}。
 	 * @return 解析成功返回{@link AddressEntity}，解析失败返回null。
 	 */
-	public AddressEntity interpretAddress(String addressText){
+	public AddressEntity interpret(String addressText){
 		if(addressText==null || addressText.trim().length()<=0) return null;
 		
 		long start = 0;
@@ -423,7 +423,8 @@ public class AddressInterpreter {
 				//特殊情况处理：
 				//河北秦皇岛昌黎县昌黎镇秦皇岛市昌黎镇马铁庄村
 				//在移除冗余时匹配：秦皇岛市昌黎镇，会将【昌黎】匹配成为区县【昌黎县】，导致剩下的文本为【镇马铁庄村】
-				if(RegionType.County.equals(region.getType()) && !name.equals(region.getName())){ //使用别名匹配上的
+				if(RegionType.County.equals(region.getType()) 
+						&& !name.equals(region.getName()) && name.length()<region.getName().length()){ //使用别名匹配上的
 					String left = StringUtil.tail(text, text.length() - name.length());
 					if(left.length()>0 && left.startsWith("大街") || left.startsWith("大道") || left.startsWith("街道") 
 							|| left.startsWith("镇") || left.startsWith("乡") || left.startsWith("村")

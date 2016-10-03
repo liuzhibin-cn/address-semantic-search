@@ -12,6 +12,11 @@ import com.rrs.rd.address.similarity.TermType;
 
 public class SimilarityServiceTest extends TestBase {
 	@Test
+	public void testSimilarity(){
+		
+	}
+	
+	@Test
 	public void testTranslateRoadNum(){
 		SimilarityComputer service = context.getBean(SimilarityComputer.class);
 		int v = service.translateRoadNum("十");
