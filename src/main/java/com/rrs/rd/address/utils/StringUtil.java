@@ -103,6 +103,89 @@ public final class StringUtil {
 		return text.substring(s, e+1);
 	}
 	
+	/**
+	 * 在两侧删除字符串text的空格字符
+	 * @param text
+	 * @return
+	 */
+	public static String trim(String text){
+		return trim(text, true, true, ' ', '　');
+	}
+	
+	/**
+	 * 在两侧删除字符串text的特定字符(包含在chars中的字符)。
+	 * @param text
+	 * @param chars
+	 * @return
+	 */
+	public static String trim(String text, char... chars){
+		return trim(text, true, true, chars);
+	}
+	
+	/**
+	 * 左侧删除字符串text的特定字符(包含在chars中的字符)。
+	 * @param text
+	 * @param chars
+	 * @return
+	 */
+	public static String ltrim(String text, char... chars){
+		return trim(text, true, false, chars);
+	}
+	
+	/**
+	 * 右侧删除字符串text的特定字符(包含在chars中的字符)。
+	 * @param text
+	 * @param chars
+	 * @return
+	 */
+	public static String rtrim(String text, char... chars){
+		return trim(text, false, true, chars);
+	}
+	
+	/**
+	 * 两侧删除字符串text的特定字符(包含在chars中的字符)。
+	 * @param text
+	 * @param left 左侧是否删除
+	 * @param right 右侧是否删除
+	 * @param chars 需要删除的字符
+	 * @return
+	 */
+	private static String trim(String text, boolean left, boolean right, char... chars){
+		if(text==null || text.isEmpty() || chars==null || chars.length<=0) return text;
+		int start=0, end=text.length()-1;
+		boolean isDeadChar = false;
+		
+		if(left){
+			for(int i=0; i<text.length(); i++){
+				isDeadChar = false;
+				for(int j=0; j<chars.length; j++) {
+					if(text.charAt(i)==chars[j]){
+						isDeadChar=true;
+						break;
+					}
+				}
+				if(!isDeadChar) break;
+				start++;
+			}
+		}
+		
+		if(right){
+			for(int i=text.length()-1; i>=0; i--){
+				isDeadChar = false;
+				for(int j=0; j<chars.length; j++) {
+					if(text.charAt(i)==chars[j]){
+						isDeadChar=true;
+						break;
+					}
+				}
+				if(!isDeadChar) break;
+				end--;
+			}
+		}
+		
+		return substring(text, start, end);
+	}
+	
 	private static Set<Character> getReplaceCharsSet(char[] chars){
 		String key = String.copyValueOf(chars);
 		Set<Character> charsSet = REPLACE_CHARS_CACHE.get(key);

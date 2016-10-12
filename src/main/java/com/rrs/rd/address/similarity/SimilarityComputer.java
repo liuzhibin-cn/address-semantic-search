@@ -130,7 +130,7 @@ public class SimilarityComputer {
 				else break;
 			}
 			if(addr.getTowns().get(i).endsWith("镇") || addr.getTowns().get(i).endsWith("乡")){
-				town = addr.getTowns().get(i);
+				town = StringUtil.rtrim(addr.getTowns().get(i), '镇', '乡');
 				if(residentDistrict==null) continue;
 				else break;
 			}
@@ -600,6 +600,8 @@ public class SimilarityComputer {
 		
 		//=====================================================================
 		//确定性匹配
+		
+		//找出乡镇、村，道路、门牌号
 		Term qroad=null, qroadnum=null, qtown=null, qvillage=null, droad=null, droadnum=null, dtown=null, dvillage=null;
 		for(Term qterm : query.getQueryDoc().getTerms()){
 			switch(qterm.getType()){
@@ -619,64 +621,89 @@ public class SimilarityComputer {
 				default:
 			}
 		}
-		if(qtown!=null && qtown.equals(dtown)) { //镇一样
-			if(qvillage!=null && qvillage.equals(dvillage)) { //村一样
-				simiDoc.setExactPercent(1);
-				simiDoc.setExactValue(0.99);
-				simiDoc.setSimilarity(0.99);
+		
+		//乡镇村确定性匹配
+		if(qtown!=null && qtown.equals(dtown)) { //乡镇相同
+			if(qvillage!=null && qvillage.equals(dvillage)) { //镇相同村相同: 相似度 -> [0.98, 1]
+				simiDoc.setExactPercent(0.98);
+				simiDoc.setExactValue(1);
+				simiDoc.setTextPercent(1-simiDoc.getExactPercent());
+				simiDoc.setSimilarity(simiDoc.getExactValue()*simiDoc.getExactPercent()+simiDoc.getTextPercent()*simiDoc.getTextValue());
 				simiDoc.addMatchedTerm(new MatchedTerm(dtown));
 				simiDoc.addMatchedTerm(new MatchedTerm(dvillage));
 				query.addSimiDoc(simiDoc);
 				return;
-			} else { //村不一样
-				simiDoc.setExactPercent(1);
-				simiDoc.setExactValue(0.97);
-				simiDoc.setSimilarity(0.97);
+			} else { //镇相同: 相似度 -> [0.96, 1]
+				simiDoc.setExactPercent(0.98);
+				simiDoc.setExactValue(0.96/0.98);
+				simiDoc.setTextPercent(1-simiDoc.getExactPercent());
+				simiDoc.setSimilarity(simiDoc.getExactValue()*simiDoc.getExactPercent()+simiDoc.getTextPercent()*simiDoc.getTextValue());
 				simiDoc.addMatchedTerm(new MatchedTerm(dtown));
 				query.addSimiDoc(simiDoc);
 				return;
 			}
 		}
-		if(qroad!=null && qroad.equals(droad)) { //道路一样
+		if(qtown!=null && dtown!=null){ //都有乡镇但乡镇不同: 相似度 -> [0, 0.8]
+			simiDoc.setExactPercent(0.2);
+			simiDoc.setExactValue(0);
+			simiDoc.setTextPercent(1-simiDoc.getExactPercent());
+			simiDoc.setSimilarity(simiDoc.getExactValue()*simiDoc.getExactPercent()+simiDoc.getTextPercent()*simiDoc.getTextValue());
+			query.addSimiDoc(simiDoc);
+			return;
+		}
+		
+		//道路门牌号确定性匹配
+		if(qroad!=null && qroad.equals(droad)) { //道路相同
 			if(qroadnum!=null && droadnum!=null){
 				int qnum = translateRoadNum(qroadnum.getText());
 				int dnum = translateRoadNum(droadnum.getText());
 				simiDoc.addMatchedTerm(new MatchedTerm(droad));
 				simiDoc.addMatchedTerm(new MatchedTerm(droadnum));
-				if(qnum==dnum) { //道路一样，都有门牌号，门牌号一样
-					simiDoc.setExactPercent(1);
+				if(qnum==dnum) { //道路相同门牌号相同: 相似度 -> [0.98, 1]
+					simiDoc.setExactPercent(0.98);
 					simiDoc.setExactValue(1);
-					simiDoc.setSimilarity(1);
+					simiDoc.setTextPercent(1-simiDoc.getExactPercent());
+					simiDoc.setSimilarity(simiDoc.getExactValue()*simiDoc.getExactPercent()+simiDoc.getTextPercent()*simiDoc.getTextValue());
 					query.addSimiDoc(simiDoc);
 					return;
-				} else { //道路一样，都有门牌号，门牌号不一样
-					if(simiDoc.getTextValue()>0.85){
+				} else { //道路相同且都有门牌号但门牌号不同: 相似度 -> [0.56, 1]，根据门牌号间隔大小、文本匹配度高低调整权重
+					if(simiDoc.getTextValue()>0.9){ //文本部分高度匹配，降低门牌号权重，突出文本权重: 相似度 -> [0.88, 1]
+						simiDoc.setExactPercent(0.2);
+					}else{ //文本部分匹配度一般，基本代表文本匹配不够靠谱，因此突出门牌号权重，降低文本权重: 相似度 -> [0.56, 0.97]
 						simiDoc.setExactPercent(0.7);
-						simiDoc.setExactValue(0.95);
-						simiDoc.setTextPercent(0.3);
-					}else{
-						simiDoc.setExactPercent(0.92);
-						simiDoc.setExactValue( 0.85 + (1 / (Math.sqrt(Math.sqrt( Math.abs(qnum - dnum) + 1))) ) * 0.15 );
-						simiDoc.setTextPercent(0.08);
 					}
+					simiDoc.setExactValue( 0.8 + (1 / ( Math.sqrt(Math.sqrt( Math.abs(qnum-dnum)+1 )) ) ) * 0.2 );
+					simiDoc.setTextPercent(1-simiDoc.getExactPercent());
+					simiDoc.setSimilarity(simiDoc.getExactValue()*simiDoc.getExactPercent()+simiDoc.getTextPercent()*simiDoc.getTextValue());
+					query.addSimiDoc(simiDoc);
+					return;
 				}
-			}else{ //道路一样，其中一个没有门牌号或两个都没有门牌号
+			}else{ //道路相同，其中一个没有门牌号或两个都没有门牌号: 相似度 -> [0.56, 0.97]，根据文本匹配度高低调整权重
 				simiDoc.addMatchedTerm(new MatchedTerm(droad));
-				if(simiDoc.getTextValue()>0.8){
-					simiDoc.setExactPercent(0.7);
-					simiDoc.setExactValue(0.95);
-					simiDoc.setTextPercent(0.3);
-				}else{
-					simiDoc.setExactPercent(0.7);
+				if(simiDoc.getTextValue()>0.9){ //文本部分高度匹配，加权: 相似度 -> [0.9, 0.97]
+					simiDoc.setExactValue(0.9);
+					simiDoc.setExactPercent(0.3);
+				}else{ //文本部分匹配度一般，基本代表文本匹配不够靠谱，降权: 相似度 -> [0.56, 0.83]
 					simiDoc.setExactValue(0.8);
-					simiDoc.setTextPercent(0.3);
+					simiDoc.setExactPercent(0.7);
 				}
+				simiDoc.setTextPercent(1-simiDoc.getExactPercent());
+				simiDoc.setSimilarity(simiDoc.getExactValue()*simiDoc.getExactPercent()+simiDoc.getTextPercent()*simiDoc.getTextValue());
+				query.addSimiDoc(simiDoc);
+				return;
 			}
 		}
-		if(qroad!=null && droad!=null && !qroad.equals(droad)){ //道路不一样
-			simiDoc.setExactPercent(0.2);
+		if(qroad!=null && droad!=null){ //都有道路但道路不同: 相似度 -> [0, 0.93]
+			if(simiDoc.getTextValue()>0.9){ //文本部分高度匹配，为文本加权: 相似度 -> [0.837, 0.93]
+				simiDoc.setExactPercent(0.07);
+			}else{ //文本部分匹配度一般，基本代表文本匹配不够靠谱，为文本降权: 相似度 -> [0, 0.85]
+				simiDoc.setExactPercent(0.15);
+			}
 			simiDoc.setExactValue(0);
-			simiDoc.setTextPercent(0.8);
+			simiDoc.setTextPercent(1-simiDoc.getExactPercent());
+			simiDoc.setSimilarity(simiDoc.getExactValue()*simiDoc.getExactPercent()+simiDoc.getTextPercent()*simiDoc.getTextValue());
+			query.addSimiDoc(simiDoc);
+			return;
 		}
 		
 		simiDoc.setSimilarity(simiDoc.getExactPercent()*simiDoc.getExactValue()+simiDoc.getTextPercent()*simiDoc.getTextValue());

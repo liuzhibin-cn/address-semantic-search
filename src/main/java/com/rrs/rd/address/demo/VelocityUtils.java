@@ -34,10 +34,10 @@ public class VelocityUtils extends StringUtils {
 	}
 	public boolean exactPart(SimilarDoc doc){
 		if(doc==null) return false;
-		return doc.getExactPercent()>0 && doc.getExactValue()>0;
+		return doc.getExactPercent()>0 || doc.getExactValue()>0;
 	}
 	public boolean textPart(SimilarDoc doc){
 		if(doc==null) return false;
-		return doc.getTextPercent()>0 && doc.getTextValue()>0;
+		return doc.getTextPercent()>0 || doc.getTextValue()>0;
 	}
 }

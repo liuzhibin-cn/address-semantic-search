@@ -5,7 +5,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.context.support.ClassPathXmlApplicationContext;
@@ -82,6 +84,10 @@ public class ImportWLTestData {
 		}
 		
 		String line = null;
+		SimpleDateFormat format = new SimpleDateFormat("MM/dd/yyy HH:mm:ss");
+		@SuppressWarnings("deprecation")
+		Date defaultDate = new Date(1900,1,1);
+		
 		System.out.println("> 开始导入地址库");
 		
 		try{
@@ -95,7 +101,7 @@ public class ImportWLTestData {
             			//System.out.println("> [format-error] " + lineNum +" - " + line);
             			continue;
             		}
-            		String orderNo = tokens[0], gridId = tokens[6];
+            		
             		AddressEntity addr = interpreter.interpret(tokens[1]+tokens[2]+tokens[3]+tokens[4]);
             		if(addr==null){
             			System.out.println("> [inter-error] " + lineNum + " - " + line);
@@ -105,8 +111,18 @@ public class ImportWLTestData {
             			System.out.println("> [region-error] " + lineNum + " - " + line);
             			continue;
             		}
+            		
+            		String orderNo = tokens[0], gridId = tokens[6];
             		addr.setProp1(orderNo);
             		addr.setProp2(gridId);
+            		
+            		addr.setCreateTime(defaultDate);
+            		try{
+	            		if(tokens[5]!=null && tokens[5].length()==19){
+	            			addr.setCreateTime(format.parse(tokens[5]));
+	            		}
+            		}catch(Exception e) {}
+            		
             		addrList.add(addr);
             	}catch(RuntimeException ex){
             		System.out.println("> [错误] " + ex.getMessage());
