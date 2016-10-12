@@ -435,21 +435,21 @@ public class SimilarityComputer {
 	 * @return
 	 */
 	public void computeDocSimilarity1(Query query, Document doc){
-		double sumQD=0, sumQQ=0, sumDD=0, tfidfQry=0, tfidfDoc=0;
-		double tfQry = 1; // / Math.log(qryDoc.getTerms().size());
-		double tfDoc = 1; // / Math.log(doc.getTerms().size());
+		double sumQD=0, sumQQ=0, sumDD=0, qtfidf=0, dtfidf=0;
+		double qtf = 1; // / Math.log(qryDoc.getTerms().size());
+		double dtf = 1; // / Math.log(doc.getTerms().size());
 		
-		Term docTerm = null;
+		Term dterm = null;
 		//Text类型词条匹配情况
 		int qryTextTermCount = 0; //查询文档Text类型词条数量
 		int matchCount = 0, matchStart = -1, matchEnd = -1; //地址库文档匹配上的Text词条数量
-		for(Term qryTerm : query.getQueryDoc().getTerms()){
-			if(!TermType.Text.equals(qryTerm.getType())) continue; //仅针对Text类型词条计算 词条稠密度、词条匹配率
+		for(Term qterm : query.getQueryDoc().getTerms()){
+			if(!TermType.Text.equals(qterm.getType())) continue; //仅针对Text类型词条计算 词条稠密度、词条匹配率
 			qryTextTermCount++;
 			for(int i=0; i< doc.getTerms().size(); i++){
 				Term term = doc.getTerms().get(i);
 				if(!TermType.Text.equals(term.getType())) continue; //仅针对Text类型词条计算 词条稠密度、词条匹配率
-				if(term.getText().equals(qryTerm.getText())){
+				if(term.getText().equals(qterm.getText())){
 					matchCount++;
 					if(matchStart==-1) {
 						matchStart = matchEnd = i;
@@ -484,40 +484,40 @@ public class SimilarityComputer {
 		simiDoc.setTextPercent(1);
 		
 		//计算TF-IDF和相似度所需的中间值
-		double docBoost = 0, qryBoost = 0; //加权值
-		for(Term qryTerm : query.getQueryDoc().getTerms()) {
-			qryBoost = getBoostValue(false, query.getQueryDoc(), qryTerm, null, null);
-			tfidfQry = tfQry * qryTerm.getIdf() * qryBoost;
-			docTerm = doc.getTerm(qryTerm.getText());
-			if(docTerm==null && TermType.RoadNum.equals(qryTerm.getType())){
+		double dboost = 0, qboost = 0; //加权值
+		for(Term qterm : query.getQueryDoc().getTerms()) {
+			qboost = getBoostValue(false, query.getQueryDoc(), qterm, null, null);
+			qtfidf = qtf * qterm.getIdf() * qboost;
+			dterm = doc.getTerm(qterm.getText());
+			if(dterm==null && TermType.RoadNum.equals(qterm.getType())){
 				//从b中找门牌号词条
 				for(Term t : doc.getTerms()){
 					if(TermType.RoadNum.equals(t.getType())){
-						if(t.getRef()!=null && t.getRef().equals(qryTerm.getRef())){ //道路相同
-							docTerm = t;
+						if(t.getRef()!=null && t.getRef().equals(qterm.getRef())){ //道路相同
+							dterm = t;
 						}
 						break;
 					}
 				}
 			}
-			docBoost = docTerm==null ? 0 : getBoostValue(true, query.getQueryDoc(), qryTerm, doc, docTerm);
-			double rate = (docTerm!=null && TermType.Text.equals(docTerm.getType())) ? termMatchRate : 1;
-			double density = (docTerm!=null && TermType.Text.equals(docTerm.getType())) ? termDensity : 1;
-			tfidfDoc = tfDoc * qryTerm.getIdf() * docBoost * rate * density;
+			dboost = dterm==null ? 0 : getBoostValue(true, query.getQueryDoc(), qterm, doc, dterm);
+			double rate = (dterm!=null && TermType.Text.equals(dterm.getType())) ? termMatchRate : 1;
+			double density = (dterm!=null && TermType.Text.equals(dterm.getType())) ? termDensity : 1;
+			dtfidf = dtf * qterm.getIdf() * dboost * rate * density;
 			
 			MatchedTerm mt = null;
-			if(docTerm!=null){
-				mt = new MatchedTerm(docTerm);
-				mt.setBoost(docBoost);
+			if(dterm!=null){
+				mt = new MatchedTerm(dterm);
+				mt.setBoost(dboost);
 				mt.setDensity(density);
 				mt.setRate(rate);
-				mt.setTfidf(tfidfDoc);
+				mt.setTfidf(dtfidf);
 				simiDoc.addMatchedTerm(mt);
 			}
 			
-			sumQQ += tfidfQry * tfidfQry;
-			sumQD += tfidfQry * tfidfDoc;
-			sumDD += tfidfDoc * tfidfDoc;
+			sumQQ += qtfidf * qtfidf;
+			sumQD += qtfidf * dtfidf;
+			sumDD += dtfidf * dtfidf;
 		}
 		if(sumDD==0 || sumQQ==0) return;
 		
