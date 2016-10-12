@@ -99,6 +99,9 @@ public class AddressPersister implements ApplicationContextAware {
 				address.setHash(address.getRawText().hashCode());
 				ADDRESS_INDEX_BY_HASH.put(address.getHash(), address);
 				
+				if(address.getCreateTime()==null) 
+					address.setCreateTime(new Date());
+				
 				if(address.getText().length()>100)
 					address.setText(StringUtil.head(address.getText(), 100));
 				if(address.getVillage().length()>5)

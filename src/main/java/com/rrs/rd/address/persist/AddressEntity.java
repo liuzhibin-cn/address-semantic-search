@@ -2,6 +2,7 @@ package com.rrs.rd.address.persist;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -53,6 +54,7 @@ public class AddressEntity implements Serializable {
     private String rawText = "";
     private String prop1 = "";
     private String prop2 = "";
+    private Date createTime = null;
     
     public AddressEntity() { }
     public AddressEntity(String text) {
@@ -402,6 +404,13 @@ public class AddressEntity implements Serializable {
     	else
     		this.prop2=value;
     }
+    
+    public Date getCreateTime() {
+		return createTime;
+	}
+	public void setCreateTime(Date createTime) {
+		this.createTime = createTime;
+	}
     
     @Override
     public String toString(){

@@ -16,19 +16,20 @@
 		<result property="rawText" column="raw_text" />
 		<result property="prop1" column="prop1" />
 		<result property="prop2" column="prop2" />
+		<result property="createTime" column="create_time" />
 	</resultMap>
 	<insert id="create" parameterType="com.rrs.rd.address.persist.AddressEntity">
 		<selectKey keyProperty="id" resultType="Integer">select last_insert_id()</selectKey>
-insert into addr_address(province_id,city_id,county_id,`text`,town,village,road,road_num,building_num,`hash`,raw_text,prop1,prop2)
+insert into addr_address(province_id,city_id,county_id,`text`,town,village,road,road_num,building_num,`hash`,raw_text,prop1,prop2,create_time)
 values(#{province, typeHandler=com.rrs.rd.address.persist.dao.RegionPropertyTypeHandler}
     ,#{city, typeHandler=com.rrs.rd.address.persist.dao.RegionPropertyTypeHandler}
-    ,#{county, typeHandler=com.rrs.rd.address.persist.dao.RegionPropertyTypeHandler},#{text},#{towns},#{village},#{road},#{roadNum},#{buildingNum},#{hash}, #{rawText},#{prop1},#{prop2})
+    ,#{county, typeHandler=com.rrs.rd.address.persist.dao.RegionPropertyTypeHandler},#{text},#{towns},#{village},#{road},#{roadNum},#{buildingNum},#{hash}, #{rawText},#{prop1},#{prop2},#{createTime})
 	</insert>
 	<insert id="batchCreate">
-insert into addr_address(province_id,city_id,county_id,`text`,town,village,road,road_num,building_num,`hash`,raw_text,prop1,prop2) values
+insert into addr_address(province_id,city_id,county_id,`text`,town,village,road,road_num,building_num,`hash`,raw_text,prop1,prop2,create_time) values
 		<foreach collection="addresses" item="addr" separator=",">
 (#{addr.province, typeHandler=com.rrs.rd.address.persist.dao.RegionPropertyTypeHandler},#{addr.city, typeHandler=com.rrs.rd.address.persist.dao.RegionPropertyTypeHandler},#{addr.county, typeHandler=com.rrs.rd.address.persist.dao.RegionPropertyTypeHandler}
-  ,#{addr.text},#{addr.towns},#{addr.village},#{addr.road},#{addr.roadNum},#{addr.buildingNum},#{addr.hash}, #{addr.rawText},#{addr.prop1},#{addr.prop2})
+  ,#{addr.text},#{addr.towns},#{addr.village},#{addr.road},#{addr.roadNum},#{addr.buildingNum},#{addr.hash}, #{addr.rawText},#{addr.prop1},#{addr.prop2},#{addr.createTime})
 		</foreach>
 	</insert>
 	<select id="findAll" resultMap="AddressEntityResult">
@@ -41,7 +42,7 @@ from `addr_address` where province_id=#{provinceId} and city_id=#{cityId} <if te
 	</select>
 	
 	<select id="get" parameterType="Integer" resultMap="AddressEntityResult">
-select `id`,`province_id`,`city_id`,`county_id`,`text`,`town`,`village`,`road`,`road_num`,`building_num`,`hash`, raw_text,prop1,prop2
+select `id`,`province_id`,`city_id`,`county_id`,`text`,`town`,`village`,`road`,`road_num`,`building_num`,`hash`, raw_text,prop1,prop2,create_time
 from `addr_address`
 where id=#{id}
 	</select>

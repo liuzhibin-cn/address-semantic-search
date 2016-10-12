@@ -1,5 +1,7 @@
 package com.rrs.rd.address.test;
 
+import java.util.Date;
+
 import org.junit.Test;
 
 import com.rrs.rd.address.persist.AddressEntity;
@@ -22,6 +24,7 @@ public class AddressDaoTest extends TestBase {
 		address.setCounty(service.getRegion(440184));
 		address.addTown("xx街道");
 		address.addTown("xx镇");
+		address.setCreateTime(new Date());
 		dao.create(address);
 		
 		assertTrue("创建地址对象后未返回ID", address.getId()>0);
