@@ -115,7 +115,7 @@ public class RegressionRunTest {
     		//查相似地址
     		Query query = null;
     		try{
-    			query = computer.findSimilarAddress(tokens[1]+tokens[2]+tokens[3]+tokens[4], 1);
+    			query = computer.findSimilarAddress(tokens[1]+tokens[2]+tokens[3]+tokens[4], 1, 1);
     		}catch(NoHistoryDataException nhdex){
     			noHisNum++;
     			continue;

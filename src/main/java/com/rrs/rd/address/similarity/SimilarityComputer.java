@@ -51,7 +51,7 @@ import com.rrs.rd.address.utils.StringUtil;
  * 步骤1、2由方法{@link #analyse(AddressEntity)}完成。<br />
  * 3. 在全部文档中为所有词条统计逆文档引用情况，由方法{@link #statInverseDocRefers(List)}完成；<br />
  * 4. 为文档中的每个词条计算特征值，由方法{@link #computeTermEigenvalue(Document, int, Map)}完成；<br />
- * 5. 为两个文档计算余弦相似度，由方法{@link #computeDocSimilarity(Document, Document)}完成；<br />
+ * 5. 为两个文档计算余弦相似度，由方法{@link #computeDocSimilarity1(Document, Document)}完成；<br />
  * &nbsp;&nbsp;&nbsp;&nbsp;文档特征向量的维度，取两个文档汇总后的独立词条个数。
  * </p>
  * 
@@ -194,105 +194,6 @@ public class SimilarityComputer {
 			}
 		}
 		return idrc;
-	}
-	
-	/**
-	 * 计算2个文档的相似度。
-	 * <p>采用余弦相似度，0 &lt;= 返回值 &lt;= 1，值越大表示相似度越高，返回值为1则表示完全相同。</p>
-	 * @param qryDoc
-	 * @param doc
-	 * @return
-	 */
-	public void computeDocSimilarity(Query query, Document doc){
-		double sumQD=0, sumQQ=0, sumDD=0, tfidfQry=0, tfidfDoc=0;
-		double tfQry = 1; // / Math.log(qryDoc.getTerms().size());
-		double tfDoc = 1; // / Math.log(doc.getTerms().size());
-		
-		Term docTerm = null;
-		//Text类型词条匹配情况
-		int qryTextTermCount = 0; //查询文档Text类型词条数量
-		int matchCount = 0, matchStart = -1, matchEnd = -1; //地址库文档匹配上的Text词条数量
-		for(Term qryTerm : query.getQueryDoc().getTerms()){
-			if(!TermType.Text.equals(qryTerm.getType())) continue; //仅针对Text类型词条计算 词条稠密度、词条匹配率
-			qryTextTermCount++;
-			for(int i=0; i< doc.getTerms().size(); i++){
-				Term term = doc.getTerms().get(i);
-				if(!TermType.Text.equals(term.getType())) continue; //仅针对Text类型词条计算 词条稠密度、词条匹配率
-				if(term.getText().equals(qryTerm.getText())){
-					matchCount++;
-					if(matchStart==-1) {
-						matchStart = matchEnd = i;
-						break;
-					}
-					if(i>matchEnd) matchEnd = i;
-					else if(i<matchStart) matchStart = i;
-					break;
-				}
-			}
-		}
-		//计算词条稠密度、词条匹配率
-		double termDensity = 1, termMatchRate = 1;
-		if(qryTextTermCount>0) termMatchRate = Math.sqrt(matchCount * 1.0 / qryTextTermCount) * 0.5 + 0.5;
-		//词条稠密度：
-		// 查询文档a的文本词条为：【翠微西里】
-		// 地址库文档词条为：【翠微北里12号翠微嘉园B座西801】
-		// 地址库词条能匹配上【翠微西里】的每一个词条，但不是连续匹配，中间间隔了其他词条，稠密度不够，这类文档应当比能够连续匹配上查询文档的权重低
-		//稠密度 = 0.7 + (匹配上查询文档的词条数量 / 匹配上的词条起止位置间总词条数量) * 0.3 
-		//   乘以0.3是为了将稠密度对相似度结果的影响限制在 0 - 0.3 的范围内。
-		//假设：查询文档中Text类型的词条为：翠, 微, 西, 里。地址库中有如下两个文档，Text类型的词条为：
-		//1: 翠, 微, 西, 里, 10, 号, 楼
-		//2: 翠, 微, 北, 里, 89, 号, 西, 2, 楼
-		//则：
-		// density1 = 0.7 + ( 4/4 ) * 0.3 = 0.7 + 0.3 = 1
-		// density2 = 0.7 + ( 4/7 ) * 0.3 = 0.7 + 0.17143 = 0.87143
-		// 文档2中 [翠、微、西、里] 4个词匹配上查询文档词条，这4个词条之间共包含7个词条。
-		if(qryTextTermCount>=2 && matchCount>=2) 
-			termDensity = Math.sqrt( matchCount * 1.0 / (matchEnd - matchStart + 1) ) * 0.5 + 0.5;
-		
-		SimilarDoc simiDoc = new SimilarDoc(doc);
-		simiDoc.setTextPercent(1);
-		
-		//计算TF-IDF和相似度所需的中间值
-		double docBoost = 0, qryBoost = 0; //加权值
-		for(Term qryTerm : query.getQueryDoc().getTerms()) {
-			qryBoost = getBoostValue(false, query.getQueryDoc(), qryTerm, null, null);
-			tfidfQry = tfQry * qryTerm.getIdf() * qryBoost;
-			docTerm = doc.getTerm(qryTerm.getText());
-			if(docTerm==null && TermType.RoadNum.equals(qryTerm.getType())){
-				//从b中找门牌号词条
-				for(Term t : doc.getTerms()){
-					if(TermType.RoadNum.equals(t.getType())){
-						if(t.getRef()!=null && t.getRef().equals(qryTerm.getRef())){ //道路相同
-							docTerm = t;
-						}
-						break;
-					}
-				}
-			}
-			docBoost = docTerm==null ? 0 : getBoostValue(true, query.getQueryDoc(), qryTerm, doc, docTerm);
-			double rate = (docTerm!=null && TermType.Text.equals(docTerm.getType())) ? termMatchRate : 1;
-			double density = (docTerm!=null && TermType.Text.equals(docTerm.getType())) ? termDensity : 1;
-			tfidfDoc = tfDoc * qryTerm.getIdf() * docBoost * rate * density;
-			
-			MatchedTerm mt = null;
-			if(docTerm!=null){
-				mt = new MatchedTerm(docTerm);
-				mt.setBoost(docBoost);
-				mt.setDensity(density);
-				mt.setRate(rate);
-				mt.setTfidf(tfidfDoc);
-				simiDoc.addMatchedTerm(mt);
-			}
-			
-			sumQQ += tfidfQry * tfidfQry;
-			sumQD += tfidfQry * tfidfDoc;
-			sumDD += tfidfDoc * tfidfDoc;
-		}
-		if(sumDD==0 || sumQQ==0) return;
-		
-		simiDoc.setSimilarity(sumQD / ( Math.sqrt(sumQQ * sumDD) ));
-		simiDoc.setTextValue(simiDoc.getSimilarity());
-		query.addSimiDoc(simiDoc);
 	}
 	
 	/**
@@ -465,14 +366,16 @@ public class SimilarityComputer {
 		return doc;
 	}
 	
+	
+	
+	
 	/**
 	 * 搜索相似地址。
 	 * @param addressText 详细地址文本，开头部分必须包含省、市、区。
 	 * @param topN 返回多少条最相似地址。
-	 * @param needExplain 是否返回详细执行计划。
 	 * @return
 	 */
-	public Query findSimilarAddress(String addressText, int topN){
+	public Query findSimilarAddress(String addressText, int topN, int mode){
 		long start = System.currentTimeMillis(), startCompute = 0, elapsedCompute = 0;
 		Query query = new Query(topN);
 		
@@ -510,7 +413,8 @@ public class SimilarityComputer {
 		//对应地址库中每条地址计算相似度，并保留相似度最高的topN条地址
 		for(Document doc : allDocs){
 			startCompute = System.currentTimeMillis();
-			computeDocSimilarity(query, doc);
+			if(mode==1) computeDocSimilarity1(query, doc);
+			else if(mode==2) computeDocSimilarity2(query, doc);
 			elapsedCompute += System.currentTimeMillis() - startCompute;
 		}
 		
@@ -523,7 +427,104 @@ public class SimilarityComputer {
 		return query;
 	}
 	
-	
+	/**
+	 * 计算2个文档的相似度。
+	 * <p>采用余弦相似度，0 &lt;= 返回值 &lt;= 1，值越大表示相似度越高，返回值为1则表示完全相同。</p>
+	 * @param qryDoc
+	 * @param doc
+	 * @return
+	 */
+	public void computeDocSimilarity1(Query query, Document doc){
+		double sumQD=0, sumQQ=0, sumDD=0, tfidfQry=0, tfidfDoc=0;
+		double tfQry = 1; // / Math.log(qryDoc.getTerms().size());
+		double tfDoc = 1; // / Math.log(doc.getTerms().size());
+		
+		Term docTerm = null;
+		//Text类型词条匹配情况
+		int qryTextTermCount = 0; //查询文档Text类型词条数量
+		int matchCount = 0, matchStart = -1, matchEnd = -1; //地址库文档匹配上的Text词条数量
+		for(Term qryTerm : query.getQueryDoc().getTerms()){
+			if(!TermType.Text.equals(qryTerm.getType())) continue; //仅针对Text类型词条计算 词条稠密度、词条匹配率
+			qryTextTermCount++;
+			for(int i=0; i< doc.getTerms().size(); i++){
+				Term term = doc.getTerms().get(i);
+				if(!TermType.Text.equals(term.getType())) continue; //仅针对Text类型词条计算 词条稠密度、词条匹配率
+				if(term.getText().equals(qryTerm.getText())){
+					matchCount++;
+					if(matchStart==-1) {
+						matchStart = matchEnd = i;
+						break;
+					}
+					if(i>matchEnd) matchEnd = i;
+					else if(i<matchStart) matchStart = i;
+					break;
+				}
+			}
+		}
+		//计算词条稠密度、词条匹配率
+		double termDensity = 1, termMatchRate = 1;
+		if(qryTextTermCount>0) termMatchRate = Math.sqrt(matchCount * 1.0 / qryTextTermCount) * 0.5 + 0.5;
+		//词条稠密度：
+		// 查询文档a的文本词条为：【翠微西里】
+		// 地址库文档词条为：【翠微北里12号翠微嘉园B座西801】
+		// 地址库词条能匹配上【翠微西里】的每一个词条，但不是连续匹配，中间间隔了其他词条，稠密度不够，这类文档应当比能够连续匹配上查询文档的权重低
+		//稠密度 = 0.7 + (匹配上查询文档的词条数量 / 匹配上的词条起止位置间总词条数量) * 0.3 
+		//   乘以0.3是为了将稠密度对相似度结果的影响限制在 0 - 0.3 的范围内。
+		//假设：查询文档中Text类型的词条为：翠, 微, 西, 里。地址库中有如下两个文档，Text类型的词条为：
+		//1: 翠, 微, 西, 里, 10, 号, 楼
+		//2: 翠, 微, 北, 里, 89, 号, 西, 2, 楼
+		//则：
+		// density1 = 0.7 + ( 4/4 ) * 0.3 = 0.7 + 0.3 = 1
+		// density2 = 0.7 + ( 4/7 ) * 0.3 = 0.7 + 0.17143 = 0.87143
+		// 文档2中 [翠、微、西、里] 4个词匹配上查询文档词条，这4个词条之间共包含7个词条。
+		if(qryTextTermCount>=2 && matchCount>=2) 
+			termDensity = Math.sqrt( matchCount * 1.0 / (matchEnd - matchStart + 1) ) * 0.5 + 0.5;
+		
+		SimilarDoc simiDoc = new SimilarDoc(doc);
+		simiDoc.setTextPercent(1);
+		
+		//计算TF-IDF和相似度所需的中间值
+		double docBoost = 0, qryBoost = 0; //加权值
+		for(Term qryTerm : query.getQueryDoc().getTerms()) {
+			qryBoost = getBoostValue(false, query.getQueryDoc(), qryTerm, null, null);
+			tfidfQry = tfQry * qryTerm.getIdf() * qryBoost;
+			docTerm = doc.getTerm(qryTerm.getText());
+			if(docTerm==null && TermType.RoadNum.equals(qryTerm.getType())){
+				//从b中找门牌号词条
+				for(Term t : doc.getTerms()){
+					if(TermType.RoadNum.equals(t.getType())){
+						if(t.getRef()!=null && t.getRef().equals(qryTerm.getRef())){ //道路相同
+							docTerm = t;
+						}
+						break;
+					}
+				}
+			}
+			docBoost = docTerm==null ? 0 : getBoostValue(true, query.getQueryDoc(), qryTerm, doc, docTerm);
+			double rate = (docTerm!=null && TermType.Text.equals(docTerm.getType())) ? termMatchRate : 1;
+			double density = (docTerm!=null && TermType.Text.equals(docTerm.getType())) ? termDensity : 1;
+			tfidfDoc = tfDoc * qryTerm.getIdf() * docBoost * rate * density;
+			
+			MatchedTerm mt = null;
+			if(docTerm!=null){
+				mt = new MatchedTerm(docTerm);
+				mt.setBoost(docBoost);
+				mt.setDensity(density);
+				mt.setRate(rate);
+				mt.setTfidf(tfidfDoc);
+				simiDoc.addMatchedTerm(mt);
+			}
+			
+			sumQQ += tfidfQry * tfidfQry;
+			sumQD += tfidfQry * tfidfDoc;
+			sumDD += tfidfDoc * tfidfDoc;
+		}
+		if(sumDD==0 || sumQQ==0) return;
+		
+		simiDoc.setSimilarity(sumQD / ( Math.sqrt(sumQQ * sumDD) ));
+		simiDoc.setTextValue(simiDoc.getSimilarity());
+		query.addSimiDoc(simiDoc);
+	}
 	
 	public void computeDocSimilarity2(Query query, Document doc){
 		SimilarDoc simiDoc = new SimilarDoc(doc);
@@ -682,55 +683,7 @@ public class SimilarityComputer {
 		query.addSimiDoc(simiDoc);
 	}
 	
-	public Query findSimilarAddress2(String addressText, int topN){
-		long start = System.currentTimeMillis(), startCompute = 0, elapsedCompute = 0;
-		
-		//解析地址
-		if(addressText==null || addressText.trim().isEmpty())
-			throw new IllegalArgumentException("Null or empty address text! Please provider a valid address.");
-		AddressEntity queryAddr = interpreter.interpret(addressText);
-		if(queryAddr==null){
-			LOG.warn("[addr] [find-similar] [addr-err] null << " + addressText);
-			throw new RuntimeException("Can't interpret address!");
-		}
-		if(!queryAddr.hasProvince() || !queryAddr.hasCity() || !queryAddr.hasCounty()){
-			LOG.warn("[addr] [find-similar] [addr-err] "
-					+ (queryAddr.hasProvince() ? queryAddr.getProvince().getName() : "X") + "-"
-					+ (queryAddr.hasCity() ? queryAddr.getCity().getName() : "X") + "-"
-					+ (queryAddr.hasCounty() ? queryAddr.getCounty().getName() : "X")
-					+ " << " + addressText);
-			throw new RuntimeException("Can't interpret address, invalid province, city or county name!");
-		}
-		
-		//从文件缓存或内存缓存获取所有文档。
-		List<Document> allDocs = loadDocunentsFromCache(queryAddr);
-		if(allDocs.isEmpty()) {
-			String message = queryAddr.getProvince().getName() + queryAddr.getCity().getName();
-			if(!RegionType.CityLevelCounty.equals(queryAddr.getCounty().getType()))
-				message = message + queryAddr.getCounty().getName();
-			throw new NoHistoryDataException(message);
-		}
-		
-		Document queryDoc = analyse(queryAddr);
-		
-		Query query = new Query(topN);
-		query.setQueryAddr(queryAddr);
-		query.setQueryDoc(queryDoc);
-		
-		//对应地址库中每条地址计算相似度，并保留相似度最高的topN条地址
-		for(Document doc : allDocs){
-			startCompute = System.currentTimeMillis();
-			computeDocSimilarity2(query, doc);
-			elapsedCompute += System.currentTimeMillis() - startCompute;
-		}
-		//按相似度从高到低排序
-		query.sortSimilarDocs();
-		
-		LOG.info("[addr] [find-similar] [perf] elapsed " + (System.currentTimeMillis() - start)
-				+ "ms (com=" + elapsedCompute + "ms), " + addressText);
-		
-		return query;
-	}
+	
 	
 	/**
 	 * 从文件或内存缓存读取加载文档。
