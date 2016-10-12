@@ -36,14 +36,22 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 		Velocity.init(properties);
 	}
 	
-	public String find(String addrText){
+	public String find1(String addrText){
+		return this.find(addrText, 1);
+	}
+	
+	public String find2(String addrText){
+		return this.find(addrText, 2);
+	}
+	
+	private String find(String addrText, int mode){
 		Map<String, Object> model = new HashMap<String, Object>();
 		model.put("addressText", addrText);
 		
 		String path = HttpDemoServiceImpl.class.getPackage().getName().replace('.', File.separatorChar);
 		String vm = "find-addr2.vm";
 		try{
-			this.findSimilarAddress(addrText, model);
+			this.findSimilarAddress(addrText, model, mode);
 		}catch(Exception ex){
 			LOG.error("[addr] [find-similar] [error] " + ex.getMessage(), ex);
 			model.put("ex", ex);
@@ -70,9 +78,11 @@ public class HttpDemoServiceImpl implements HttpDemoService {
         }
 	}
 	
-	private void findSimilarAddress(String addrText, Map<String, Object> model){
+	private void findSimilarAddress(String addrText, Map<String, Object> model, int mode){
 		long startAt = System.currentTimeMillis();
-		Query q = computer.findSimilarAddress2(addrText, 5);
+		Query q = null;
+		if(mode==1) q = computer.findSimilarAddress(addrText, 5);
+		else q = computer.findSimilarAddress2(addrText, 5);
 		
 		List<SimilarAddressVO> vos = new ArrayList<SimilarAddressVO>(q.getSimilarDocs().size());
 		for(int i=0; i<q.getSimilarDocs().size(); i++){

@@ -16,7 +16,7 @@
 	<import resource="datasource-config.xml" />
 
 	<dubbo:application name="address-similarity" />
-	<dubbo:protocol name="rest" server="jetty" host="127.0.0.1" port="8000" contextpath="test"
+	<dubbo:protocol name="rest" server="jetty" host="127.0.0.1" port="8000" contextpath="address"
 		extension="com.alibaba.dubbo.rpc.protocol.rest.support.LoggingFilter" />
 	<dubbo:service interface="com.rrs.rd.address.demo.HttpDemoService" ref="demoService" 
 		register="false" protocol="rest" />

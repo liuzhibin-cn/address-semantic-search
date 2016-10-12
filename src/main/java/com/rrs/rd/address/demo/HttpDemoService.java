@@ -10,12 +10,17 @@ import javax.ws.rs.Produces;
  * @author Richie 刘志斌 yudi@sina.com
  * 2016年9月25日
  */
-@Path("address")
+@Path("demo")
 public interface HttpDemoService {
 	
 	@GET
-	@Path("find/{addrText: .+}")
+	@Path("s1/{addrText: .+}")
 	@Produces({"application/text", "text/html"})
-	String find(@PathParam("addrText") String addrText);
+	String find1(@PathParam("addrText") String addrText);
+	
+	@GET
+	@Path("s2/{addrText: .+}")
+	@Produces({"application/text", "text/html"})
+	String find2(@PathParam("addrText") String addrText);
 	
 }
