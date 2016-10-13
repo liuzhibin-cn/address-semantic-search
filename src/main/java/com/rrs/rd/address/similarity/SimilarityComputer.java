@@ -83,6 +83,8 @@ public class SimilarityComputer {
 	private static Map<String, List<Document>> VECTORS_CACHE = new HashMap<String, List<Document>>();
 	private static Map<String, Map<String, Double>> IDF_CACHE = new HashMap<String, Map<String, Double>>();
 	
+	public long timeBoost=0;
+	
 	/**
 	 * 分词，设置词条权重。
 	 * @param addresses
@@ -240,10 +242,12 @@ public class SimilarityComputer {
 				for(Term t : qdoc.getTerms()){
 					if(t.getType().equals(TermType.Town)) qtown=t;
 					else if(t.getType().equals(TermType.Village)) qvillage=t;
+					else if(t.getType().equals(TermType.Text)) break;
 				}
 				for(Term t : ddoc.getTerms()){
 					if(t.getType().equals(TermType.Town)) dtown=t;
 					else if(t.getType().equals(TermType.Village)) dvillage=t;
+					else if(t.getType().equals(TermType.Text)) break;
 				}
 				if(TermType.Town.equals(type)){ //乡镇
 					//查询文档和地址库文档都有乡镇，为乡镇加权。注意：存在乡镇相同、不同两种情况。
@@ -272,11 +276,13 @@ public class SimilarityComputer {
 					else if(t.getType().equals(TermType.RoadNum)) qroadnum=t;
 					else if(t.getType().equals(TermType.Town)) qtown = t;
 					else if(t.getType().equals(TermType.Village)) qvillage = t;
+					else if(t.getType().equals(TermType.Text)) break;
 				}
 				if(qtown==null || qvillage==null){ //有乡镇有村庄，不再考虑道路、门牌号的加权
 					for(Term t : ddoc.getTerms()){
 						if(t.getType().equals(TermType.Road)) droad=t;
 						else if(t.getType().equals(TermType.RoadNum)) droadnum=t;
+						else if(t.getType().equals(TermType.Text)) break;
 					}
 					if(TermType.Road.equals(type)){ //道路
 						if(qroad!=null && droad!=null) value = BOOST_L;
@@ -413,7 +419,6 @@ public class SimilarityComputer {
 	 * @return
 	 */
 	public Query findSimilarAddress(String addressText, int topN, int mode, boolean explain){
-		long start = System.currentTimeMillis(), startCompute = 0, elapsedCompute = 0;
 		Query query = new Query(topN);
 		
 		//解析地址
@@ -450,19 +455,13 @@ public class SimilarityComputer {
 		//对应地址库中每条地址计算相似度，并保留相似度最高的topN条地址
 		double similarity=0;
 		for(Document doc : allDocs){
-			startCompute = System.currentTimeMillis();
-			if(mode==1) similarity = computeDocSimilarity1(query, doc, explain);
+			if(mode==1) similarity = computeDocSimilarity1(query, doc, topN, explain);
 			else if(mode==2) computeDocSimilarity2(query, doc, explain);
-			elapsedCompute += System.currentTimeMillis() - startCompute;
 			if(topN==1 && mode==1 && similarity==1) break;
 		}
 		
 		//按相似度从高到低排序
 		if(topN>1) query.sortSimilarDocs();
-		
-		if(LOG.isInfoEnabled())
-			LOG.info("[addr] [find-similar] [perf] elapsed " + (System.currentTimeMillis() - start)
-				+ "ms (com=" + elapsedCompute + "ms), " + addressText);
 		
 		return query;
 	}
@@ -474,7 +473,7 @@ public class SimilarityComputer {
 	 * @param doc
 	 * @return
 	 */
-	public double computeDocSimilarity1(Query query, Document doc, boolean explain){
+	public double computeDocSimilarity1(Query query, Document doc, int topN, boolean explain){
 		Term dterm = null;
 		//=====================================================================
 		//计算text类型词条的稠密度、匹配率
@@ -518,8 +517,11 @@ public class SimilarityComputer {
 		if(qTextTermCount>=2 && dTextTermMatchCount>=2) 
 			textTermDensity = Math.sqrt( dTextTermMatchCount * 1.0 / (matchEnd - matchStart + 1) ) * 0.5 + 0.5;
 		
-		SimilarDoc simiDoc = new SimilarDoc(doc);
-		simiDoc.setTextPercent(1);
+		SimilarDoc simiDoc = null;
+		if(explain && topN>1){
+			simiDoc = new SimilarDoc(doc);
+			simiDoc.setTextPercent(1);
+		}
 		
 		//=====================================================================
 		//计算TF-IDF和相似度所需的中间值
@@ -545,7 +547,7 @@ public class SimilarityComputer {
 			double density = (dterm!=null && TermType.Text.equals(dterm.getType())) ? textTermDensity : 1;
 			dtfidf = (dterm!=null ? dterm.getIdf() : qterm.getIdf()) * dboost * rate * density;
 			
-			if(explain && dterm!=null){
+			if(explain && topN>1 && dterm!=null){
 				MatchedTerm mt = null;
 				mt = new MatchedTerm(dterm);
 				mt.setBoost(dboost);
@@ -561,10 +563,13 @@ public class SimilarityComputer {
 		}
 		if(sumDD==0 || sumQQ==0) return 0;
 		
-		simiDoc.setSimilarity(sumQD / ( Math.sqrt(sumQQ * sumDD) ));
-		simiDoc.setTextValue(simiDoc.getSimilarity());
-		query.addSimiDoc(simiDoc);
-		return simiDoc.getSimilarity();
+		double similarity = sumQD / ( Math.sqrt(sumQQ * sumDD) );
+		if(explain && topN>1){
+			simiDoc.setSimilarity(similarity);
+			simiDoc.setTextValue(similarity);
+			query.addSimiDoc(simiDoc);
+		}else query.addSimiDoc(doc, similarity);
+		return similarity;
 	}
 	
 	public void computeDocSimilarity2(Query query, Document doc, boolean explain){

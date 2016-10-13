@@ -77,6 +77,28 @@ public class Query {
 		return false;
 	}
 	
+	public boolean addSimiDoc(Document doc, double similarity){
+		if(similarity<=0) return false;
+		if(this.simiDocs==null) {
+			this.simiDocs = new ArrayList<SimilarDoc>(this.topN);
+			SimilarDoc simiDoc = new SimilarDoc(doc);
+			simiDoc.setTextPercent(1);
+			simiDoc.setTextValue(similarity);
+			simiDoc.setSimilarity(similarity);
+			this.simiDocs.add(simiDoc);
+			return true;
+		}
+		if(this.simiDocs.get(0).getSimilarity()<similarity){
+			SimilarDoc simiDoc = new SimilarDoc(doc);
+			simiDoc.setTextPercent(1);
+			simiDoc.setTextValue(similarity);
+			simiDoc.setSimilarity(similarity);
+			this.simiDocs.set(0, simiDoc);
+			return true;
+		}
+		return false;
+	}
+	
 	public List<SimilarDoc> getSimilarDocs(){
 		if(this.simiDocs==null) this.simiDocs = new ArrayList<SimilarDoc>(0);
 		return this.simiDocs;

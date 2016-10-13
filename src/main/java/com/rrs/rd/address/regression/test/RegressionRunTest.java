@@ -89,7 +89,7 @@ public class RegressionRunTest {
 		System.out.println("> 开始回归测试");
 		
 		int lineNum = 0;
-		start1 = System.currentTimeMillis();
+		start1 = System.nanoTime();
         while((line = br.readLine()) != null){
     		lineNum++;
     		String[] tokens = StringUtil.substring(line, 1, line.length()-2).split("\",\"");
@@ -101,9 +101,9 @@ public class RegressionRunTest {
     		effectiveNum++;
     		AddressEntity addr = null;
     		try{
-    			start2 = System.currentTimeMillis();
+    			start2 = System.nanoTime();
     			addr = interpreter.interpret(tokens[1]+tokens[2]+tokens[3]+tokens[4]);
-    			timeInter += System.currentTimeMillis()-start2;
+    			timeInter += System.nanoTime()-start2;
     		}catch(Exception ex){
     			interpretFail++;
     			LOG.info("[inter-ex] " + lineNum + ":" + tokens[1]+tokens[2]+tokens[3]+tokens[4] + ", " + ex.getMessage());
@@ -119,9 +119,9 @@ public class RegressionRunTest {
     		//查相似地址
     		Query query = null;
     		try{
-    			start2 = System.currentTimeMillis();
+    			start2 = System.nanoTime();
     			query = computer.findSimilarAddress(tokens[1]+tokens[2]+tokens[3]+tokens[4], 1, 1, false);
-    			timeSimi += System.currentTimeMillis()-start2;
+    			timeSimi += System.nanoTime()-start2;
     		}catch(NoHistoryDataException nhdex){
     			noHisNum++;
     			continue;
@@ -162,13 +162,16 @@ public class RegressionRunTest {
 				+ " --> " + simiAddr.getId() + ":" + simiAddr.getRawText());
 			
 			if(effectiveNum%500 == 0){ //性能日志
-				timeTotal += System.currentTimeMillis() - start1;
-				LOG.info("[perf] num:" + effectiveNum +", [time:" + round(timeTotal/1000.0) + ", avg:" + round(timeTotal*1.0/effectiveNum)+"], "
-						+ "[inte: " + round(timeInter/1000.0) + ", avg:" + round(timeInter*1.0/500) + "], "
-						+ "[find: " + round(timeSimi/1000.0) + ", avg:" + round(timeSimi*1.0/500) + "]");
-				start1 = System.currentTimeMillis();
+				timeTotal += System.nanoTime() - start1;
+				LOG.info("[perf] num:" + effectiveNum +", [time:" + round(timeTotal/1000000/1000.0) + ", avg:" + round(timeTotal*1.0/1000000/effectiveNum)+"], "
+						+ "[inte: " + round(timeInter/1000000/1000.0) + ", avg:" + round(timeInter*1.0/1000000/500) + "], "
+						+ "[find: " + round(timeSimi/1000000/1000.0) + ", avg:" + round(timeSimi*1.0/1000000/500) + "], "
+						+ "[boost: " + round(computer.timeBoost/1000000/1000.0) +", avg:" + round(computer.timeBoost*1.0/1000000/500) + "]");
+				computer.timeBoost=0;
+				start1 = System.nanoTime();
 				timeInter=0;
 				timeSimi=0;
+				timeTotal=0;
 			}
         }
         
