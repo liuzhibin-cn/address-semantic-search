@@ -12,6 +12,11 @@ public class Document {
 	private int id;
 	private List<Term> terms = null;
 	private Map<String, Term> termsMap = null;
+	private Term town = null;
+	private Term village = null;
+	private Term road = null;
+	private Term roadNum = null;
+	private int roadNumValue = 0;
 	
 	public Document() {}
 	
@@ -29,6 +34,41 @@ public class Document {
 	}
 	public void setId(int value){
 		this.id = value;
+	}
+	
+	public Term getTown() {
+		return town;
+	}
+	public void setTown(Term town) {
+		this.town = town;
+	}
+
+	public Term getVillage() {
+		return village;
+	}
+	public void setVillage(Term village) {
+		this.village = village;
+	}
+
+	public Term getRoad() {
+		return road;
+	}
+	public void setRoad(Term road) {
+		this.road = road;
+	}
+
+	public Term getRoadNum() {
+		return roadNum;
+	}
+	public void setRoadNum(Term roadNum) {
+		this.roadNum = roadNum;
+	}
+	
+	public int getRoadNumValue() {
+		return roadNumValue;
+	}
+	public void setRoadNumValue(int value) {
+		this.roadNumValue = value;
 	}
 	
 	/**
@@ -55,14 +95,6 @@ public class Document {
 		this.terms = value;
 	}
 	
-	public int textTermNum(){
-		if(this.terms==null) return 0;
-		int num = 0;
-		for(Term t : this.terms)
-			if(TermType.Text.equals(t.getType())) num++;
-		return num;
-	}
-	
 	/**
 	 * 该文档是否包含词语term。
 	 * @param term
@@ -83,5 +115,6 @@ public class Document {
 				this.termsMap.put(t.getText(), t);
 		}
 	}
+
 	
 }

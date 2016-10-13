@@ -1,6 +1,10 @@
 package com.rrs.rd.address.test;
 
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
@@ -89,5 +93,59 @@ public class BasicFuncTest {
 			char c = str.charAt(i);
 			System.out.println((long)c + ": " + c);
 		}
+	}
+	
+	@Test
+	public void testMapPerformance(){
+		List<String> strs = new ArrayList<String>(9);
+		strs.add("北京");
+		strs.add("海淀区");
+		strs.add("丹棱街");
+		strs.add("18号");
+		strs.add("创");
+		strs.add("富");
+		strs.add("大");
+		strs.add("厦");
+		strs.add("1106");
+		Map<String, String> strMap = new HashMap<String, String>(strs.size());
+		Map<Integer, String> intMap = new HashMap<Integer, String>(strs.size());
+		for(String s : strs) {
+			strMap.put(s, s);
+			intMap.put(s.hashCode(), s);
+		}
+		
+		int loop = 5000000;
+		String val = null;
+		
+		long start = System.nanoTime();
+		for(int i=0; i<loop; i++){
+			val = strMap.get("丹棱街");
+			val = strMap.get("厦");
+		}
+		System.out.println("StrMap耗时: " + (System.nanoTime()-start)/1000000);
+		
+		start = System.nanoTime();
+		for(int i=0; i<loop; i++){
+			val = intMap.get("丹棱街".hashCode());
+			val = strMap.get("厦".hashCode());
+		}
+		System.out.println("IntMap耗时: " + (System.nanoTime()-start)/1000000);
+		
+		start = System.nanoTime();
+		for(int i=0; i<loop; i++){
+			for(String s : strs) {
+				if("丹棱街".equals(s)) {
+					val = s;
+					break;
+				}
+			}
+			for(String s : strs) {
+				if("厦".equals(s)) {
+					val = s;
+					break;
+				}
+			}
+		}
+		System.out.println("List耗时: " + (System.nanoTime()-start)/1000000);
 	}
 }

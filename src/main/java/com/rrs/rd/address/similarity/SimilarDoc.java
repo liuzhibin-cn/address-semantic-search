@@ -34,7 +34,7 @@ public class SimilarDoc {
 	}
 	
 	public MatchedTerm addMatchedTerm(MatchedTerm value){
-		if(this.matchedTerms==null) this.matchedTerms = new HashMap<String, MatchedTerm>(this.doc.textTermNum());
+		if(this.matchedTerms==null) this.matchedTerms = new HashMap<String, MatchedTerm>(this.doc.getTerms().size());
 		this.matchedTerms.put(value.getTerm().getText(), value);
 		return value;
 	}

@@ -39,26 +39,9 @@
         <level value="INFO"/>
         <appender-ref ref="console"/>
     </logger>
- 	<logger name="com.rrs.rd.address.similarity" additivity="false">
-        <level value="NONE"/>
-        <appender-ref ref="file"/>
-    </logger>
-    <!-- <logger name="com.rrs.rd.address.persist.dao" additivity="false">
-        <level value="ERROR"/>  
-        <appender-ref ref="sql"/>
-    </logger>  --> 
- 	<logger name="com.rrs.rd.address.persist" additivity="false">
-        <level value="NONE"/>
-        <appender-ref ref="file"/>
-        <!-- <appender-ref ref="console"/> -->
-    </logger>
-    <!-- <logger name="com.alibaba.dubbo.rpc.protocol.rest.support.LoggingFilter" additivity="false">
-    	<level value="INFO"/>
-        <appender-ref ref="file"/>
-    </logger> -->
     
 	<root>
-		<level value="WARN" />
+		<level value="ERROR" />
 		<appender-ref ref="file" />
 	</root>
 </log4j:configuration>

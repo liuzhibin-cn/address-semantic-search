@@ -162,8 +162,8 @@ public class RegressionRunTest {
 				+ " --> " + simiAddr.getId() + ":" + simiAddr.getRawText());
 			
 			if(effectiveNum%500 == 0){ //性能日志
-				timeTotal += System.nanoTime() - start1;
-				LOG.info("[perf] num:" + effectiveNum +", [time:" + round(timeTotal/1000000/1000.0) + ", avg:" + round(timeTotal*1.0/1000000/effectiveNum)+"], "
+				timeTotal = System.nanoTime() - start1;
+				LOG.info("[perf] num:" + effectiveNum +", [time:" + round(timeTotal/1000000/1000.0) + ", avg:" + round(timeTotal*1.0/1000000/500)+"], "
 						+ "[inte: " + round(timeInter/1000000/1000.0) + ", avg:" + round(timeInter*1.0/1000000/500) + "], "
 						+ "[find: " + round(timeSimi/1000000/1000.0) + ", avg:" + round(timeSimi*1.0/1000000/500) + "], "
 						+ "[boost: " + round(computer.timeBoost/1000000/1000.0) +", avg:" + round(computer.timeBoost*1.0/1000000/500) + "]");
@@ -177,11 +177,11 @@ public class RegressionRunTest {
         
         LOG.info("有效地址: " + effectiveNum + ", 解析失败: " + interpretFail + ", 缺历史: " + noHisNum
 				+ ", 相似度0: " + zeroNum + ", 低相似度: " + ls + " - " + lf + ", 高相似度: " + hs + " - " + hf);
-        LOG.info("低相似度准确率: " + ( ls * 1.0 / (ls + lf) ) + ", 高相似度准确率: " + ( hs * 1.0 / (hs + hf) ) );
+        LOG.info("低相似度准确率: " + round( ls * 1.0 / (ls + lf) ) + ", 高相似度准确率: " + round( hs * 1.0 / (hs + hf) ) );
         
         System.out.println("有效地址: " + effectiveNum + ", 解析失败: " + interpretFail + ", 缺历史: " + noHisNum
 				+ ", 相似度0: " + zeroNum + ", 低相似度: " + ls + "s - " + lf + "f, 高相似度: " + hs + "s - " + hf + "f");
-        System.out.println("匹配率: " + (hs*1.0/effectiveNum) + ", 低相似度准确率: " + ( ls * 1.0 / (ls + lf) ) + ", 高相似度准确率: " + ( hs * 1.0 / (hs + hf) ) );
+        System.out.println("匹配率: " + round(hs*1.0/effectiveNum) + ", 低相似度准确率: " + round( ls * 1.0 / (ls + lf) ) + ", 高相似度准确率: " + round( hs * 1.0 / (hs + hf) ) );
         
 		try {
 			br.close();

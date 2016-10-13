@@ -40,10 +40,10 @@ public class Term {
 				return 0;
 			case Street:
 				return 1;
-			case RoadNum:
+			case Town:
 			case Village:
 			case Road:
-			case Town: 
+			case RoadNum:
 			case Text:
 			default:
 				return this.idf;
