@@ -73,6 +73,7 @@ public class RegressionRunTest {
 	private static void doRegressionTest(File file, AddressPersister persister
 			, AddressInterpreter interpreter, SimilarityComputer computer) throws IOException{
 		int effectiveNum=0, interpretFail=0, noHisNum=0, ls = 0, lf=0, hs=0, hf=0, zeroNum=0;
+		long start1=0, start2=0, timeTotal=0, timeInter=0, timeSimi=0; 
 		InputStreamReader sr = null;
 		BufferedReader br = null;
 		try {
@@ -88,6 +89,7 @@ public class RegressionRunTest {
 		System.out.println("> 开始回归测试");
 		
 		int lineNum = 0;
+		start1 = System.currentTimeMillis();
         while((line = br.readLine()) != null){
     		lineNum++;
     		String[] tokens = StringUtil.substring(line, 1, line.length()-2).split("\",\"");
@@ -99,7 +101,9 @@ public class RegressionRunTest {
     		effectiveNum++;
     		AddressEntity addr = null;
     		try{
+    			start2 = System.currentTimeMillis();
     			addr = interpreter.interpret(tokens[1]+tokens[2]+tokens[3]+tokens[4]);
+    			timeInter += System.currentTimeMillis()-start2;
     		}catch(Exception ex){
     			interpretFail++;
     			LOG.info("[inter-ex] " + lineNum + ":" + tokens[1]+tokens[2]+tokens[3]+tokens[4] + ", " + ex.getMessage());
@@ -115,7 +119,9 @@ public class RegressionRunTest {
     		//查相似地址
     		Query query = null;
     		try{
-    			query = computer.findSimilarAddress(tokens[1]+tokens[2]+tokens[3]+tokens[4], 1, 1);
+    			start2 = System.currentTimeMillis();
+    			query = computer.findSimilarAddress(tokens[1]+tokens[2]+tokens[3]+tokens[4], 1, 1, false);
+    			timeSimi += System.currentTimeMillis()-start2;
     		}catch(NoHistoryDataException nhdex){
     			noHisNum++;
     			continue;
@@ -141,7 +147,7 @@ public class RegressionRunTest {
     		AddressEntity simiAddr = persister.getAddress(id);
     		boolean match = simiAddr.getProp2().equals(gridId);
     		String prefix = "";
-    		if(simi<0.8){
+    		if(simi<0.85){
     			if(simi==0) zeroNum++;
     			else {
 	    			if(match) { prefix = "[r-s-l] "; ls++; }
@@ -154,6 +160,16 @@ public class RegressionRunTest {
 			LOG.info(prefix + round(simiDoc.getSimilarity()) + " " + simiAddr.getProp2() + " --> " + gridId
 				+ " " + lineNum + ":" + tokens[1]+tokens[2]+tokens[3]+tokens[4] 
 				+ " --> " + simiAddr.getId() + ":" + simiAddr.getRawText());
+			
+			if(effectiveNum%500 == 0){ //性能日志
+				timeTotal += System.currentTimeMillis() - start1;
+				LOG.info("[perf] num:" + effectiveNum +", [time:" + round(timeTotal/1000.0) + ", avg:" + round(timeTotal*1.0/effectiveNum)+"], "
+						+ "[inte: " + round(timeInter/1000.0) + ", avg:" + round(timeInter*1.0/500) + "], "
+						+ "[find: " + round(timeSimi/1000.0) + ", avg:" + round(timeSimi*1.0/500) + "]");
+				start1 = System.currentTimeMillis();
+				timeInter=0;
+				timeSimi=0;
+			}
         }
         
         LOG.info("有效地址: " + effectiveNum + ", 解析失败: " + interpretFail + ", 缺历史: " + noHisNum
@@ -161,8 +177,8 @@ public class RegressionRunTest {
         LOG.info("低相似度准确率: " + ( ls * 1.0 / (ls + lf) ) + ", 高相似度准确率: " + ( hs * 1.0 / (hs + hf) ) );
         
         System.out.println("有效地址: " + effectiveNum + ", 解析失败: " + interpretFail + ", 缺历史: " + noHisNum
-				+ ", 相似度0: " + zeroNum + ", 低相似度: " + ls + " - " + lf + ", 高相似度: " + hs + " - " + hf);
-        System.out.println("低相似度准确率: " + ( ls * 1.0 / (ls + lf) ) + ", 高相似度准确率: " + ( hs * 1.0 / (hs + hf) ) );
+				+ ", 相似度0: " + zeroNum + ", 低相似度: " + ls + "s - " + lf + "f, 高相似度: " + hs + "s - " + hf + "f");
+        System.out.println("匹配率: " + (hs*1.0/effectiveNum) + ", 低相似度准确率: " + ( ls * 1.0 / (ls + lf) ) + ", 高相似度准确率: " + ( hs * 1.0 / (hs + hf) ) );
         
 		try {
 			br.close();

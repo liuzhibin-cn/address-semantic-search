@@ -40,7 +40,7 @@
         <appender-ref ref="console"/>
     </logger>
  	<logger name="com.rrs.rd.address.similarity" additivity="false">
-        <level value="INFO"/>
+        <level value="NONE"/>
         <appender-ref ref="file"/>
     </logger>
     <!-- <logger name="com.rrs.rd.address.persist.dao" additivity="false">
@@ -48,7 +48,7 @@
         <appender-ref ref="sql"/>
     </logger>  --> 
  	<logger name="com.rrs.rd.address.persist" additivity="false">
-        <level value="INFO"/>
+        <level value="NONE"/>
         <appender-ref ref="file"/>
         <!-- <appender-ref ref="console"/> -->
     </logger>

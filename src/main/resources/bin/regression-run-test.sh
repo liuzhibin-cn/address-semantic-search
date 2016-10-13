@@ -13,4 +13,4 @@ LIB_DIR=$DEPLOY_DIR/lib
 LIB_JARS=`ls $LIB_DIR | grep .jar | awk '{print "'$LIB_DIR'/"$0}' | tr "\n" ":"`
 
 echo -e "Run regression test ...\c"
-java -classpath $CONF_DIR:$CONF_DIR/dic:$LIB_JARS com.rrs.rd.address.regression.test.RegressionRunTest $1
+java -Xmx4096m -classpath $CONF_DIR:$CONF_DIR/dic:$LIB_JARS com.rrs.rd.address.regression.test.RegressionRunTest $1

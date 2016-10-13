@@ -70,7 +70,7 @@ public class SimilarityComputer {
 	private static double BOOST_M = 1; //正常权重
 	private static double BOOST_L = 2; //加权高值
 	private static double BOOST_XL = 4; //加权高值
-	//private static double BOOST_S = 0.5; //降权
+	private static double BOOST_S = 0.5; //降权
 	private static double BOOST_XS = 0.25; //降权
 	
 	private static double MISSING_IDF = 4;
@@ -221,6 +221,7 @@ public class SimilarityComputer {
 		
 		double value = BOOST_M;
 		TermType type = forDoc ? dterm.getType() : qterm.getType();
+		Term qtown=null, qvillage=null, dtown=null, dvillage=null;
 		switch(type){
 			case Province:
 			case City:
@@ -236,7 +237,6 @@ public class SimilarityComputer {
 			case Town:
 			case Village:
 				value = BOOST_XS;
-				Term qtown=null, qvillage=null, dtown=null, dvillage=null;
 				for(Term t : qdoc.getTerms()){
 					if(t.getType().equals(TermType.Town)) qtown=t;
 					else if(t.getType().equals(TermType.Village)) qvillage=t;
@@ -253,33 +253,41 @@ public class SimilarityComputer {
 				}else{ //村庄
 					//查询文档和地址库文档都有乡镇且乡镇相同，且查询文档和地址库文档都有村庄时，为村庄加权
 					//与上述乡镇类似，存在村庄相同和不同两种情况
-					if(qvillage!=null && dvillage!=null && qtown!=null && qtown.equals(dtown)){
-						if(qvillage.equals(dvillage)) value = BOOST_XL;
-						else value = BOOST_L;
+					if(qvillage!=null && dvillage!=null && qtown!=null){
+						if(qtown.equals(dtown)){ //镇相同
+							if(qvillage.equals(dvillage)) value = BOOST_XL;
+							else value = BOOST_L;
+						}else if(dtown!=null) { //镇不同
+							if(!forDoc) value = BOOST_L;
+							else value = BOOST_S;
+						}
 					}
 				}
 				break;
 			case Road:
 			case RoadNum:
-				//value = BOOST_M;
 				Term qroad=null, qroadnum=null, droad=null, droadnum=null;
 				for(Term t : qdoc.getTerms()){
 					if(t.getType().equals(TermType.Road)) qroad=t;
 					else if(t.getType().equals(TermType.RoadNum)) qroadnum=t;
+					else if(t.getType().equals(TermType.Town)) qtown = t;
+					else if(t.getType().equals(TermType.Village)) qvillage = t;
 				}
-				for(Term t : ddoc.getTerms()){
-					if(t.getType().equals(TermType.Road)) droad=t;
-					else if(t.getType().equals(TermType.RoadNum)) droadnum=t;
-				}
-				if(TermType.Road.equals(type)){ //道路
-					if(qroad!=null && droad!=null) value = BOOST_L;
-				}else{ //门牌号。注意：查询文档和地址库文档的门牌号都会进入此处执行，这一点跟Road、Town、Village不同。
-					if(qroadnum!=null && droadnum!=null && qroad!=null && qroad.equals(droad)){
-						int qnum = translateRoadNum(qroadnum.getText());
-						int dnum = translateRoadNum(droadnum.getText());
-						if(qnum>0 && dnum>0){
-							if(qnum==dnum) value = 3;
-							else value = forDoc ? ( 1 / Math.sqrt(Math.sqrt( Math.abs(qnum - dnum) + 1 )) ) * BOOST_L : 3;
+				if(qtown==null || qvillage==null){ //有乡镇有村庄，不再考虑道路、门牌号的加权
+					for(Term t : ddoc.getTerms()){
+						if(t.getType().equals(TermType.Road)) droad=t;
+						else if(t.getType().equals(TermType.RoadNum)) droadnum=t;
+					}
+					if(TermType.Road.equals(type)){ //道路
+						if(qroad!=null && droad!=null) value = BOOST_L;
+					}else{ //门牌号。注意：查询文档和地址库文档的门牌号都会进入此处执行，这一点跟Road、Town、Village不同。
+						if(qroadnum!=null && droadnum!=null && qroad!=null && qroad.equals(droad)){
+							int qnum = translateRoadNum(qroadnum.getText());
+							int dnum = translateRoadNum(droadnum.getText());
+							if(qnum>0 && dnum>0){
+								if(qnum==dnum) value = 3;
+								else value = forDoc ? ( 1 / Math.sqrt(Math.sqrt( Math.abs(qnum - dnum) + 1 )) ) * BOOST_L : 3;
+							}
 						}
 					}
 				}
@@ -404,7 +412,7 @@ public class SimilarityComputer {
 	 * @param topN 返回多少条最相似地址。
 	 * @return
 	 */
-	public Query findSimilarAddress(String addressText, int topN, int mode){
+	public Query findSimilarAddress(String addressText, int topN, int mode, boolean explain){
 		long start = System.currentTimeMillis(), startCompute = 0, elapsedCompute = 0;
 		Query query = new Query(topN);
 		
@@ -440,17 +448,20 @@ public class SimilarityComputer {
 		query.setQueryDoc(queryDoc);
 		
 		//对应地址库中每条地址计算相似度，并保留相似度最高的topN条地址
+		double similarity=0;
 		for(Document doc : allDocs){
 			startCompute = System.currentTimeMillis();
-			if(mode==1) computeDocSimilarity1(query, doc);
-			else if(mode==2) computeDocSimilarity2(query, doc);
+			if(mode==1) similarity = computeDocSimilarity1(query, doc, explain);
+			else if(mode==2) computeDocSimilarity2(query, doc, explain);
 			elapsedCompute += System.currentTimeMillis() - startCompute;
+			if(topN==1 && mode==1 && similarity==1) break;
 		}
 		
 		//按相似度从高到低排序
-		query.sortSimilarDocs();
+		if(topN>1) query.sortSimilarDocs();
 		
-		LOG.info("[addr] [find-similar] [perf] elapsed " + (System.currentTimeMillis() - start)
+		if(LOG.isInfoEnabled())
+			LOG.info("[addr] [find-similar] [perf] elapsed " + (System.currentTimeMillis() - start)
 				+ "ms (com=" + elapsedCompute + "ms), " + addressText);
 		
 		return query;
@@ -463,7 +474,8 @@ public class SimilarityComputer {
 	 * @param doc
 	 * @return
 	 */
-	public void computeDocSimilarity1(Query query, Document doc){Term dterm = null;
+	public double computeDocSimilarity1(Query query, Document doc, boolean explain){
+		Term dterm = null;
 		//=====================================================================
 		//计算text类型词条的稠密度、匹配率
 		//1. Text类型词条匹配情况
@@ -533,8 +545,8 @@ public class SimilarityComputer {
 			double density = (dterm!=null && TermType.Text.equals(dterm.getType())) ? textTermDensity : 1;
 			dtfidf = (dterm!=null ? dterm.getIdf() : qterm.getIdf()) * dboost * rate * density;
 			
-			MatchedTerm mt = null;
-			if(dterm!=null){
+			if(explain && dterm!=null){
+				MatchedTerm mt = null;
 				mt = new MatchedTerm(dterm);
 				mt.setBoost(dboost);
 				mt.setDensity(density);
@@ -547,14 +559,15 @@ public class SimilarityComputer {
 			sumQD += qtfidf * dtfidf;
 			sumDD += dtfidf * dtfidf;
 		}
-		if(sumDD==0 || sumQQ==0) return;
+		if(sumDD==0 || sumQQ==0) return 0;
 		
 		simiDoc.setSimilarity(sumQD / ( Math.sqrt(sumQQ * sumDD) ));
 		simiDoc.setTextValue(simiDoc.getSimilarity());
 		query.addSimiDoc(simiDoc);
+		return simiDoc.getSimilarity();
 	}
 	
-	public void computeDocSimilarity2(Query query, Document doc){
+	public void computeDocSimilarity2(Query query, Document doc, boolean explain){
 		SimilarDoc simiDoc = new SimilarDoc(doc);
 		
 		//=====================================================================
@@ -765,34 +778,35 @@ public class SimilarityComputer {
 						if(docs==null) docs = new ArrayList<Document>(0);
 						VECTORS_CACHE.put(cacheKey, docs);
 					}
-				}
-			}
-		}
-		//为所有词条计算IDF并缓存
-		Map<String, Double> idfs = IDF_CACHE.get(cacheKey);
-		if(idfs==null){
-			synchronized (IDF_CACHE) {
-				idfs = IDF_CACHE.get(cacheKey);
-				if(idfs==null){
-					Map<String, Integer> termReferences = statInverseDocRefers(docs);
-					idfs = new HashMap<String, Double>(termReferences.size());
-					for(Map.Entry<String, Integer> entry : termReferences.entrySet()){
-						double idf = 0; 
-						//纯数字或字母组成
-						if(StringUtil.isNumericChars(entry.getKey())) idf = 2;
-						else if(StringUtil.isAnsiChars(entry.getKey())) idf = 2;
-						else idf = Math.log( docs.size() * 1.0 / (entry.getValue() + 1) );
-						if(idf<0) idf = 0;
-						idfs.put(entry.getKey(), idf);
+					
+					//为所有词条计算IDF并缓存
+					Map<String, Double> idfs = IDF_CACHE.get(cacheKey);
+					if(idfs==null){
+						synchronized (IDF_CACHE) {
+							idfs = IDF_CACHE.get(cacheKey);
+							if(idfs==null){
+								Map<String, Integer> termReferences = statInverseDocRefers(docs);
+								idfs = new HashMap<String, Double>(termReferences.size());
+								for(Map.Entry<String, Integer> entry : termReferences.entrySet()){
+									double idf = 0; 
+									//纯数字或字母组成
+									if(StringUtil.isNumericChars(entry.getKey())) idf = 2;
+									else if(StringUtil.isAnsiChars(entry.getKey())) idf = 2;
+									else idf = Math.log( docs.size() * 1.0 / (entry.getValue() + 1) );
+									if(idf<0) idf = 0;
+									idfs.put(entry.getKey(), idf);
+								}
+								IDF_CACHE.put(cacheKey, idfs);
+							}
+						}
 					}
-					IDF_CACHE.put(cacheKey, idfs);
+					
+					for(Document doc : docs){
+						for(Term term : doc.getTerms())
+							term.setIdf(idfs.get(generateIDFCacheEntryKey(term)));
+					}
 				}
 			}
-		}
-		
-		for(Document doc : docs){
-			for(Term term : doc.getTerms())
-				term.setIdf(idfs.get(generateIDFCacheEntryKey(term)));
 		}
 		
 		return docs;
