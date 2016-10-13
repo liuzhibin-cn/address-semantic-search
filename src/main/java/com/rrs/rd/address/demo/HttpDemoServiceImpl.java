@@ -80,7 +80,7 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 	
 	private void findSimilarAddress(String addrText, Map<String, Object> model, int mode){
 		long startAt = System.currentTimeMillis();
-		Query q = computer.findSimilarAddress(addrText, 5, mode);
+		Query q = computer.findSimilarAddress(addrText, 50, mode);
 		
 		List<SimilarAddressVO> vos = new ArrayList<SimilarAddressVO>(q.getSimilarDocs().size());
 		for(int i=0; i<q.getSimilarDocs().size(); i++){

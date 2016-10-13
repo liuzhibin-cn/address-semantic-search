@@ -33,10 +33,21 @@ public class Term {
 	}
 	
 	public double getIdf(){
-		if(TermType.RoadNum.equals(this.type)) //道路门牌号取固定IDF值
-			return ROAD_NUM_IDF;
-		else
-			return this.idf;
+		switch(this.type){
+			case Province:
+			case City:
+			case County:
+				return 0;
+			case Street:
+				return 1;
+			case RoadNum:
+			case Village:
+			case Road:
+			case Town: 
+			case Text:
+			default:
+				return this.idf;
+		}
 	}
 	
 	public void setIdf(double value){

@@ -186,6 +186,34 @@ public final class StringUtil {
 		return substring(text, start, end);
 	}
 	
+	/**
+	 * 是否全部为数字
+	 * @param text
+	 * @return
+	 */
+	public static boolean isNumericChars(String text){
+		if(text==null || text.isEmpty()) return false;
+		for(int i=0; i<text.length(); i++){
+			char c = text.charAt(i);
+			if(c<'0' || c>'9') return false;
+		}
+		return true;
+	}
+	
+	/**
+	 * 是否全部为ANSI字母
+	 * @param text
+	 * @return
+	 */
+	public static boolean isAnsiChars(String text){
+		if(text==null || text.isEmpty()) return false;
+		for(int i=0; i<text.length(); i++){
+			char c = text.charAt(i);
+			if(!( (c>='a' && c<='z') || (c>='A' && c<='Z'))) return false;
+		}
+		return true;
+	}
+	
 	private static Set<Character> getReplaceCharsSet(char[] chars){
 		String key = String.copyValueOf(chars);
 		Set<Character> charsSet = REPLACE_CHARS_CACHE.get(key);

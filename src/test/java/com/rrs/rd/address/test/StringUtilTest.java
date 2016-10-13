@@ -20,4 +20,18 @@ public class StringUtilTest extends TestCase {
 		assertEquals("", StringUtil.substring("", 2, 5));
 		assertEquals("", StringUtil.substring("abcdef", 7, 9));
 	}
+	
+	@Test
+	public void testIsNumericChars(){
+		assertFalse(StringUtil.isNumericChars(""));
+		assertFalse(StringUtil.isNumericChars(null));
+		
+		assertTrue(StringUtil.isNumericChars("0123"));
+		assertTrue(StringUtil.isNumericChars("789"));
+		assertTrue(StringUtil.isNumericChars("09"));
+		
+		assertFalse(StringUtil.isNumericChars("abc"));
+		assertFalse(StringUtil.isNumericChars("19abc"));
+		assertFalse(StringUtil.isNumericChars("19a771"));
+	}
 }

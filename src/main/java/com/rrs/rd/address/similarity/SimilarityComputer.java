@@ -69,8 +69,9 @@ public class SimilarityComputer {
 	private static String DEFAULT_CACHE_FOLDER = "~/.vector_cache";
 	private static double BOOST_M = 1; //正常权重
 	private static double BOOST_L = 2; //加权高值
-	private static double BOOST_XL = 3; //加权高值
-	private static double BOOST_S = 0.5; //降权
+	private static double BOOST_XL = 4; //加权高值
+	//private static double BOOST_S = 0.5; //降权
+	private static double BOOST_XS = 0.25; //降权
 	
 	private static double MISSING_IDF = 4;
 	
@@ -165,7 +166,7 @@ public class SimilarityComputer {
 		Map<String, Double> idfs = IDF_CACHE.get(this.buildCacheKey(addr));
 		if(idfs!=null){
 			for(Term t : terms){
-				Double idf = idfs.get(t.getText());
+				Double idf = idfs.get(generateIDFCacheEntryKey(t));
 				if(idf==null) t.setIdf(MISSING_IDF);
 				else t.setIdf(idf.doubleValue());
 			}
@@ -187,73 +188,101 @@ public class SimilarityComputer {
 		for(Document doc : docs) {
 			if(doc.getTerms()==null) continue;
 			for(Term term : doc.getTerms()){
-				if(idrc.containsKey(term.getText()))
-					idrc.put(term.getText(), idrc.get(term.getText()) + 1);
+				String key = generateIDFCacheEntryKey(term);
+				if(idrc.containsKey(key))
+					idrc.put(key, idrc.get(key) + 1);
 				else 
-					idrc.put(term.getText(), 1);
+					idrc.put(key, 1);
 			}
 		}
 		return idrc;
+	}
+	private String generateIDFCacheEntryKey(Term term){
+		String key = term.getText();
+		if(TermType.RoadNum.equals(term.getType())){
+			int num = translateRoadNum(key);
+			key = ( term.getRef() == null ? "" : term.getRef().getText() ) + "-" + num;
+		}
+		return key;
 	}
 	
 	/**
 	 * 计算词条加权权重boost值。
 	 * @param forDoc true:为地址库文档词条计算boost；false:为查询文档词条计算boost。
-	 * @param queryDoc 查询文档。
-	 * @param queryTerm 查询文档词条。
-	 * @param doc 地址库文档。
-	 * @param term 地址库文档词条。
+	 * @param qdoc 查询文档。
+	 * @param qterm 查询文档词条。
+	 * @param ddoc 地址库文档。
+	 * @param dterm 地址库文档词条。
 	 * @return
 	 */
-	private double getBoostValue(boolean forDoc, Document queryDoc, Term queryTerm, Document doc, Term term){
-		//forDoc==true, 为地址库文档计算boost，queryDoc, doc, term肯定不为null，但queryTerm可能为null（执行explain时）；
-		//forDoc==false, 为查询文档计算boost，queryDoc, queryTerm肯定不为null，doc, term肯定是null；
-		if(forDoc && TermType.RoadNum.equals(term.getType())){
-			//道路门牌号特殊处理
-			Term queryRoadNumTerm = null, roadTerm = term.getRef();;
-			for(Term qt : queryDoc.getTerms()){
-				if(TermType.RoadNum.equals(qt.getType())){
-					queryRoadNumTerm = qt;
-					continue;
-				}
-			}
-			Term queryRoadTerm = queryRoadNumTerm == null ? null : queryRoadNumTerm.getRef();
-			if(queryRoadTerm!=null && roadTerm!=null && queryRoadTerm.equals(roadTerm)){
-				//道路一样，根据门牌号间隔情况动态加权
-				if(queryRoadNumTerm!=null){
-					int queryRoadNum = translateRoadNum(queryRoadNumTerm.getText());
-					int docRoadNum = translateRoadNum(term.getText());
-					if(queryRoadNum>0 && docRoadNum>0){
-						return ( 1 / Math.sqrt(Math.sqrt( Math.abs(queryRoadNum - docRoadNum) + 1 )) ) * BOOST_L;
-					}
-				}
-				//道路号一样，但无法根据门牌号间隔加权，则门牌号降权
-				//这会将机会让给那些可以按门牌号间隔加权的文档优先匹配（包括门牌号数字一样的情况）
-				return BOOST_S;
-			}
-			return 0; //与查询文档道路不一样，则对门牌号降权处理
-		}
+	private double getBoostValue(boolean forDoc, Document qdoc, Term qterm, Document ddoc, Term dterm){
+		//forDoc==true, 为地址库文档计算boost，qdoc, qterm, ddoc, dterm肯定不为null；
+		//forDoc==false, 为查询文档计算boost，qdoc, qterm, ddoc肯定不为null, dterm肯定是null；
+		
 		double value = BOOST_M;
-		TermType type = forDoc ? term.getType() : queryTerm.getType();
+		TermType type = forDoc ? dterm.getType() : qterm.getType();
 		switch(type){
 			case Province:
 			case City:
 			case County:
-				value = BOOST_XL; //省市区、道路出现频次高，IDF值较低，因此给予比较高的加权权重
+				value = BOOST_XL; //省市区、道路出现频次高，IDF值较低，但重要程度最高，因此给予比较高的加权权重
 				break;
-			case Town:
-			case Village:
-			case Road:
-				value = BOOST_L; //乡镇、村庄出现频次低，本身IDF值高，因此给予中等加权
-				break;
-			case Street: 
-				value = BOOST_S; //一般人对于城市街道范围概念不强，在地址中随意选择街道的可能性较高，因此降权处理
-				break;
-			case RoadNum:
-				value = BOOST_L; //仅查询文档会执行此处逻辑，地址库文档的门牌号已经在上面处理完毕
+			case Street: //一般人对于城市街道范围概念不强，在地址中随意选择街道的可能性较高，因此降权处理
+				value = BOOST_XS; 
 				break;
 			case Text:
 				value = BOOST_M;
+				break;
+			case Town:
+			case Village:
+				value = BOOST_XS;
+				Term qtown=null, qvillage=null, dtown=null, dvillage=null;
+				for(Term t : qdoc.getTerms()){
+					if(t.getType().equals(TermType.Town)) qtown=t;
+					else if(t.getType().equals(TermType.Village)) qvillage=t;
+				}
+				for(Term t : ddoc.getTerms()){
+					if(t.getType().equals(TermType.Town)) dtown=t;
+					else if(t.getType().equals(TermType.Village)) dvillage=t;
+				}
+				if(TermType.Town.equals(type)){ //乡镇
+					//查询文档和地址库文档都有乡镇，为乡镇加权。注意：存在乡镇相同、不同两种情况。
+					//  乡镇相同：查询文档和地址库文档都加权BOOST_L，提高相似度
+					//  乡镇不同：只有查询文档的词条加权BOOST_L，地址库文档的词条因无法匹配不会进入该函数。结果是拉开相似度的差异
+					if(qtown!=null && dtown!=null) value = BOOST_L;
+				}else{ //村庄
+					//查询文档和地址库文档都有乡镇且乡镇相同，且查询文档和地址库文档都有村庄时，为村庄加权
+					//与上述乡镇类似，存在村庄相同和不同两种情况
+					if(qvillage!=null && dvillage!=null && qtown!=null && qtown.equals(dtown)){
+						if(qvillage.equals(dvillage)) value = BOOST_XL;
+						else value = BOOST_L;
+					}
+				}
+				break;
+			case Road:
+			case RoadNum:
+				//value = BOOST_M;
+				Term qroad=null, qroadnum=null, droad=null, droadnum=null;
+				for(Term t : qdoc.getTerms()){
+					if(t.getType().equals(TermType.Road)) qroad=t;
+					else if(t.getType().equals(TermType.RoadNum)) qroadnum=t;
+				}
+				for(Term t : ddoc.getTerms()){
+					if(t.getType().equals(TermType.Road)) droad=t;
+					else if(t.getType().equals(TermType.RoadNum)) droadnum=t;
+				}
+				if(TermType.Road.equals(type)){ //道路
+					if(qroad!=null && droad!=null) value = BOOST_L;
+				}else{ //门牌号。注意：查询文档和地址库文档的门牌号都会进入此处执行，这一点跟Road、Town、Village不同。
+					if(qroadnum!=null && droadnum!=null && qroad!=null && qroad.equals(droad)){
+						int qnum = translateRoadNum(qroadnum.getText());
+						int dnum = translateRoadNum(droadnum.getText());
+						if(qnum>0 && dnum>0){
+							if(qnum==dnum) value = 3;
+							else value = forDoc ? ( 1 / Math.sqrt(Math.sqrt( Math.abs(qnum - dnum) + 1 )) ) * BOOST_L : 3;
+						}
+					}
+				}
 				break;
 			default:
 		}
@@ -434,23 +463,20 @@ public class SimilarityComputer {
 	 * @param doc
 	 * @return
 	 */
-	public void computeDocSimilarity1(Query query, Document doc){
-		double sumQD=0, sumQQ=0, sumDD=0, qtfidf=0, dtfidf=0;
-		double qtf = 1; // / Math.log(qryDoc.getTerms().size());
-		double dtf = 1; // / Math.log(doc.getTerms().size());
-		
-		Term dterm = null;
-		//Text类型词条匹配情况
-		int qryTextTermCount = 0; //查询文档Text类型词条数量
-		int matchCount = 0, matchStart = -1, matchEnd = -1; //地址库文档匹配上的Text词条数量
+	public void computeDocSimilarity1(Query query, Document doc){Term dterm = null;
+		//=====================================================================
+		//计算text类型词条的稠密度、匹配率
+		//1. Text类型词条匹配情况
+		int qTextTermCount = 0; //查询文档Text类型词条数量
+		int dTextTermMatchCount = 0, matchStart = -1, matchEnd = -1; //地址库文档匹配上的Text词条数量
 		for(Term qterm : query.getQueryDoc().getTerms()){
 			if(!TermType.Text.equals(qterm.getType())) continue; //仅针对Text类型词条计算 词条稠密度、词条匹配率
-			qryTextTermCount++;
+			qTextTermCount++;
 			for(int i=0; i< doc.getTerms().size(); i++){
 				Term term = doc.getTerms().get(i);
 				if(!TermType.Text.equals(term.getType())) continue; //仅针对Text类型词条计算 词条稠密度、词条匹配率
 				if(term.getText().equals(qterm.getText())){
-					matchCount++;
+					dTextTermMatchCount++;
 					if(matchStart==-1) {
 						matchStart = matchEnd = i;
 						break;
@@ -461,9 +487,9 @@ public class SimilarityComputer {
 				}
 			}
 		}
-		//计算词条稠密度、词条匹配率
-		double termDensity = 1, termMatchRate = 1;
-		if(qryTextTermCount>0) termMatchRate = Math.sqrt(matchCount * 1.0 / qryTextTermCount) * 0.5 + 0.5;
+		//2. 计算稠密度、匹配率
+		double textTermDensity = 1, textTermMatchRate = 1;
+		if(qTextTermCount>0) textTermMatchRate = Math.sqrt(dTextTermMatchCount * 1.0 / qTextTermCount) * 0.5 + 0.5;
 		//词条稠密度：
 		// 查询文档a的文本词条为：【翠微西里】
 		// 地址库文档词条为：【翠微北里12号翠微嘉园B座西801】
@@ -477,17 +503,19 @@ public class SimilarityComputer {
 		// density1 = 0.7 + ( 4/4 ) * 0.3 = 0.7 + 0.3 = 1
 		// density2 = 0.7 + ( 4/7 ) * 0.3 = 0.7 + 0.17143 = 0.87143
 		// 文档2中 [翠、微、西、里] 4个词匹配上查询文档词条，这4个词条之间共包含7个词条。
-		if(qryTextTermCount>=2 && matchCount>=2) 
-			termDensity = Math.sqrt( matchCount * 1.0 / (matchEnd - matchStart + 1) ) * 0.5 + 0.5;
+		if(qTextTermCount>=2 && dTextTermMatchCount>=2) 
+			textTermDensity = Math.sqrt( dTextTermMatchCount * 1.0 / (matchEnd - matchStart + 1) ) * 0.5 + 0.5;
 		
 		SimilarDoc simiDoc = new SimilarDoc(doc);
 		simiDoc.setTextPercent(1);
 		
+		//=====================================================================
 		//计算TF-IDF和相似度所需的中间值
+		double sumQD=0, sumQQ=0, sumDD=0, qtfidf=0, dtfidf=0;
 		double dboost = 0, qboost = 0; //加权值
 		for(Term qterm : query.getQueryDoc().getTerms()) {
-			qboost = getBoostValue(false, query.getQueryDoc(), qterm, null, null);
-			qtfidf = qtf * qterm.getIdf() * qboost;
+			qboost = getBoostValue(false, query.getQueryDoc(), qterm, doc, null);
+			qtfidf = qterm.getIdf() * qboost;
 			dterm = doc.getTerm(qterm.getText());
 			if(dterm==null && TermType.RoadNum.equals(qterm.getType())){
 				//从b中找门牌号词条
@@ -501,9 +529,9 @@ public class SimilarityComputer {
 				}
 			}
 			dboost = dterm==null ? 0 : getBoostValue(true, query.getQueryDoc(), qterm, doc, dterm);
-			double rate = (dterm!=null && TermType.Text.equals(dterm.getType())) ? termMatchRate : 1;
-			double density = (dterm!=null && TermType.Text.equals(dterm.getType())) ? termDensity : 1;
-			dtfidf = dtf * qterm.getIdf() * dboost * rate * density;
+			double rate = (dterm!=null && TermType.Text.equals(dterm.getType())) ? textTermMatchRate : 1;
+			double density = (dterm!=null && TermType.Text.equals(dterm.getType())) ? textTermDensity : 1;
+			dtfidf = (dterm!=null ? dterm.getIdf() : qterm.getIdf()) * dboost * rate * density;
 			
 			MatchedTerm mt = null;
 			if(dterm!=null){
@@ -531,20 +559,19 @@ public class SimilarityComputer {
 		
 		//=====================================================================
 		//文本匹配
-		double sumQD=0, sumQQ=0, sumDD=0, qtfidf=0;
 		
 		Term term = null;
 		//Text类型词条匹配情况
-		int textTermNum = 0; //查询文档Text类型词条数量
-		int matchCount = 0, matchStart = -1, matchEnd = -1; //地址库文档匹配上的Text词条数量
+		int textTermCount = 0; //查询文档Text类型词条数量
+		int textTermMatchCount = 0, matchStart = -1, matchEnd = -1; //地址库文档匹配上的Text词条数量
 		for(Term qterm : query.getQueryDoc().getTerms()){
 			if(!TermType.Text.equals(qterm.getType())) continue; //仅针对Text类型词条计算 词条稠密度、词条匹配率
-			textTermNum++;
+			textTermCount++;
 			for(int i=0; i< doc.getTerms().size(); i++){
 				term = doc.getTerms().get(i);
 				if(!TermType.Text.equals(term.getType())) continue; //仅针对Text类型词条计算 词条稠密度、词条匹配率
 				if(term.getText().equals(qterm.getText())){
-					matchCount++;
+					textTermMatchCount++;
 					if(matchStart==-1) {
 						matchStart = matchEnd = i;
 						break;
@@ -556,8 +583,8 @@ public class SimilarityComputer {
 			}
 		}
 		//计算词条稠密度、词条匹配率
-		double termDensity = 1, termMatchRate = 1;
-		if(textTermNum>0) termMatchRate = Math.sqrt(matchCount * 1.0 / textTermNum) * 0.5 + 0.5;
+		double textTermDensity = 1, textTermMatchRate = 1;
+		if(textTermCount>0) textTermMatchRate = Math.sqrt(textTermMatchCount * 1.0 / textTermCount) * 0.5 + 0.5;
 		//词条稠密度：
 		// 查询文档a的文本词条为：【翠微西里】
 		// 地址库文档词条为：【翠微北里12号翠微嘉园B座西801】
@@ -571,22 +598,23 @@ public class SimilarityComputer {
 		// density1 = 0.7 + ( 4/4 ) * 0.3 = 0.7 + 0.3 = 1
 		// density2 = 0.7 + ( 4/7 ) * 0.3 = 0.7 + 0.17143 = 0.87143
 		// 文档2中 [翠、微、西、里] 4个词匹配上查询文档词条，这4个词条之间共包含7个词条。
-		if(textTermNum>=2 && matchCount>=2) 
-			termDensity = Math.sqrt( matchCount * 1.0 / (matchEnd - matchStart + 1) ) * 0.5 + 0.5;
+		if(textTermCount>=2 && textTermMatchCount>=2) 
+			textTermDensity = Math.sqrt( textTermMatchCount * 1.0 / (matchEnd - matchStart + 1) ) * 0.5 + 0.5;
 		
 		//计算TF-IDF和相似度所需的中间值
+		double sumQD=0, sumQQ=0, sumDD=0, qtfidf=0;
 		double qboost = 0; //加权值
 		for(Term qterm : query.getQueryDoc().getTerms()) {
 			if(TermType.Text!=qterm.getType()) continue; //仅计算Text类型词条的相似度
-			qboost = getBoostValue(false, query.getQueryDoc(), qterm, null, null);
+			qboost = getBoostValue(false, query.getQueryDoc(), qterm, doc, null);
 			qtfidf = qterm.getIdf() * qboost;
 			term = doc.getTerm(qterm.getText());
 			MatchedTerm mt = null;
 			if(term!=null){
 				mt = new MatchedTerm(term);
 				mt.setBoost(getBoostValue(true, query.getQueryDoc(), qterm, doc, term));
-				mt.setRate((term!=null && TermType.Text.equals(term.getType())) ? termMatchRate : 1);
-				mt.setDensity((term!=null && TermType.Text.equals(term.getType())) ? termDensity : 1);
+				mt.setRate((term!=null && TermType.Text.equals(term.getType())) ? textTermMatchRate : 1);
+				mt.setDensity((term!=null && TermType.Text.equals(term.getType())) ? textTermDensity : 1);
 				mt.setTfidf(term.getIdf() * mt.getBoost() * mt.getRate() * mt.getDensity());
 				simiDoc.addMatchedTerm(mt);
 			}
@@ -709,7 +737,7 @@ public class SimilarityComputer {
 		simiDoc.setSimilarity(simiDoc.getExactPercent()*simiDoc.getExactValue()+simiDoc.getTextPercent()*simiDoc.getTextValue());
 		query.addSimiDoc(simiDoc);
 	}
-	
+
 	
 	
 	/**
@@ -749,7 +777,11 @@ public class SimilarityComputer {
 					Map<String, Integer> termReferences = statInverseDocRefers(docs);
 					idfs = new HashMap<String, Double>(termReferences.size());
 					for(Map.Entry<String, Integer> entry : termReferences.entrySet()){
-						double idf = Math.log( docs.size() * 1.0 / (entry.getValue() + 1) );
+						double idf = 0; 
+						//纯数字或字母组成
+						if(StringUtil.isNumericChars(entry.getKey())) idf = 2;
+						else if(StringUtil.isAnsiChars(entry.getKey())) idf = 2;
+						else idf = Math.log( docs.size() * 1.0 / (entry.getValue() + 1) );
 						if(idf<0) idf = 0;
 						idfs.put(entry.getKey(), idf);
 					}
@@ -760,7 +792,7 @@ public class SimilarityComputer {
 		
 		for(Document doc : docs){
 			for(Term term : doc.getTerms())
-				term.setIdf(idfs.get(term.getText()));
+				term.setIdf(idfs.get(generateIDFCacheEntryKey(term)));
 		}
 		
 		return docs;
@@ -853,6 +885,7 @@ public class SimilarityComputer {
 	
 	private Term addTerm(String text, TermType type, List<Term> terms, RegionEntity region){
 		String termText = text;
+		//省市区名称作为词条，如果词条文本过长，则使用名称最短的简称作为词条文本
 		if(termText.length()>=4 && region!=null && region.orderedNameAndAlias()!=null && !region.orderedNameAndAlias().isEmpty()){
 			termText = region.orderedNameAndAlias().get(region.orderedNameAndAlias().size()-1);
 		}
