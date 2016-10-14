@@ -3,7 +3,7 @@ package com.rrs.rd.address.similarity;
 import java.util.HashMap;
 import java.util.Map;
 
-public class SimilarDoc {
+public class SimilarDoccument {
 	private Document doc;
 	private Map<String, MatchedTerm> matchedTerms;
 	
@@ -13,10 +13,10 @@ public class SimilarDoc {
 	private double textPercent = 1;
 	private double textValue = 0;
 	
-	public SimilarDoc(Document doc){
+	public SimilarDoccument(Document doc){
 		this.doc = doc;
 	}
-	protected SimilarDoc(SimilarDoc clone){
+	protected SimilarDoccument(SimilarDoccument clone){
 		this.doc = clone.doc;
 		this.matchedTerms = clone.matchedTerms;
 		this.similarity = clone.similarity;

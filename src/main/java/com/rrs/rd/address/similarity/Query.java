@@ -10,7 +10,7 @@ public class Query {
 	private AddressEntity queryAddr;
 	private Document queryDoc;
 	
-	private List<SimilarDoc> simiDocs;
+	private List<SimilarDoccument> simiDocs;
 	
 	public Query(int N){
 		this.topN = N;
@@ -42,7 +42,7 @@ public class Query {
 			exchanged = false;
 			for(int i=1; i<=endIndex; i++){
 				if(this.simiDocs.get(i-1).getSimilarity() < this.simiDocs.get(i).getSimilarity()){
-					SimilarDoc temp = this.simiDocs.get(i-1);
+					SimilarDoccument temp = this.simiDocs.get(i-1);
 					this.simiDocs.set(i-1, this.simiDocs.get(i));
 					this.simiDocs.set(i, temp);
 					exchanged = true;
@@ -58,9 +58,9 @@ public class Query {
 	 * @param simiDoc
 	 * @return
 	 */
-	public boolean addSimiDoc(SimilarDoc simiDoc){
+	public boolean addSimiDoc(SimilarDoccument simiDoc){
 		if(simiDoc==null || simiDoc.getSimilarity()<=0) return false;
-		if(this.simiDocs==null) this.simiDocs = new ArrayList<SimilarDoc>(this.topN);
+		if(this.simiDocs==null) this.simiDocs = new ArrayList<SimilarDoccument>(this.topN);
 		if(this.simiDocs.size()<this.topN){
 			this.simiDocs.add(simiDoc);
 			return true;
@@ -80,8 +80,8 @@ public class Query {
 	public boolean addSimiDoc(Document doc, double similarity){
 		if(similarity<=0) return false;
 		if(this.simiDocs==null) {
-			this.simiDocs = new ArrayList<SimilarDoc>(this.topN);
-			SimilarDoc simiDoc = new SimilarDoc(doc);
+			this.simiDocs = new ArrayList<SimilarDoccument>(this.topN);
+			SimilarDoccument simiDoc = new SimilarDoccument(doc);
 			simiDoc.setTextPercent(1);
 			simiDoc.setTextValue(similarity);
 			simiDoc.setSimilarity(similarity);
@@ -89,7 +89,7 @@ public class Query {
 			return true;
 		}
 		if(this.simiDocs.get(0).getSimilarity()<similarity){
-			SimilarDoc simiDoc = new SimilarDoc(doc);
+			SimilarDoccument simiDoc = new SimilarDoccument(doc);
 			simiDoc.setTextPercent(1);
 			simiDoc.setTextValue(similarity);
 			simiDoc.setSimilarity(similarity);
@@ -99,8 +99,8 @@ public class Query {
 		return false;
 	}
 	
-	public List<SimilarDoc> getSimilarDocs(){
-		if(this.simiDocs==null) this.simiDocs = new ArrayList<SimilarDoc>(0);
+	public List<SimilarDoccument> getSimilarDocs(){
+		if(this.simiDocs==null) this.simiDocs = new ArrayList<SimilarDoccument>(0);
 		return this.simiDocs;
 	}
 }

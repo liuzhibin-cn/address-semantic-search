@@ -536,9 +536,9 @@ public class SimilarityComputer {
 		if(qTextTermCount>=2 && dTextTermMatchCount>=2) 
 			textTermDensity = Math.sqrt( dTextTermMatchCount * 1.0 / (matchEnd - matchStart + 1) ) * 0.5 + 0.5;
 		
-		SimilarDoc simiDoc = null;
+		SimilarDoccument simiDoc = null;
 		if(explain && topN>1){
-			simiDoc = new SimilarDoc(doc);
+			simiDoc = new SimilarDoccument(doc);
 			simiDoc.setTextPercent(1);
 		}
 		
@@ -586,7 +586,7 @@ public class SimilarityComputer {
 	}
 	
 	public void computeDocSimilarity2(Query query, Document doc, boolean explain){
-		SimilarDoc simiDoc = new SimilarDoc(doc);
+		SimilarDoccument simiDoc = new SimilarDoccument(doc);
 		
 		//=====================================================================
 		//文本匹配

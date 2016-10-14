@@ -4,7 +4,7 @@ import java.util.List;
 
 import org.apache.velocity.util.StringUtils;
 
-import com.rrs.rd.address.similarity.SimilarDoc;
+import com.rrs.rd.address.similarity.SimilarDoccument;
 import com.rrs.rd.address.similarity.Term;
 
 /**
@@ -27,16 +27,16 @@ public class VelocityUtils extends StringUtils {
 		long p = Math.round(Math.pow(10, precision));
 		return Math.round(value * p) * 1.0 / p;
 	}
-	public String hitClass(SimilarDoc d, Term t){
+	public String hitClass(SimilarDoccument d, Term t){
 		if(d==null || d.getMatchedTerms()==null || t==null) return "";
 		if(d.getMatchedTerms().containsKey(t.getText())) return "hit";
 		return "";
 	}
-	public boolean exactPart(SimilarDoc doc){
+	public boolean exactPart(SimilarDoccument doc){
 		if(doc==null) return false;
 		return doc.getExactPercent()>0 || doc.getExactValue()>0;
 	}
-	public boolean textPart(SimilarDoc doc){
+	public boolean textPart(SimilarDoccument doc){
 		if(doc==null) return false;
 		return doc.getTextPercent()>0 || doc.getTextValue()>0;
 	}

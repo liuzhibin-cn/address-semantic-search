@@ -15,7 +15,7 @@ import com.rrs.rd.address.persist.AddressEntity;
 import com.rrs.rd.address.persist.AddressPersister;
 import com.rrs.rd.address.similarity.NoHistoryDataException;
 import com.rrs.rd.address.similarity.Query;
-import com.rrs.rd.address.similarity.SimilarDoc;
+import com.rrs.rd.address.similarity.SimilarDoccument;
 import com.rrs.rd.address.similarity.SimilarityComputer;
 import com.rrs.rd.address.utils.StringUtil;
 
@@ -134,7 +134,7 @@ public class RegressionRunTest {
     			LOG.info("[simi-fail] " + lineNum + ":" + tokens[1]+tokens[2]+tokens[3]+tokens[4]);
     			continue;
     		}
-    		SimilarDoc simiDoc = query.getSimilarDocs().get(0);
+    		SimilarDoccument simiDoc = query.getSimilarDocs().get(0);
     		if(simiDoc.getSimilarity()<=0){
     			LOG.info("[simi-fail] " + lineNum + ":" + tokens[1]+tokens[2]+tokens[3]+tokens[4] );
     			continue;
