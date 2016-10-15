@@ -30,7 +30,7 @@
 ## 算法说明
  
 ### 基于TF-IDF的余弦相似度算法
-参考[百度百科：余弦相似度](http://baike.baidu.com/item/%E4%BD%99%E5%BC%A6%E7%9B%B8%E4%BC%BC%E5%BA%A6)、[TF-IDF与余弦相似性的应用（一）：自动提取关键词](http://www.ruanyifeng.com/blog/2013/03/tf-idf.html)、[TF-IDF与余弦相似性的应用（二）：找出相似文章](http://www.ruanyifeng.com/blog/2013/03/cosine_similarity.html)。
+参考[百度百科：余弦相似度](http://baike.baidu.com/item/%E4%BD%99%E5%BC%A6%E7%9B%B8%E4%BC%BC%E5%BA%A6){:target="_blank"}、[TF-IDF与余弦相似性的应用（一）：自动提取关键词](http://www.ruanyifeng.com/blog/2013/03/tf-idf.html){:target="_blank"}、[TF-IDF与余弦相似性的应用（二）：找出相似文章](http://www.ruanyifeng.com/blog/2013/03/cosine_similarity.html){:target="_blank"}。
 
 **TC: Term Count**，词数，某个词在文档中出现的次数。<br />
 **TF: Term Frequency**，词频，某个词在文档中出现的频率，_TF = 该词在文档中出现的次数 / 该文档的总词数_。<br />
