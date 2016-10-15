@@ -28,10 +28,10 @@
 
 -------------------------------------------------------------------------
 ## 算法说明
-项目中计算两个地址相似度借鉴了文本TF-IDF余弦相似度算法、Lucene的评分算法。
+项目中计算两个地址相似度借鉴了文本`TF-IDF`余弦相似度算法、Lucene的评分算法。
 
 ### 文本TF-IDF余弦相似度算法
-关于TF-IDF余弦相似度简单直观的说明可以参考[TF-IDF与余弦相似性的应用（一）：自动提取关键词](http://www.ruanyifeng.com/blog/2013/03/tf-idf.html)、[TF-IDF与余弦相似性的应用（二）：找出相似文章](http://www.ruanyifeng.com/blog/2013/03/cosine_similarity.html)。
+`TF-IDF`余弦相似度简单直观的说明可以参考[TF-IDF与余弦相似性的应用（一）：自动提取关键词](http://www.ruanyifeng.com/blog/2013/03/tf-idf.html)、[TF-IDF与余弦相似性的应用（二）：找出相似文章](http://www.ruanyifeng.com/blog/2013/03/cosine_similarity.html)。
 
 * `TC`: `Term Count`，词数，某个词在文档中出现的次数。<br />
 * `TF`: `Term Frequency`，词频，某个词在文档中出现的频率，`TF = 该词在文档中出现的次数 / 该文档的总词数`。<br />
@@ -40,7 +40,7 @@
 
 两个多维空间向量的余弦相似度：![余弦相似度](images/cos-similarity.png)
 
-TF-IDF余弦相似度是比较通用、有效的文本相似度算法。其它文本相似度相关的算法有：[最长公共子串](https://zh.wikipedia.org/wiki/最长公共子串)、[最长公共子序列](http://baike.baidu.com/view/2020307.htm)、[编辑距离](http://baike.baidu.com/view/2020247.htm)、[汉明距离](http://baike.baidu.com/view/725269.htm)等，基于语义的有LSA/LSI、PLSA、LDA等（参考[既然LDA是一种比PLSA更高级的模型，为啥百度还在用PLSA？](http://www.zhihu.com/question/23642556/answer/38969800)、[CSDN专栏：主题模型 TopicModel](http://blog.csdn.net/column/details/topic-model.html)）。
+`TF-IDF`余弦相似度是比较通用、有效的文本相似度算法。其它文本相似度相关的算法有：[最长公共子串](https://zh.wikipedia.org/wiki/最长公共子串)、[最长公共子序列](http://baike.baidu.com/view/2020307.htm)、[编辑距离](http://baike.baidu.com/view/2020247.htm)、[汉明距离](http://baike.baidu.com/view/725269.htm)等，基于语义的有LSA/LSI、PLSA、LDA等（参考[既然LDA是一种比PLSA更高级的模型，为啥百度还在用PLSA？](http://www.zhihu.com/question/23642556/answer/38969800)、[CSDN专栏：主题模型 TopicModel](http://blog.csdn.net/column/details/topic-model.html)）。
 
 
 ### Lucene的评分算法
@@ -51,7 +51,7 @@ TF-IDF余弦相似度是比较通用、有效的文本相似度算法。其它�
 * **① score(q, d)** <br>
    查询文档q与文档d的相关性评分值，Lucene中的评分值是一个大于0的实数值。
 * **② queuryNorm(q)** <br>
-   `queryNorm(q) = 1 / sqrt( sumOfSquaredWeights )`，`sumOfSquaredWeights`是查询文档q中每个词条的IDF平方根之和。同理，文档库中的每个文档也会使用这一公式进行归一化处理。<br>
+   `queryNorm(q) = 1 / sqrt( sumOfSquaredWeights )`，`sumOfSquaredWeights`是查询文档q中每个词条的`IDF`平方根之和。同理，文档库中的每个文档也会使用这一公式进行归一化处理。<br>
    `queryNorm`的目的是将lucene评分值进行归一化处理，使不同文档之间的评分值具有可比较性，但这个归一化算法严谨性有待证明。相比较之下，余弦相似度算法的结果无需额外的归一化处理。
 * **③ coord(q, d)** <br> 
    `coord(q, d) = 文档d中匹配上的词条数量 / 文档q的词条数量` <br>
@@ -87,7 +87,7 @@ TF-IDF余弦相似度是比较通用、有效的文本相似度算法。其它�
     中等权重：门牌号<br />
     取低权重：街道<br />
 3. 在全部文档中为所有词语统计逆文档引用情况；<br />
-4. 为文档中的每个词语计算IDF；<br />
+4. 为文档中的每个词语计算`IDF`；<br />
 5. 为两个文档计算余弦相似度；
 
 <pre>
@@ -118,7 +118,7 @@ git clone https://github.com/liuzhibin-cn/address-similarity.git /your/src/path/
 
 修改`pom.xml`文件，在`profile`节点`test`下面设置数据库连接信息。
 
-执行maven命令编译打包_（项目开发和测试环境使用的JDK1.8，项目使用的Dubbox也是在1.8版本下源码编译的）_：
+执行`maven`命令编译打包_（项目开发和测试环境使用的JDK1.8，项目使用的Dubbox也是在JDK1.8版本下源码编译的）_：
 ```shell
 mvn clean package -P test
 ```
@@ -159,7 +159,7 @@ bin/start.sh
 Demo服务运行效果如下：<br>
 ![使用相似度搜索匹配地址Demo Service](images/demo-screenshot.png)
 
-Demo服务使用的Dubbox的REST接口，服务启动时会监听2个端口：`8080`和`8000`。
+Demo服务使用的`Dubbox`的REST接口，服务启动时会监听2个端口：`8080`和`8000`。
 如果需要修改为其他端口号，请修改以下文件：
 ```xml
 spring-config.xml
@@ -179,14 +179,14 @@ nohup java -Ddubbo.spring.config=spring-config.xml -Ddubbo.jetty.port="8080" -Dd
 ## 更新日志
 * ❓机制简化：去除特征向量文件缓存处理，改为在实时请求处理时构建内存缓存。
 * ❓提升准确率：从网络抓取全国小区名称，作为分词词库。
-* ✅提升准确率：借鉴elasticsearch的评分算法。_Done 20160925_
-* ✅优化分析：引入velocity生成demo service的html输出，输出分词等更详细信息，辅助分析准确率。_Done 20160922_
-* ✅结构优化：将AddressService中地址解析和数据持久化逻辑分离。_Done 20160922_
+* ✅提升准确率：借鉴`elasticsearch`的评分算法。_Done 20160925_
+* ✅优化分析：引入`velocity`生成demo service的html输出，输出分词等更详细信息，辅助分析准确率。_Done 20160922_
+* ✅结构优化：将`AddressService`中地址解析和数据持久化逻辑分离。_Done 20160922_
 * ✅性能优化：提升搜索相似地址的处理速度。_Done 20160921_
     * 缓存从地级市细化到到区县一级；
     * 余弦相似度算法性能优化；
 * ✅提升准确率：匹配结果准确度不够理想。_Done 20160921_
-	* 更改标准TF-IDF算法，将词频TF改为对地址不同组成部分设置自定义权重。
+	* 更改标准`TF-IDF`算法，将`词频TF`改为对地址不同组成部分设置自定义权重。
 * ✅功能完善：添加部署测试服务器所需功能，方便内测和验证。_Done 20160919_
-    * 将Dubbo更换为Dubbox，使用dubbox的REST API暴露HTTP测试验证接口；
-    * 添加管理用shell脚本，方便测试环境编译部署；
+    * 将`Dubbo`更换为`Dubbox`，使用`dubbox`的REST API暴露HTTP测试验证接口；
+    * 添加管理用`shell`脚本，方便测试环境编译部署；
