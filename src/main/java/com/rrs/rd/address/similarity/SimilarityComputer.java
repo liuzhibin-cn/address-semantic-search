@@ -180,26 +180,6 @@ public class SimilarityComputer {
 		if(docs==null) return idrc;
 		String key = null;
 		for(Document doc : docs) {
-//			if(doc.getTown()!=null){
-//				key = generateIDFCacheEntryKey(doc.getTown());
-//				if(idrc.containsKey(key)) idrc.put(key, idrc.get(key) + 1);
-//				else idrc.put(key, 1);
-//			}
-//			if(doc.getVillage()!=null){
-//				key = generateIDFCacheEntryKey(doc.getVillage());
-//				if(idrc.containsKey(key)) idrc.put(key, idrc.get(key) + 1);
-//				else idrc.put(key, 1);
-//			}
-//			if(doc.getRoad()!=null){
-//				key = generateIDFCacheEntryKey(doc.getRoad());
-//				if(idrc.containsKey(key)) idrc.put(key, idrc.get(key) + 1);
-//				else idrc.put(key, 1);
-//			}
-//			if(doc.getRoadNum()!=null){
-//				key = generateIDFCacheEntryKey(doc.getRoadNum());
-//				if(idrc.containsKey(key)) idrc.put(key, idrc.get(key) + 1);
-//				else idrc.put(key, 1);
-//			}
 			if(doc.getTerms()==null) continue;
 			for(Term term : doc.getTerms()){
 				key = generateIDFCacheEntryKey(term);
@@ -296,11 +276,11 @@ public class SimilarityComputer {
 		StringBuilder sb = new StringBuilder();
 		for(int i=0; i<text.length(); i++){
 			char c = text.charAt(i);
-			if(c>='0' && c<='9') {
+			if(c>='0' && c<='9') { //ANSI数字字符
 				sb.append(c);
 				continue;
 			}
-			switch(c){
+			switch(c){ //中文全角数字字符
 				case '０': sb.append(0); continue;
 				case '１': sb.append(1); continue;
 				case '２': sb.append(2); continue;
@@ -317,7 +297,7 @@ public class SimilarityComputer {
 		boolean isTen = false;
 		for(int i=0; i<text.length(); i++){
 			char c = text.charAt(i);
-			if(isTen){
+			if(isTen){ //对汉字“十”的翻译，例如：十号院、十二号院、四十六号院等
 				boolean pre = sb.length() > 0 ? true : false;
 				boolean post = (c=='一' || c=='二' || c=='三' || c=='四' || c=='五' || c=='六' || c=='七' || c=='八' || c=='九') ?
 					true : false;
@@ -330,7 +310,7 @@ public class SimilarityComputer {
 				}
 				isTen = false;
 			}
-			switch(c){
+			switch(c){ //汉字数字
 				case '一': sb.append(1); continue;
 				case '二': sb.append(2); continue;
 				case '三': sb.append(3); continue;
@@ -356,6 +336,7 @@ public class SimilarityComputer {
 	
 	/**
 	 * 将Document对象序列化成缓存格式。
+	 * <p>序列化格式：955163$R和平里中街|N17号|X天|X元|X和|X平|X商|X业|X大|X厦|X彩|X票|X店</p>
 	 * @param doc
 	 * @return
 	 */
@@ -363,25 +344,6 @@ public class SimilarityComputer {
 		StringBuilder sb = new StringBuilder();
 		sb.append(doc.getId()).append('$');
 		boolean started = false;
-//		if(doc.getTown()!=null){
-//			sb.append(doc.getTown().getType().getValue()).append(doc.getTown().getText());
-//			started=true;
-//		}
-//		if(doc.getVillage()!=null){
-//			if(started) sb.append('|');
-//			sb.append(doc.getVillage().getType().getValue()).append(doc.getVillage().getText());
-//			started=true;
-//		}
-//		if(doc.getRoad()!=null){
-//			if(started) sb.append('|');
-//			sb.append(doc.getRoad().getType().getValue()).append(doc.getRoad().getText());
-//			started=true;
-//		}
-//		if(doc.getRoadNum()!=null){
-//			if(started) sb.append('|');
-//			sb.append(doc.getRoadNum().getType().getValue()).append(doc.getRoadNum().getText());
-//			started=true;
-//		}
 		for(int i=0; i<doc.getTerms().size(); i++){
 			Term term = doc.getTerms().get(i);
 			if(started) sb.append('|');
@@ -393,6 +355,7 @@ public class SimilarityComputer {
 	
 	/**
 	 * 将缓存中的文档反序列化成Document对象。
+	 * <p>序列化格式：955163$R和平里中街|N17号|X天|X元|X和|X平|X商|X业|X大|X厦|X彩|X票|X店</p>
 	 * @param str
 	 * @return
 	 */
