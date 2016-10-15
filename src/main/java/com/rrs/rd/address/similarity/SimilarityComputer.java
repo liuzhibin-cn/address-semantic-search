@@ -517,8 +517,8 @@ public class SimilarityComputer {
 			}
 		}
 		//2. 计算稠密度、匹配率
-		double textTermDensity = 1, textTermMatchRate = 1;
-		if(qTextTermCount>0) textTermMatchRate = Math.sqrt(dTextTermMatchCount * 1.0 / qTextTermCount) * 0.5 + 0.5;
+		double textTermDensity = 1, textTermCoord = 1;
+		if(qTextTermCount>0) textTermCoord = Math.sqrt(dTextTermMatchCount * 1.0 / qTextTermCount) * 0.5 + 0.5;
 		//词条稠密度：
 		// 查询文档a的文本词条为：【翠微西里】
 		// 地址库文档词条为：【翠微北里12号翠微嘉园B座西801】
@@ -554,9 +554,9 @@ public class SimilarityComputer {
 					dterm = doc.getRoadNum();
 			}
 			dboost = dterm==null ? 0 : getBoostValue(true, query.getQueryDoc(), qterm, doc, dterm);
-			double rate = (dterm!=null && TermType.Text==dterm.getType()) ? textTermMatchRate : 1;
+			double coord = (dterm!=null && TermType.Text==dterm.getType()) ? textTermCoord : 1;
 			double density = (dterm!=null && TermType.Text==dterm.getType()) ? textTermDensity : 1;
-			dtfidf = (dterm!=null ? dterm.getIdf() : qterm.getIdf()) * dboost * rate * density;
+			dtfidf = (dterm!=null ? dterm.getIdf() : qterm.getIdf()) * dboost * coord * density;
 			
 			if(explain && topN>1 && dterm!=null){
 				MatchedTerm mt = null;
@@ -565,10 +565,10 @@ public class SimilarityComputer {
 				mt.setTfidf(dtfidf);
 				if(dterm.getType()==TermType.Text){
 					mt.setDensity(density);
-					mt.setRate(rate);
+					mt.setCoord(coord);
 				}else{
 					mt.setDensity(-1);
-					mt.setRate(-1);
+					mt.setCoord(-1);
 				}
 				simiDoc.addMatchedTerm(mt);
 			}

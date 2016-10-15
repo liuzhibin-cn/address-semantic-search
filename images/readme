@@ -1,6 +1,6 @@
 LaTeX:
 \cos \theta = \frac{ 
-  \sum_{i=1}^n(A_i \times B_i) 
+  \sum_1^n(A_i \times B_i) 
 }{ 
-  \sqrt{ \sum_{i=1}^n{A_i^2} } \times \sqrt{ \sum_{i=1}^n{B_i^2} } 
+  \sqrt{ \sum_1^n{A_i^2} } \times \sqrt{ \sum_1^n{B_i^2} } 
 } 

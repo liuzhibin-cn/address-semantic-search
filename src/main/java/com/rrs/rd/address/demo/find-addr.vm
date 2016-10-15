@@ -87,9 +87,9 @@
 			#foreach($t in ${d.document.terms})<td class='$!{utils.hitClass($d, $t)}'>$utils.round($t.idf, 4)</td>#end
 			#if($utils.notEmpty($d.addr.buildingNum))<td></td>#end
 		</tr>
-		<tr><th>Rate</th>
+		<tr><th>Coord</th>
 			<td></td>
-			#foreach($t in ${d.document.terms})<td class='$!{utils.hitClass($d, $t)}'>$!{utils.round($d.matchedTerms.get($t.text).rate, 4)}</td>#end
+			#foreach($t in ${d.document.terms})<td class='$!{utils.hitClass($d, $t)}'>$!{utils.round($d.matchedTerms.get($t.text).coord, 4)}</td>#end
 			#if($utils.notEmpty($d.addr.buildingNum))<td></td>#end
 		</tr>
 		<tr><th>Density</th>
