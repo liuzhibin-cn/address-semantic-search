@@ -19,6 +19,8 @@
 ### 解决方案
 物流公司在长期运营过程中积累了大量历史地址数据，其中包含了```[地址]<<-->>[片区]```对应关系，基于这些历史数据建立自己的地址匹配服务，可以降低第三方GIS的不利影响，节约费用。
 
+![使用相似度搜索匹配地址Demo Service](images/solution.png)
+
 本项目研究使用文本相似度，基于历史地址库进行地址解析和匹配。<br>
 项目处于研究验证阶段，使用500万历史地址的情况下，匹配结果准确率比较高。
 
@@ -119,7 +121,7 @@ bin/start.sh
 
 服务启动成功后，通过`http://localhost:8000/test/address/find/北京海淀区苏州街29号院18号楼维亚大厦`访问。<br>
 Demo服务运行效果如下：<br>
-![使用相似度搜索匹配地址Demo Service](demo-screenshot.jpg)
+![使用相似度搜索匹配地址Demo Service](images/demo-screenshot.jpg)
 
 Demo服务使用的Dubbox的REST接口，服务启动时会监听2个端口：`8080`和`8000`。
 如果需要修改为其他端口号，请修改以下文件：
@@ -133,7 +135,7 @@ spring-config.xml
 ```shell
 bin/start.sh
 echo -e "Starting the service ...\c"
-nohup java -Ddubbo.spring.config=spring-config.xml -Ddubbp.jetty.port="8080" -Ddubbo.jetty.page=log,status,system -classpath $CONF_DIR:$CONF_DIR/dic:$LIB_JARS com.alibaba.dubbo.container.Main spring jetty > $DEPLOY_DIR/log/address-service-stdout.log 2>&1 &
+nohup java -Ddubbo.spring.config=spring-config.xml -Ddubbo.jetty.port="8080" -Ddubbo.jetty.page=log,status,system -classpath $CONF_DIR:$CONF_DIR/dic:$LIB_JARS com.alibaba.dubbo.container.Main spring jetty > $DEPLOY_DIR/log/address-service-stdout.log 2>&1 &
 ```
 
 
