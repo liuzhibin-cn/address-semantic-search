@@ -22,9 +22,9 @@
 </head>
 <body style="padding:10px 0 0 10px;">
 
-<!-- div style="padding:10px 10px 0 10px;width:620px;border:solid 1px #aaa;" -->
+<!--div style="padding:10px 10px 0 10px;width:620px;border:solid 1px #aaa;"-->
 <div>
-	<h3>相似地址：</h3>
+	<h3>[$!{r.queryAddr.rawText}] 相似地址：</h3>
 	<table>
 		<tr class=c>
 			<th>相似度</th>
@@ -43,10 +43,9 @@
 		</tr>
 		#end
 	</table>
-	<span class=em2>$!{totalDocCount}</span>
 	<span>[$!{r.queryAddr.province.name} $!{r.queryAddr.city.name} $!{r.queryAddr.county.name}]: 共 </span>
-	<span class=em2>$!{docsNum}</span><span> 条历史地址.</span>
-	<span class="left10">匹配耗时: </span><span class="em1">$!{elapsedTime}</span><span> 毫秒.</span>
+	<span class=em1>$!{docsNum}</span><span> 条历史地址.</span>
+	<span class="left10">匹配耗时: </span><span class=em1>$!{elapsedTime}</span><span> 毫秒.</span>
 </div>
 
 <div class="top20">
@@ -111,6 +110,6 @@
 	</table>
 #end
 </div>
-<!-- /div -->
+<!--/div-->
 </body>
 </html>

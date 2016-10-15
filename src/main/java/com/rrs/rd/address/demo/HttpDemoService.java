@@ -4,6 +4,7 @@ import javax.ws.rs.GET;
 import javax.ws.rs.Path;
 import javax.ws.rs.PathParam;
 import javax.ws.rs.Produces;
+import javax.ws.rs.QueryParam;
 
 /**
  * Demo服务，使用Dubbox的REST方式，仅用于分析测试目的。
@@ -16,6 +17,6 @@ public interface HttpDemoService {
 	@GET
 	@Path("find/{addr: .+}")
 	@Produces({"application/text", "text/html"})
-	String find(@PathParam("addr") String addrText);
+	String find(@PathParam("addr") String addrText, @QueryParam("top") int topN);
 	
 }
