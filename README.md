@@ -28,17 +28,19 @@
 
 -------------------------------------------------------------------------
 ## 算法说明
-项目中计算两个地址相似度的算法借鉴了文本TF-IDF余弦相似度算法、Lucene的评分算法。
+项目中计算两个地址相似度借鉴了文本TF-IDF余弦相似度算法、Lucene的评分算法。
 
 ### 文本TF-IDF余弦相似度算法
-参考[TF-IDF与余弦相似性的应用（一）：自动提取关键词](http://www.ruanyifeng.com/blog/2013/03/tf-idf.html)、[TF-IDF与余弦相似性的应用（二）：找出相似文章](http://www.ruanyifeng.com/blog/2013/03/cosine_similarity.html)。
+关于TF-IDF余弦相似度简单明了的说明可以参考[TF-IDF与余弦相似性的应用（一）：自动提取关键词](http://www.ruanyifeng.com/blog/2013/03/tf-idf.html)、[TF-IDF与余弦相似性的应用（二）：找出相似文章](http://www.ruanyifeng.com/blog/2013/03/cosine_similarity.html)。
 
-**TC: Term Count**，词数，某个词在文档中出现的次数。<br />
-**TF: Term Frequency**，词频，某个词在文档中出现的频率，_TF = 该词在文档中出现的次数 / 该文档的总词数_。<br />
-**IDF: Inverse Document Frequency**，逆文档词频，_IDF = log( 文档总数 / ( 包含该词的文档数 + 1 ) )_。分母加1是为了防止分母出现0的情况。<br />
-**TF-IDF**: 词条的特征值，_TF-IDF = TF * IDF_。 <br>
+TC: Term Count，词数，某个词在文档中出现的次数。<br />
+TF: Term Frequency，词频，某个词在文档中出现的频率，_TF = 该词在文档中出现的次数 / 该文档的总词数_。<br />
+IDF: Inverse Document Frequency，逆文档词频，_IDF = log( 文档总数 / ( 包含该词的文档数 + 1 ) )_。分母加1是为了防止分母出现0的情况。<br />
+TF-IDF: 词条的特征值，_TF-IDF = TF * IDF_。 <br>
 
 两个多维空间向量的余弦相似度：![余弦相似度](images/cos-similarity.png)
+
+TF-IDF余弦相似度是比较通用、有效的文本相似度算法。其它文本相似度相关的算法有：[最长公共子串](https://zh.wikipedia.org/wiki/最长公共子串)、[最长公共子序列](http://baike.baidu.com/view/2020307.htm)、[编辑距离](http://baike.baidu.com/view/2020247.htm)、[汉明距离](http://baike.baidu.com/view/725269.htm)等，基于语义的有LSA/LSI、PLSA、LDA等（[既然LDA是一种比PLSA更高级的模型，为啥百度还在用PLSA？](http://www.zhihu.com/question/23642556/answer/38969800)、[CSDN专栏：主题模型 TopicModel](http://blog.csdn.net/column/details/topic-model.html)）。
 
 
 ### Lucene的评分算法
