@@ -20,8 +20,9 @@
 	h3 { font-size:14px; font-weight:600; color:blue; }
 </style>
 </head>
-<body style="padding:5px 20px 0 20px;">
+<body style="padding:10px 0 0 10px;">
 
+<!-- div style="padding:10px 10px 0 10px;width:620px;border:solid 1px #aaa;" -->
 <div>
 	<h3>相似地址：</h3>
 	<table>
@@ -110,5 +111,6 @@
 	</table>
 #end
 </div>
+<!-- /div -->
 </body>
 </html>
