@@ -28,10 +28,10 @@
 
 -------------------------------------------------------------------------
 ## 算法说明
-项目中计算相似度的算法借鉴了基于TF-IDF的余弦相似度算法、Lucene的评分算法。
+项目中计算两个地址相似度的算法借鉴了文本TF-IDF余弦相似度算法、Lucene的评分算法。
 
-### 基于TF-IDF的余弦相似度算法
-参考[余弦相似度](http://baike.baidu.com/item/%E4%BD%99%E5%BC%A6%E7%9B%B8%E4%BC%BC%E5%BA%A6)、[TF-IDF与余弦相似性的应用（一）：自动提取关键词](http://www.ruanyifeng.com/blog/2013/03/tf-idf.html)、[TF-IDF与余弦相似性的应用（二）：找出相似文章](http://www.ruanyifeng.com/blog/2013/03/cosine_similarity.html)。
+### 文本TF-IDF余弦相似度算法
+参考[TF-IDF与余弦相似性的应用（一）：自动提取关键词](http://www.ruanyifeng.com/blog/2013/03/tf-idf.html)、[TF-IDF与余弦相似性的应用（二）：找出相似文章](http://www.ruanyifeng.com/blog/2013/03/cosine_similarity.html)。
 
 **TC: Term Count**，词数，某个词在文档中出现的次数。<br />
 **TF: Term Frequency**，词频，某个词在文档中出现的频率，_TF = 该词在文档中出现的次数 / 该文档的总词数_。<br />
@@ -46,9 +46,9 @@
 
 ![Lucene评分算法](images/lucene-score-function.png)
 
-1. score(q, d) 
-2. queuryNorm(q)
-3. coord(q, d)
+1. score(q, d) : 查询文档q与地址库中的某个文档d的匹配程度评分值
+2. queuryNorm(q) : 将lucene评分值进行归一化处理的因子
+3. coord(q, d) : 
 4. ∑(...)(t in q)
 5. tf(t in d)
 6. idf(t)²
