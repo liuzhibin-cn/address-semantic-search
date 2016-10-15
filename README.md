@@ -14,7 +14,7 @@
 2. 通过GIS服务将详细地址解析出`经纬度`或`平面坐标值`。<br>
    GIS服务使用文本匹配算法，通过关键字、相似度等方式将输入地址与GIS地址库中的地址（POI）进行匹配，从而得到`经纬度`或`平面坐标值`。
 3. 使用空间几何算法，计算出地址坐标位于哪个片区中。<br>
-   [openlayers](http://openlayers.org/)等开源工具中包含了这些算法，[CSDN: 点在多边形内算法——判断一个点是否在一个复杂多边形的内部](http://blog.csdn.net/hjh2005/article/details/9246967)、[CSDN: 判断一个点是否在多边形内 C++](http://blog.csdn.net/orange_xxx/article/details/7445803)有各种算法的说明。
+   [openlayers](http://openlayers.org/)等开源工具中包含了这些算法，[点在多边形内算法——判断一个点是否在一个复杂多边形的内部](http://blog.csdn.net/hjh2005/article/details/9246967)、[判断一个点是否在多边形内 C++](http://blog.csdn.net/orange_xxx/article/details/7445803)有各种算法的说明。
 
 
 ### 解决方案
@@ -30,7 +30,7 @@
 ## 算法说明
  
 ### 基于TF-IDF的余弦相似度算法
-参考[百度百科：余弦相似度](http://baike.baidu.com/item/%E4%BD%99%E5%BC%A6%E7%9B%B8%E4%BC%BC%E5%BA%A6){:target="_blank"}、[TF-IDF与余弦相似性的应用（一）：自动提取关键词](http://www.ruanyifeng.com/blog/2013/03/tf-idf.html){:target="_blank"}、[TF-IDF与余弦相似性的应用（二）：找出相似文章](http://www.ruanyifeng.com/blog/2013/03/cosine_similarity.html){:target="_blank"}。
+参考[余弦相似度](http://baike.baidu.com/item/%E4%BD%99%E5%BC%A6%E7%9B%B8%E4%BC%BC%E5%BA%A6)、[TF-IDF与余弦相似性的应用（一）：自动提取关键词](http://www.ruanyifeng.com/blog/2013/03/tf-idf.html)、[TF-IDF与余弦相似性的应用（二）：找出相似文章](http://www.ruanyifeng.com/blog/2013/03/cosine_similarity.html)。
 
 **TC: Term Count**，词数，某个词在文档中出现的次数。<br />
 **TF: Term Frequency**，词频，某个词在文档中出现的频率，_TF = 该词在文档中出现的次数 / 该文档的总词数_。<br />
@@ -38,6 +38,7 @@
 **TF-IDF**: 词条的特征值，_TF-IDF = TF * IDF_。 <br>
 
 两个多维空间向量的余弦相似度： 
+
 ![余弦相似度](images/latex-cos-formula.png)
 
 
