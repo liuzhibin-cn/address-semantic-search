@@ -82,16 +82,12 @@ public class Query {
 		if(this.simiDocs==null) {
 			this.simiDocs = new ArrayList<SimilarDoccument>(this.topN);
 			SimilarDoccument simiDoc = new SimilarDoccument(doc);
-			simiDoc.setTextPercent(1);
-			simiDoc.setTextValue(similarity);
 			simiDoc.setSimilarity(similarity);
 			this.simiDocs.add(simiDoc);
 			return true;
 		}
 		if(this.simiDocs.get(0).getSimilarity()<similarity){
 			SimilarDoccument simiDoc = new SimilarDoccument(doc);
-			simiDoc.setTextPercent(1);
-			simiDoc.setTextValue(similarity);
 			simiDoc.setSimilarity(similarity);
 			this.simiDocs.set(0, simiDoc);
 			return true;

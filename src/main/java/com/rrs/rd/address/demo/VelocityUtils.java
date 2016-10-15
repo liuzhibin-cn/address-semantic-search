@@ -28,17 +28,26 @@ public class VelocityUtils extends StringUtils {
 		long p = Math.round(Math.pow(10, precision));
 		return "" + (Math.round(value * p) * 1.0 / p);
 	}
+	/**
+	 * 根据词条根据命中情况返回相应的CSS class。
+	 * @param d
+	 * @param t
+	 * @return
+	 */
 	public String hitClass(SimilarDoccument d, Term t){
-		if(d==null || d.getMatchedTerms()==null || t==null) return "";
-		if(d.getMatchedTerms().containsKey(t.getText())) return "hit";
-		return "";
+		if(d==null || d.getMatchedTerms()==null || t==null) return "non-hit";
+		if(d.getMatchedTerms().containsKey(t.getText())) return "hit-term";
+		return "non-hit";
 	}
-	public boolean exactPart(SimilarDoccument doc){
-		if(doc==null) return false;
-		return doc.getExactPercent()>0 || doc.getExactValue()>0;
-	}
-	public boolean textPart(SimilarDoccument doc){
-		if(doc==null) return false;
-		return doc.getTextPercent()>0 || doc.getTextValue()>0;
+	/**
+	 * 显示相似地址列表时，为满足条件且匹配度最高的地址加粗显示。
+	 * @param d
+	 * @param velocityCount
+	 * @return
+	 */
+	public String hitClass(SimilarDoccument d, int velocityCount){
+		if(velocityCount>1) return "non-hit";
+		if(d.getSimilarity()>=0.85) return "hit-doc";
+		return "non-hit";
 	}
 }

@@ -10,7 +10,10 @@
 	.top20 { margin-top:20px; }
 	.bot10 { margin-bottom:10px; }
 	.em1 { color:red; } 
-	.em2, td.hit { color:orange; }
+	.em2, td.hit-term { color:orange; }
+	tr.hit-doc td { color:orange; font-weight:600; }
+	tr.non-hit td { color:#bbb; }
+	td.non-hit { color:#bbb; }
 	.c { text-align:center; }
 	table.c td, table.c th { text-align:center; }
 	tr.c td, tr.c th { text-align:center; }
@@ -20,26 +23,26 @@
 <body style="padding:5px 20px 0 20px;">
 
 <div>
-	<h3>Most similar documents for: [$!{r.queryAddr.rawText}]</h3>
+	<h3>相似地址：</h3>
 	<table>
 		<tr class=c>
 			<th>相似度</th>
-			<th>地址ID</th>
 			<th>详细地址</th>
 			<th>订单号</th>
 			<th>网格</th>
+			<th>地址ID</th>
 		</tr>
 		#foreach($vo in ${r.similarDocs})
-		<tr>
+		<tr class=$!{utils.hitClass($vo, $velocityCount)}>
 			<td>$utils.round($vo.similarity, 4)</td>
-			<td>$!{vo.addr.id}</td>
 			<td>$!{vo.addr.rawText}</td>
 			<td>$!{vo.addr.prop1}</td>
 			<td>$!{vo.addr.prop2}</td>
+			<td>$!{vo.addr.id}</td>
 		</tr>
 		#end
 	</table>
-	<span class=em1>$!{totalDocCount}</span>
+	<span class=em2>$!{totalDocCount}</span>
 	<span>[$!{r.queryAddr.province.name} $!{r.queryAddr.city.name} $!{r.queryAddr.county.name}]: 共 </span>
 	<span class=em2>$!{docsNum}</span><span> 条历史地址.</span>
 	<span class="left10">匹配耗时: </span><span class="em1">$!{elapsedTime}</span><span> 毫秒.</span>
@@ -68,18 +71,16 @@
 #foreach($d in ${r.similarDocs})
 	<span>$!{d.addr.id}: $!{d.addr.rawText}</span>
 	<span class="left10 em1">Similarity=$utils.round($d.similarity, 4)</span>
-	#if($utils.exactPart($d))<span class="left10 em2">EP=$utils.round($d.exactPercent, 2)</span><span class="left10 em2">EV=$utils.round($d.exactValue, 4)</span>#end
-	#if($utils.textPart($d))<span class="left10 em2">TP=$utils.round($d.textPercent, 2)</span><span class="left10 em2">TV=$utils.round($d.textValue, 4)</span>#end
 	<table class="bot10 c">
 		<tr><th>Term</th>
 			<td class=em2>$!{d.addr.county.name}</td>
 			#foreach($t in ${d.document.terms})<td class='$!{utils.hitClass($d, $t)}'>$!{t.text}</td>#end
-			#if($utils.notEmpty($d.addr.buildingNum))<td>$!{d.addr.buildingNum}</td>#end
+			#if($utils.notEmpty($d.addr.buildingNum))<td class=non-hit>$!{d.addr.buildingNum}</td>#end
 		</tr>
 		<tr><th>Type</th>
 			<td class=em2>County</td>
 			#foreach($t in ${d.document.terms})<td class='$!{utils.hitClass($d, $t)}'>$!{t.type}</td>#end
-			#if($utils.notEmpty($d.addr.buildingNum))<td>BuildingNum</td>#end
+			#if($utils.notEmpty($d.addr.buildingNum))<td class=non-hit>BuildingNum</td>#end
 		</tr>
 		<tr><th>IDF</th>
 			<td class=em2>0</td>

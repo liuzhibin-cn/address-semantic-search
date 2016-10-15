@@ -8,10 +8,6 @@ public class SimilarDoccument {
 	private Map<String, MatchedTerm> matchedTerms;
 	
 	private double similarity = 0;
-	private double exactPercent = 0;
-	private double exactValue = 0;
-	private double textPercent = 1;
-	private double textValue = 0;
 	
 	public SimilarDoccument(Document doc){
 		this.doc = doc;
@@ -20,10 +16,6 @@ public class SimilarDoccument {
 		this.doc = clone.doc;
 		this.matchedTerms = clone.matchedTerms;
 		this.similarity = clone.similarity;
-		this.exactPercent = clone.exactPercent;
-		this.exactValue = clone.exactValue;
-		this.textPercent = clone.textPercent;
-		this.textValue = clone.textValue;
 	}
 	
 	public double getSimilarity(){
@@ -46,31 +38,4 @@ public class SimilarDoccument {
 		return this.doc;
 	}
 	
-	public double getExactPercent(){
-		return this.exactPercent;
-	}
-	public void setExactPercent(double value){
-		this.exactPercent = value;
-	}
-	
-	public double getExactValue(){
-		return this.exactValue;
-	}
-	public void setExactValue(double value){
-		this.exactValue = value;
-	}
-	
-	public double getTextPercent(){
-		return this.textPercent;
-	}
-	public void setTextPercent(double value){
-		this.textPercent = value;
-	}
-	
-	public double getTextValue(){
-		return this.textValue;
-	}
-	public void setTextValue(double value){
-		this.textValue = value;
-	}
 }

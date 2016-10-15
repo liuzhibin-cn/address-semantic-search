@@ -538,7 +538,6 @@ public class SimilarityComputer {
 		SimilarDoccument simiDoc = null;
 		if(explain && topN>1){
 			simiDoc = new SimilarDoccument(doc);
-			simiDoc.setTextPercent(1);
 		}
 		
 		//=====================================================================
@@ -583,7 +582,6 @@ public class SimilarityComputer {
 		double similarity = sumQD / ( Math.sqrt(sumQQ * sumDD) );
 		if(explain && topN>1){
 			simiDoc.setSimilarity(similarity);
-			simiDoc.setTextValue(similarity);
 			query.addSimiDoc(simiDoc);
 		}else query.addSimiDoc(doc, similarity);
 		return similarity;
