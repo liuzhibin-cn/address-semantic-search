@@ -37,9 +37,7 @@
 **IDF: Inverse Document Frequency**，逆文档词频，_IDF = log( 文档总数 / ( 包含该词的文档数 + 1 ) )_。分母加1是为了防止分母出现0的情况。<br />
 **TF-IDF**: 词条的特征值，_TF-IDF = TF * IDF_。 <br>
 
-两个多维空间向量的余弦相似度： 
-
-![余弦相似度](images/latex-cos-formula.png)
+两个多维空间向量的余弦相似度：![余弦相似度](images/latex-cos-formula.png)
 
 
 ### 基于标准TF-IDF算法的调整
