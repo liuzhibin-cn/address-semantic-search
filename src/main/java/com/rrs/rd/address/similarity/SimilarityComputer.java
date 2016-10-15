@@ -437,7 +437,7 @@ public class SimilarityComputer {
 	 * @param topN 返回多少条最相似地址。
 	 * @return
 	 */
-	public Query findSimilarAddress(String addressText, int topN, int mode, boolean explain){
+	public Query findSimilarAddress(String addressText, int topN, boolean explain){
 		Query query = new Query(topN);
 		
 		//解析地址
@@ -474,9 +474,8 @@ public class SimilarityComputer {
 		//对应地址库中每条地址计算相似度，并保留相似度最高的topN条地址
 		double similarity=0;
 		for(Document doc : allDocs){
-			if(mode==1) similarity = computeDocSimilarity1(query, doc, topN, explain);
-			else if(mode==2) computeDocSimilarity2(query, doc, explain);
-			if(topN==1 && mode==1 && similarity==1) break;
+			similarity = computeDocSimilarity(query, doc, topN, explain);
+			if(topN==1 && similarity==1) break;
 		}
 		
 		//按相似度从高到低排序
@@ -492,7 +491,7 @@ public class SimilarityComputer {
 	 * @param doc
 	 * @return
 	 */
-	public double computeDocSimilarity1(Query query, Document doc, int topN, boolean explain){
+	public double computeDocSimilarity(Query query, Document doc, int topN, boolean explain){
 		Term dterm = null;
 		//=====================================================================
 		//计算text类型词条的稠密度、匹配率
@@ -589,191 +588,6 @@ public class SimilarityComputer {
 		}else query.addSimiDoc(doc, similarity);
 		return similarity;
 	}
-	
-	public void computeDocSimilarity2(Query query, Document doc, boolean explain){
-		SimilarDoccument simiDoc = new SimilarDoccument(doc);
-		
-		//=====================================================================
-		//文本匹配
-		
-		Term term = null;
-		//Text类型词条匹配情况
-		int textTermCount = 0; //查询文档Text类型词条数量
-		int textTermMatchCount = 0, matchStart = -1, matchEnd = -1; //地址库文档匹配上的Text词条数量
-		for(Term qterm : query.getQueryDoc().getTerms()){
-			if(!(TermType.Text==qterm.getType())) continue; //仅针对Text类型词条计算 词条稠密度、词条匹配率
-			textTermCount++;
-			for(int i=0; i< doc.getTerms().size(); i++){
-				term = doc.getTerms().get(i);
-				if(!(TermType.Text==term.getType())) continue; //仅针对Text类型词条计算 词条稠密度、词条匹配率
-				if(term.getText().equals(qterm.getText())){
-					textTermMatchCount++;
-					if(matchStart==-1) {
-						matchStart = matchEnd = i;
-						break;
-					}
-					if(i>matchEnd) matchEnd = i;
-					else if(i<matchStart) matchStart = i;
-					break;
-				}
-			}
-		}
-		//计算词条稠密度、词条匹配率
-		double textTermDensity = 1, textTermMatchRate = 1;
-		if(textTermCount>0) textTermMatchRate = Math.sqrt(textTermMatchCount * 1.0 / textTermCount) * 0.5 + 0.5;
-		//词条稠密度：
-		// 查询文档a的文本词条为：【翠微西里】
-		// 地址库文档词条为：【翠微北里12号翠微嘉园B座西801】
-		// 地址库词条能匹配上【翠微西里】的每一个词条，但不是连续匹配，中间间隔了其他词条，稠密度不够，这类文档应当比能够连续匹配上查询文档的权重低
-		//稠密度 = 0.7 + (匹配上查询文档的词条数量 / 匹配上的词条起止位置间总词条数量) * 0.3 
-		//   乘以0.3是为了将稠密度对相似度结果的影响限制在 0 - 0.3 的范围内。
-		//假设：查询文档中Text类型的词条为：翠, 微, 西, 里。地址库中有如下两个文档，Text类型的词条为：
-		//1: 翠, 微, 西, 里, 10, 号, 楼
-		//2: 翠, 微, 北, 里, 89, 号, 西, 2, 楼
-		//则：
-		// density1 = 0.7 + ( 4/4 ) * 0.3 = 0.7 + 0.3 = 1
-		// density2 = 0.7 + ( 4/7 ) * 0.3 = 0.7 + 0.17143 = 0.87143
-		// 文档2中 [翠、微、西、里] 4个词匹配上查询文档词条，这4个词条之间共包含7个词条。
-		if(textTermCount>=2 && textTermMatchCount>=2) 
-			textTermDensity = Math.sqrt( textTermMatchCount * 1.0 / (matchEnd - matchStart + 1) ) * 0.5 + 0.5;
-		
-		//计算TF-IDF和相似度所需的中间值
-		double sumQD=0, sumQQ=0, sumDD=0, qtfidf=0;
-		double qboost = 0; //加权值
-		for(Term qterm : query.getQueryDoc().getTerms()) {
-			if(TermType.Text!=qterm.getType()) continue; //仅计算Text类型词条的相似度
-			qboost = getBoostValue(false, query.getQueryDoc(), qterm, doc, null);
-			qtfidf = qterm.getIdf() * qboost;
-			term = doc.getTerm(qterm.getText());
-			MatchedTerm mt = null;
-			if(term!=null){
-				mt = new MatchedTerm(term);
-				mt.setBoost(getBoostValue(true, query.getQueryDoc(), qterm, doc, term));
-				mt.setRate((term!=null && TermType.Text==term.getType()) ? textTermMatchRate : 1);
-				mt.setDensity((term!=null && TermType.Text==term.getType()) ? textTermDensity : 1);
-				mt.setTfidf(term.getIdf() * mt.getBoost() * mt.getRate() * mt.getDensity());
-				simiDoc.addMatchedTerm(mt);
-			}
-			
-			sumQQ += qtfidf * qtfidf;
-			sumQD += qtfidf * (mt==null ? 0: mt.getTfidf());
-			sumDD += (mt==null ? 0: mt.getTfidf()) * (mt==null ? 0: mt.getTfidf());
-		}
-		
-		if(sumDD>0 && sumQQ>0) simiDoc.setTextValue(sumQD / ( Math.sqrt(sumQQ * sumDD) ));
-		
-		//=====================================================================
-		//确定性匹配
-		
-		//找出乡镇、村，道路、门牌号
-		Term qroad=null, qroadnum=null, qtown=null, qvillage=null, droad=null, droadnum=null, dtown=null, dvillage=null;
-		for(Term qterm : query.getQueryDoc().getTerms()){
-			switch(qterm.getType()){
-				case Road: qroad = qterm; break;
-				case RoadNum: qroadnum = qterm; break;
-				case Town: qtown = qterm; break;
-				case Village: qvillage=qterm; break;
-				default:
-			}
-		}
-		for(Term dterm : doc.getTerms()) {
-			switch(dterm.getType()){
-				case Road: droad = dterm; break;
-				case RoadNum: droadnum = dterm; break;
-				case Town: dtown = dterm; break;
-				case Village: dvillage=dterm; break;
-				default:
-			}
-		}
-		
-		//乡镇村确定性匹配
-		if(qtown!=null && qtown.equals(dtown)) { //乡镇相同
-			if(qvillage!=null && qvillage.equals(dvillage)) { //镇相同村相同: 相似度 -> [0.98, 1]
-				simiDoc.setExactPercent(0.98);
-				simiDoc.setExactValue(1);
-				simiDoc.setTextPercent(1-simiDoc.getExactPercent());
-				simiDoc.setSimilarity(simiDoc.getExactValue()*simiDoc.getExactPercent()+simiDoc.getTextPercent()*simiDoc.getTextValue());
-				simiDoc.addMatchedTerm(new MatchedTerm(dtown));
-				simiDoc.addMatchedTerm(new MatchedTerm(dvillage));
-				query.addSimiDoc(simiDoc);
-				return;
-			} else { //镇相同: 相似度 -> [0.96, 1]
-				simiDoc.setExactPercent(0.98);
-				simiDoc.setExactValue(0.96/0.98);
-				simiDoc.setTextPercent(1-simiDoc.getExactPercent());
-				simiDoc.setSimilarity(simiDoc.getExactValue()*simiDoc.getExactPercent()+simiDoc.getTextPercent()*simiDoc.getTextValue());
-				simiDoc.addMatchedTerm(new MatchedTerm(dtown));
-				query.addSimiDoc(simiDoc);
-				return;
-			}
-		}
-		if(qtown!=null && dtown!=null){ //都有乡镇但乡镇不同: 相似度 -> [0, 0.8]
-			simiDoc.setExactPercent(0.2);
-			simiDoc.setExactValue(0);
-			simiDoc.setTextPercent(1-simiDoc.getExactPercent());
-			simiDoc.setSimilarity(simiDoc.getExactValue()*simiDoc.getExactPercent()+simiDoc.getTextPercent()*simiDoc.getTextValue());
-			query.addSimiDoc(simiDoc);
-			return;
-		}
-		
-		//道路门牌号确定性匹配
-		if(qroad!=null && qroad.equals(droad)) { //道路相同
-			if(qroadnum!=null && droadnum!=null){
-				int qnum = translateRoadNum(qroadnum.getText());
-				int dnum = translateRoadNum(droadnum.getText());
-				simiDoc.addMatchedTerm(new MatchedTerm(droad));
-				simiDoc.addMatchedTerm(new MatchedTerm(droadnum));
-				if(qnum==dnum) { //道路相同门牌号相同: 相似度 -> [0.98, 1]
-					simiDoc.setExactPercent(0.98);
-					simiDoc.setExactValue(1);
-					simiDoc.setTextPercent(1-simiDoc.getExactPercent());
-					simiDoc.setSimilarity(simiDoc.getExactValue()*simiDoc.getExactPercent()+simiDoc.getTextPercent()*simiDoc.getTextValue());
-					query.addSimiDoc(simiDoc);
-					return;
-				} else { //道路相同且都有门牌号但门牌号不同: 相似度 -> [0.56, 1]，根据门牌号间隔大小、文本匹配度高低调整权重
-					if(simiDoc.getTextValue()>0.9){ //文本部分高度匹配，降低门牌号权重，突出文本权重: 相似度 -> [0.88, 1]
-						simiDoc.setExactPercent(0.2);
-					}else{ //文本部分匹配度一般，基本代表文本匹配不够靠谱，因此突出门牌号权重，降低文本权重: 相似度 -> [0.56, 0.97]
-						simiDoc.setExactPercent(0.7);
-					}
-					simiDoc.setExactValue( 0.8 + (1 / ( Math.sqrt(Math.sqrt( Math.abs(qnum-dnum)+1 )) ) ) * 0.2 );
-					simiDoc.setTextPercent(1-simiDoc.getExactPercent());
-					simiDoc.setSimilarity(simiDoc.getExactValue()*simiDoc.getExactPercent()+simiDoc.getTextPercent()*simiDoc.getTextValue());
-					query.addSimiDoc(simiDoc);
-					return;
-				}
-			}else{ //道路相同，其中一个没有门牌号或两个都没有门牌号: 相似度 -> [0.56, 0.97]，根据文本匹配度高低调整权重
-				simiDoc.addMatchedTerm(new MatchedTerm(droad));
-				if(simiDoc.getTextValue()>0.9){ //文本部分高度匹配，加权: 相似度 -> [0.9, 0.97]
-					simiDoc.setExactValue(0.9);
-					simiDoc.setExactPercent(0.3);
-				}else{ //文本部分匹配度一般，基本代表文本匹配不够靠谱，降权: 相似度 -> [0.56, 0.83]
-					simiDoc.setExactValue(0.8);
-					simiDoc.setExactPercent(0.7);
-				}
-				simiDoc.setTextPercent(1-simiDoc.getExactPercent());
-				simiDoc.setSimilarity(simiDoc.getExactValue()*simiDoc.getExactPercent()+simiDoc.getTextPercent()*simiDoc.getTextValue());
-				query.addSimiDoc(simiDoc);
-				return;
-			}
-		}
-		if(qroad!=null && droad!=null){ //都有道路但道路不同: 相似度 -> [0, 0.93]
-			if(simiDoc.getTextValue()>0.9){ //文本部分高度匹配，为文本加权: 相似度 -> [0.837, 0.93]
-				simiDoc.setExactPercent(0.07);
-			}else{ //文本部分匹配度一般，基本代表文本匹配不够靠谱，为文本降权: 相似度 -> [0, 0.85]
-				simiDoc.setExactPercent(0.15);
-			}
-			simiDoc.setExactValue(0);
-			simiDoc.setTextPercent(1-simiDoc.getExactPercent());
-			simiDoc.setSimilarity(simiDoc.getExactValue()*simiDoc.getExactPercent()+simiDoc.getTextPercent()*simiDoc.getTextValue());
-			query.addSimiDoc(simiDoc);
-			return;
-		}
-		
-		simiDoc.setSimilarity(simiDoc.getExactPercent()*simiDoc.getExactValue()+simiDoc.getTextPercent()*simiDoc.getTextValue());
-		query.addSimiDoc(simiDoc);
-	}
-
 	
 	
 	/**

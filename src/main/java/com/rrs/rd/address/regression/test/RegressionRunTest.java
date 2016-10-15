@@ -120,7 +120,7 @@ public class RegressionRunTest {
     		Query query = null;
     		try{
     			start2 = System.nanoTime();
-    			query = computer.findSimilarAddress(tokens[1]+tokens[2]+tokens[3]+tokens[4], 1, 1, false);
+    			query = computer.findSimilarAddress(tokens[1]+tokens[2]+tokens[3]+tokens[4], 1, false);
     			timeSimi += System.nanoTime()-start2;
     		}catch(NoHistoryDataException nhdex){
     			noHisNum++;

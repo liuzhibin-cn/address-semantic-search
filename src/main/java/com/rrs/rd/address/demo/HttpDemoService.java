@@ -14,13 +14,8 @@ import javax.ws.rs.Produces;
 public interface HttpDemoService {
 	
 	@GET
-	@Path("s1/{addrText: .+}")
+	@Path("find/{addr: .+}")
 	@Produces({"application/text", "text/html"})
-	String find1(@PathParam("addrText") String addrText);
-	
-	@GET
-	@Path("s2/{addrText: .+}")
-	@Produces({"application/text", "text/html"})
-	String find2(@PathParam("addrText") String addrText);
+	String find(@PathParam("addr") String addrText);
 	
 }
