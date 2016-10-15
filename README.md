@@ -28,7 +28,8 @@
 
 -------------------------------------------------------------------------
 ## 算法说明
- 
+项目中计算相似度的算法借鉴了基于TF-IDF的余弦相似度算法、Lucene的评分算法。
+
 ### 基于TF-IDF的余弦相似度算法
 参考[余弦相似度](http://baike.baidu.com/item/%E4%BD%99%E5%BC%A6%E7%9B%B8%E4%BC%BC%E5%BA%A6)、[TF-IDF与余弦相似性的应用（一）：自动提取关键词](http://www.ruanyifeng.com/blog/2013/03/tf-idf.html)、[TF-IDF与余弦相似性的应用（二）：找出相似文章](http://www.ruanyifeng.com/blog/2013/03/cosine_similarity.html)。
 
@@ -37,8 +38,22 @@
 **IDF: Inverse Document Frequency**，逆文档词频，_IDF = log( 文档总数 / ( 包含该词的文档数 + 1 ) )_。分母加1是为了防止分母出现0的情况。<br />
 **TF-IDF**: 词条的特征值，_TF-IDF = TF * IDF_。 <br>
 
-两个多维空间向量的余弦相似度：![余弦相似度](images/latex-cos-formula.png)
+两个多维空间向量的余弦相似度：![余弦相似度](images/cos-similarity.png)
 
+
+### Lucene的评分算法
+[Elasticsearch: The Definitive Guide](https://www.elastic.co/guide/en/elasticsearch/guide/current/index.html)专门有一个章节比较详细地讲述了Lucene的评分算法：[Theory Behind Relevance Scoring](https://www.elastic.co/guide/en/elasticsearch/guide/current/scoring-theory.html)、[Lucene’s Practical Scoring Function](https://www.elastic.co/guide/en/elasticsearch/guide/current/practical-scoring-function.html)。
+
+![Lucene评分算法](images/lucene-score-function.png)
+
+1. score(q, d) 
+2. queuryNorm(q)
+3. coord(q, d)
+4. ∑(...)(t in q)
+5. tf(t in d)
+6. idf(t)²
+7. t.getBoost()
+8. norm(t,d)
 
 ### 基于标准TF-IDF算法的调整
 计算地址相似度时，将标准TF-IDF算法中的词频TF改为了自定义的词语权重值，因为：
