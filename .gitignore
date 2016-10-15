@@ -5,3 +5,5 @@
 /test/
 /log/
 .DS_Store
+maven-eclipse.xml
+/.externalToolBuilders/
