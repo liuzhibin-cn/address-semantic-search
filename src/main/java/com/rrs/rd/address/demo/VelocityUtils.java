@@ -22,10 +22,11 @@ public class VelocityUtils extends StringUtils {
 	public boolean notEmpty(String str){
 		return !isEmpty(str);
 	}
-	public double round(double value, int precision){
+	public String round(double value, int precision){
+		if(value<0) return "";
 		if(precision<0) precision=0;
 		long p = Math.round(Math.pow(10, precision));
-		return Math.round(value * p) * 1.0 / p;
+		return "" + (Math.round(value * p) * 1.0 / p);
 	}
 	public String hitClass(SimilarDoccument d, Term t){
 		if(d==null || d.getMatchedTerms()==null || t==null) return "";

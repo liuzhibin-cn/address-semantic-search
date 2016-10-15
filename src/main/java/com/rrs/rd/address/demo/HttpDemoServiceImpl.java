@@ -15,6 +15,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.rrs.rd.address.persist.AddressPersister;
+import com.rrs.rd.address.similarity.Document;
 import com.rrs.rd.address.similarity.Query;
 import com.rrs.rd.address.similarity.SimilarityComputer;
 import com.rrs.rd.address.utils.FileUtil;
@@ -90,6 +91,8 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 		}
 		model.put("elapsedTime", System.currentTimeMillis() - startAt);
 		model.put("r", q);
+		List<Document> docs = computer.loadDocunentsFromCache(q.getQueryAddr());
+		model.put("docsNum", docs==null ? 0 : docs.size());
 		
 		if(LOG.isInfoEnabled()){
 			LOG.info("> Similar address for {" + addrText + "}: ");

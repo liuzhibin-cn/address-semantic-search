@@ -23,25 +23,30 @@
 	<h3>Most similar documents for: [$!{r.queryAddr.rawText}]</h3>
 	<table>
 		<tr class=c>
-			<th>Similarity</th>
-			<th>Addr ID</th>
-			<th>Addr Text</th>
+			<th>相似度</th>
+			<th>地址ID</th>
+			<th>详细地址</th>
+			<th>订单号</th>
+			<th>网格</th>
 		</tr>
 		#foreach($vo in ${r.similarDocs})
 		<tr>
 			<td>$utils.round($vo.similarity, 4)</td>
 			<td>$!{vo.addr.id}</td>
 			<td>$!{vo.addr.rawText}</td>
+			<td>$!{vo.addr.prop1}</td>
+			<td>$!{vo.addr.prop2}</td>
 		</tr>
 		#end
 	</table>
-	<span class="em1">$!{totalDocCount}</span>
-	<span> history addresses under: [$!{r.queryAddr.province.name} $!{r.queryAddr.city.name} $!{r.queryAddr.county.name}]</span>
-	<span class="left10">Elapsed time:</span><span class="em1">$!{elapsedTime}ms.</span>
+	<span class=em1>$!{totalDocCount}</span>
+	<span>[$!{r.queryAddr.province.name} $!{r.queryAddr.city.name} $!{r.queryAddr.county.name}]: 共 </span>
+	<span class=em2>$!{docsNum}</span><span> 条历史地址.</span>
+	<span class="left10">匹配耗时: </span><span class="em1">$!{elapsedTime}</span><span> 毫秒.</span>
 </div>
 
 <div class="top20">
-	<h3>Explain for query document:</h3>
+	<h3>输入地址解析情况:</h3>
 	<span>[$!{r.queryAddr.rawText}</span>]
 	<span class=left10>&gt;&gt;</span>
 	<span class=left10>[</span><span class="em1">$!{r.queryAddr.province.name} $!{r.queryAddr.city.name} $!{r.queryAddr.county.name}</span>]
@@ -49,34 +54,60 @@
 	#if($utils.notEmpty($r.queryAddr.village))<span class="left10">[</span><span class="em1">$!{r.queryAddr.village}</span>]#end
 	#if($utils.notEmpty($r.queryAddr.road))<span class="left10">[</span><span class="em1">$!{r.queryAddr.road}</span>]#end
 	#if($utils.notEmpty($r.queryAddr.roadNum))<span class="left10">[</span><span class="em1">$!{r.queryAddr.roadNum}</span>]#end
-	#if($utils.notEmpty($r.queryAddr.text))<span class="left10">[</span><span class="em1">T:$!{r.queryAddr.text}</span>]#end
+	#if($utils.notEmpty($r.queryAddr.text))<span class="left10">[</span><span class="em1">$!{r.queryAddr.text}</span>]#end
 	#if($utils.notEmpty($r.queryAddr.buildingNum))<span class="left10">[</span><span class="em1">$!{r.queryAddr.buildingNum}</span>]#end
 	<table class="top5 c">
 		<tr><th>Term</th>#foreach($t in ${r.queryDoc.terms})<td class="em1 c">$!{t.text}</td>#end</tr>
 		<tr><th>Type</th>#foreach($t in ${r.queryDoc.terms})<td class=c>$!{t.type}</td>#end</tr>
-		<tr><th>IDF</th>#foreach($t in ${r.queryDoc.terms})<td>$utils.round($t.idf, 4)</td>#end</tr>]
+		<tr><th>IDF</th>#foreach($t in ${r.queryDoc.terms})<td>$utils.round($t.idf, 4)</td>#end</tr>
 	</table>
 </div>
 
 <div class="top20">
-	<h3>Explain for similar documents:</h3>
-	#foreach($d in ${r.similarDocs})
+	<h3>相似地址解析情况:</h3>
+#foreach($d in ${r.similarDocs})
 	<span>$!{d.addr.id}: $!{d.addr.rawText}</span>
 	<span class="left10 em1">Similarity=$utils.round($d.similarity, 4)</span>
-	#if($utils.exactPart($d))<span class="left10 em2">EP=$utils.round($d.exactPercent, 2)</span>
-	<span class="left10 em2">EV=$utils.round($d.exactValue, 4)</span>#end
-	#if($utils.textPart($d))<span class="left10 em2">TP=$utils.round($d.textPercent, 2)</span>
-	<span class="left10 em2">TV=$utils.round($d.textValue, 4)</span>#end
+	#if($utils.exactPart($d))<span class="left10 em2">EP=$utils.round($d.exactPercent, 2)</span><span class="left10 em2">EV=$utils.round($d.exactValue, 4)</span>#end
+	#if($utils.textPart($d))<span class="left10 em2">TP=$utils.round($d.textPercent, 2)</span><span class="left10 em2">TV=$utils.round($d.textValue, 4)</span>#end
 	<table class="bot10 c">
-		<tr><th>Term</th>#foreach($t in ${d.document.terms})<td class='$!{utils.hitClass($d, $t)}'>$!{t.text}</td>#end</tr>
-		<tr><th>Type</th>#foreach($t in ${d.document.terms})<td class='$!{utils.hitClass($d, $t)}'>$!{t.type}</td>#end</tr>
-		<tr><th>IDF</th>#foreach($t in ${d.document.terms})<td class='$!{utils.hitClass($d, $t)}'>$utils.round($t.idf, 4)</td>#end</tr>
-		<tr><th>Rate</th>#foreach($t in ${d.document.terms})<td class='$!{utils.hitClass($d, $t)}'>$!{utils.round($d.matchedTerms.get($t.text).rate, 4)}</td>#end</tr>
-		<tr><th>Density</th>#foreach($t in ${d.document.terms})<td class='$!{utils.hitClass($d, $t)}'>$!{utils.round($d.matchedTerms.get($t.text).density, 4)}</td>#end</tr>
-		<tr><th>Boost</th>#foreach($t in ${d.document.terms})<td class='$!{utils.hitClass($d, $t)}'>$!{utils.round($d.matchedTerms.get($t.text).boost, 4)}</td>#end</tr>
-		<tr><th>TF-IDF</th>#foreach($t in ${d.document.terms})<td class='$!{utils.hitClass($d, $t)}'>$!{utils.round($d.matchedTerms.get($t.text).tfidf, 4)}</td>#end</tr>
+		<tr><th>Term</th>
+			<td class=em2>$!{d.addr.county.name}</td>
+			#foreach($t in ${d.document.terms})<td class='$!{utils.hitClass($d, $t)}'>$!{t.text}</td>#end
+			#if($utils.notEmpty($d.addr.buildingNum))<td>$!{d.addr.buildingNum}</td>#end
+		</tr>
+		<tr><th>Type</th>
+			<td class=em2>County</td>
+			#foreach($t in ${d.document.terms})<td class='$!{utils.hitClass($d, $t)}'>$!{t.type}</td>#end
+			#if($utils.notEmpty($d.addr.buildingNum))<td>BuildingNum</td>#end
+		</tr>
+		<tr><th>IDF</th>
+			<td class=em2>0</td>
+			#foreach($t in ${d.document.terms})<td class='$!{utils.hitClass($d, $t)}'>$utils.round($t.idf, 4)</td>#end
+			#if($utils.notEmpty($d.addr.buildingNum))<td></td>#end
+		</tr>
+		<tr><th>Rate</th>
+			<td></td>
+			#foreach($t in ${d.document.terms})<td class='$!{utils.hitClass($d, $t)}'>$!{utils.round($d.matchedTerms.get($t.text).rate, 4)}</td>#end
+			#if($utils.notEmpty($d.addr.buildingNum))<td></td>#end
+		</tr>
+		<tr><th>Density</th>
+			<td></td>
+			#foreach($t in ${d.document.terms})<td class='$!{utils.hitClass($d, $t)}'>$!{utils.round($d.matchedTerms.get($t.text).density, 4)}</td>#end
+			#if($utils.notEmpty($d.addr.buildingNum))<td></td>#end
+		</tr>
+		<tr><th>Boost</th>
+			<td class=em2>0</td>
+			#foreach($t in ${d.document.terms})<td class='$!{utils.hitClass($d, $t)}'>$!{utils.round($d.matchedTerms.get($t.text).boost, 4)}</td>#end
+			#if($utils.notEmpty($d.addr.buildingNum))<td></td>#end
+		</tr>
+		<tr><th>TF-IDF</th>
+			<td class=em2>0</td>
+			#foreach($t in ${d.document.terms})<td class='$!{utils.hitClass($d, $t)}'>$!{utils.round($d.matchedTerms.get($t.text).tfidf, 4)}</td>#end
+			#if($utils.notEmpty($d.addr.buildingNum))<td></td>#end
+		</tr>
 	</table>
-	#end
+#end
 </div>
 </body>
 </html>

@@ -564,9 +564,14 @@ public class SimilarityComputer {
 				MatchedTerm mt = null;
 				mt = new MatchedTerm(dterm);
 				mt.setBoost(dboost);
-				mt.setDensity(density);
-				mt.setRate(rate);
 				mt.setTfidf(dtfidf);
+				if(dterm.getType()==TermType.Text){
+					mt.setDensity(density);
+					mt.setRate(rate);
+				}else{
+					mt.setDensity(-1);
+					mt.setRate(-1);
+				}
 				simiDoc.addMatchedTerm(mt);
 			}
 			
@@ -860,18 +865,6 @@ public class SimilarityComputer {
             while((line = br.readLine()) != null){
                 Document doc = deserialize(line);
                 if(doc==null) continue;
-                Term road=null, roadNum=null;
-                for(Term t : doc.getTerms()){
-                	if(TermType.Road==t.getType()){
-                		road = t;
-                		continue;
-                	}
-                	if(TermType.RoadNum==t.getType()){
-                		roadNum = t;
-                		continue;
-                	}
-                }
-                if(roadNum!=null) roadNum.setRef(road);
                 docs.add(doc);
             }
             br.close();
