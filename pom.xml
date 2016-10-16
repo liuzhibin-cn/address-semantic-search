@@ -2,11 +2,11 @@
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
 	<modelVersion>4.0.0</modelVersion>
 	
-	<artifactId>address-match</artifactId>
+	<artifactId>address-semantic-search</artifactId>
 	<groupId>com.rrs.rd</groupId>
 	<version>1.0.0</version>
 	<packaging>jar</packaging>
-	<name>address-match</name>
+	<name>Address Semantic Search Engine</name>
 	
 	<properties>
 		<skip_maven_deploy>true</skip_maven_deploy>
@@ -56,7 +56,7 @@
 	</profiles>
 	
 	<build>
-		<finalName>address-match</finalName>
+		<finalName>address-semantic-search</finalName>
 		
         <resources>
             <resource>
@@ -137,7 +137,7 @@
 				<configuration>
 					<appendAssemblyId>false</appendAssemblyId>
 					<descriptor>src/main/resources/assembly-descriptor.xml</descriptor>
-					<finalName>address-match</finalName>
+					<finalName>address-semantic-search</finalName>
 				</configuration>
 				<executions>
 					<execution>

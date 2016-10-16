@@ -22,7 +22,7 @@ if [[ "$?" = "0" && "$!" != "" ]]; then
     echo ""
     COUNT=`ps -ef | grep "com.alibaba.dubbo.container.Main" | grep -v "grep" | grep "$!" | wc -l`
     if [ $COUNT -gt 0 ]; then
-        echo $! > $BIN_DIR/addrmatch.pid
+        echo $! > $BIN_DIR/address-semantic-search.pid
         echo "Service started successfully, PID: $!"
         exit 0
     fi

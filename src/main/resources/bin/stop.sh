@@ -4,15 +4,15 @@ BIN_DIR=`pwd`
 cd ..
 DEPLOY_DIR=`pwd`
 
-if [ ! -f $BIN_DIR/addrmatch.pid ]; then
-    echo "The service PID file addrmatch.pid not exists"
+if [ ! -f $BIN_DIR/address-semantic-search.pid ]; then
+    echo "The service PID file address-semantic-search.pid not exists"
     exit 0
 fi
 
-PID=`cat $BIN_DIR/addrmatch.pid`
+PID=`cat $BIN_DIR/address-semantic-search.pid`
 if [ -z "$PID" ]; then
     echo "Service process $PID not found"
-    rm -rf $BIN_DIR/addrmatch.pid
+    rm -rf $BIN_DIR/address-semantic-search.pid
     exit 0
 fi
 
@@ -20,10 +20,10 @@ fi
 COUNT=`ps -ef | grep "com.alibaba.dubbo.container.Main" | grep -v "grep" | grep "$PID" | wc -l`
 if [ 0 == $COUNT ]; then
     echo "Service process $PID not found"
-    rm -rf $BIN_DIR/addrmatch.pid
+    rm -rf $BIN_DIR/address-semantic-search.pid
     exit 0
 fi
 
 kill -9 $PID
-rm -rf $BIN_DIR/addrmatch.pid
+rm -rf $BIN_DIR/address-semantic-search.pid
 echo "OK! Service process $PID has been stopped!"
