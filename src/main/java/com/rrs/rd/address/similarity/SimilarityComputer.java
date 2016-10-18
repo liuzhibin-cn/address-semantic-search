@@ -444,6 +444,17 @@ public class SimilarityComputer {
 		//按相似度从高到低排序
 		if(topN>1) query.sortSimilarDocs();
 		
+		if(LOG.isInfoEnabled()){
+			LOG.info("[simi-addr] " + addressText);
+			if(query.getSimilarDocs()==null)
+				LOG.info("[simi-addr]    NONE");
+			else{
+				for(SimilarDoccument simiDoc : query.getSimilarDocs()){
+					LOG.info("[simi-addr]    " + simiDoc.getSimilarity() + ": " + simiDoc.getDocument().toString());
+				}
+			}
+		}
+		
 		return query;
 	}
 	

@@ -22,7 +22,7 @@
 </head>
 <body style="padding:10px 0 0 10px;">
 
-<div style="padding:10px 10px 0 10px;width:620px;border:solid 1px #aaa;">
+<!--div style="padding:10px 10px 0 10px;width:620px;border:solid 1px #aaa;"-->
 <div>
 	<h3>[$!{r.queryAddr.rawText}] 相似地址：</h3>
 	<table>
@@ -110,6 +110,6 @@
 	</table>
 #end
 </div>
-</div>
+<!--/div-->
 </body>
 </html>

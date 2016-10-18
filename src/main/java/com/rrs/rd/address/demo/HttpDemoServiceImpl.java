@@ -38,6 +38,8 @@ public class HttpDemoServiceImpl implements HttpDemoService {
 	}
 	
 	public String find(String addrText, int topN){
+		if(topN<=0) topN=5;
+		
 		Map<String, Object> model = new HashMap<String, Object>();
 		model.put("topN", topN);
 		

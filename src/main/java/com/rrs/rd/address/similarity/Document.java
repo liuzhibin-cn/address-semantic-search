@@ -116,5 +116,16 @@ public class Document {
 		}
 	}
 
+	@Override
+	public String toString() {
+		StringBuilder sb = new StringBuilder();
+		sb.append(this.getId()).append("-");
+		if(this.terms!=null){
+			for(Term t : this.terms){
+				sb.append(t.getText()).append(' ');
+			}
+		}
+		return sb.toString();
+	}
 	
 }
