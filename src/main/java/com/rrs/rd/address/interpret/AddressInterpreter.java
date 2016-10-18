@@ -8,6 +8,7 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.rrs.rd.address.index.TermIndexBuilder;
 import com.rrs.rd.address.persist.AddressEntity;
 import com.rrs.rd.address.persist.AddressPersister;
 import com.rrs.rd.address.persist.RegionEntity;
@@ -176,6 +177,19 @@ public class AddressInterpreter {
 			addr.setText(addr.getText()+brackets);
 		
 		return addr;
+	}
+	
+	public void extractRegion2(AddressEntity addr){
+		TermIndexBuilder manager = new TermIndexBuilder();
+		manager.indexRegions(persister.rootRegion().getChildren());
+		manager.indexIgnorings(invalidRegionNames);
+		
+//		int pos = 0;
+//		List<TermIndexEntry> entries = manager.searchOne(addr.getText(), pos);
+//		while(entries!=null){
+//			
+//			entries = manager.searchOne(addr.getText(), pos);
+//		}
 	}
 	
 	//***************************************************************************************

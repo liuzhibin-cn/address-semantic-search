@@ -115,6 +115,7 @@ public class BasicFuncTest {
 		}
 		
 		int loop = 5000000;
+		@SuppressWarnings("unused")
 		String val = null;
 		
 		long start = System.nanoTime();

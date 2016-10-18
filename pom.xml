@@ -18,11 +18,11 @@
 		<profile>
 			<id>test</id>
 			<properties>
-				<db.host>127.0.0.1</db.host>
-				<db.name>my_research</db.name>
+				<db.host>localhost</db.host>
+				<db.name>rrs_research</db.name>
 				<db.user>root</db.user>
-				<db.password>dev</db.password>
-				<cache.path>/Users/richie/Documents/workspace_eclipse/cache-folder</cache.path>
+				<db.password>zxcZXC123,.</db.password>
+				<cache.path>/mnt/address/cache</cache.path>
 				<cache.vectors.in.memory>true</cache.vectors.in.memory>
 			</properties>
 		</profile>

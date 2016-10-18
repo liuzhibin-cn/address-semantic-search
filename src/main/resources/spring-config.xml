@@ -47,8 +47,11 @@
 				<value>市辖区</value>
 				<value>县级直管村级单位（特殊镇）</value>
 				<value>县级直管村级单位</value>
-				<value>区直辖村</value>
 				<value>县区直属镇</value>
+				
+				<value>（镇）直辖</value>
+				<value>（镇）直辖地域</value>
+				<value>区直辖村</value>
 			</list>
 		</property>
 	</bean>

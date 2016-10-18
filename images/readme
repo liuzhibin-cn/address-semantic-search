@@ -4,3 +4,7 @@ LaTeX:
 }{ 
   \sqrt{ \sum_1^n{A_i^2} } \times \sqrt{ \sum_1^n{B_i^2} } 
 } 
+
+MySQL导出命令备份：
+mysqldump -hlocalhost -uroot -p --comments --no-data --skip-add-locks --skip-compact --skip-disable-keys my_research > db-schema.sql
+mysqldump -hlocalhost -uroot -p --no-create-db --no-create-info --skip-set-charset --skip-add-locks --skip-lock-tables --quick --complete-insert --extended-insert --compact --databases my_research --tables bas_region > db-init-data.sql

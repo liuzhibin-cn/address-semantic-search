@@ -9,9 +9,13 @@ import java.io.InputStreamReader;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import com.rrs.rd.address.index.TermIndexBuilder;
+import com.rrs.rd.address.index.TermIndexQuery;
+import com.rrs.rd.address.interpret.AcceptableRegion;
 import com.rrs.rd.address.interpret.AddressInterpreter;
 import com.rrs.rd.address.persist.AddressEntity;
 import com.rrs.rd.address.persist.AddressPersister;
+import com.rrs.rd.address.persist.RegionEntity;
 
 public class AddressInterpretTest extends TestBase {
 	@Test
@@ -182,6 +186,57 @@ public class AddressInterpretTest extends TestBase {
 		assertNotNull("未解析出区县", addr.getCounty());
 		assertEquals("区县错误", 220106, addr.getCounty().getId());
 		assertEquals("道路错误", "长沈路", addr.getRoad());
+	}
+	
+	@Test
+	public void testExtractRegionPerf(){
+		AddressInterpreter interpreter = context.getBean(AddressInterpreter.class);
+		
+		AddressPersister persister = context.getBean(AddressPersister.class);
+		RegionEntity rootRegion = persister.rootRegion();
+		TermIndexBuilder builder = new TermIndexBuilder();
+		builder.indexRegions(rootRegion.getChildren());
+		TermIndexQuery query = builder.getQuery();
+		AcceptableRegion acceptable = new AcceptableRegion(persister);
+		
+		AddressEntity addr = new AddressEntity("");
+		
+		//预热
+		this.extractRegionPerf("山东青岛市市南区宁德路金梦花园", addr, interpreter);
+		this.extractRegionPerf("广东广州从化区温泉镇新田村", addr, interpreter);
+		this.extractRegionPerf("湖南湘潭市湘潭县易俗河镇中南建材市场", addr, interpreter);
+		this.indexSearchRegionPerf("山东青岛市市南区宁德路金梦花园", query, acceptable);
+		this.indexSearchRegionPerf("广东广州从化区温泉镇新田村", query, acceptable);
+		this.indexSearchRegionPerf("湖南湘潭市湘潭县易俗河镇中南建材市场", query, acceptable);
+		
+		//性能测试
+		int loop = 5000000;
+		long start = System.nanoTime();
+		for(int i=0; i<loop; i++){
+			this.extractRegionPerf("山东青岛市市南区宁德路金梦花园", addr, interpreter);
+			this.extractRegionPerf("广东广州从化区温泉镇新田村", addr, interpreter);
+			this.extractRegionPerf("湖南湘潭市湘潭县易俗河镇中南建材市场", addr, interpreter);
+			this.extractRegionPerf("浙江省绍兴市绍兴县孙端镇村西村", addr, interpreter);
+		}
+		long time1 = System.nanoTime() - start;
+		
+		start = System.nanoTime();
+		for(int i=0; i<loop; i++){
+			this.indexSearchRegionPerf("山东青岛市市南区宁德路金梦花园", query, acceptable);
+			this.indexSearchRegionPerf("广东广州从化区温泉镇新田村", query, acceptable);
+			this.indexSearchRegionPerf("湖南湘潭市湘潭县易俗河镇中南建材市场", query, acceptable);
+			this.indexSearchRegionPerf("浙江省绍兴市绍兴县孙端镇村西村", query, acceptable);
+		}
+		long time2 = System.nanoTime() - start;
+		
+		LOG.info("硬编码解析耗时: " + (time1/1000000/1000.0) + "s, 倒排索引方式耗时: " + (time2/1000000/1000.0) + "s");
+	}
+	private void extractRegionPerf(String text, AddressEntity addr, AddressInterpreter interpreter){
+		addr.setText(text);
+		interpreter.extractRegion(addr, false);
+	}
+	private void indexSearchRegionPerf(String text, TermIndexQuery query, AcceptableRegion acceptable){
+		query.deepMostQuery(text, 0, acceptable);
 	}
 	
 	@Test
