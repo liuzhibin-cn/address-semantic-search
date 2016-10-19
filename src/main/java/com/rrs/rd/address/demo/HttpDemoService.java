@@ -16,7 +16,7 @@ public interface HttpDemoService {
 	
 	@GET
 	@Path("find/{addr: .+}")
-	@Produces({"application/text", "text/html"})
+	@Produces({"text/html;charset=UTF-8"})
 	String find(@PathParam("addr") String addrText, @QueryParam("top") int topN);
 	
 }
