@@ -1,13 +1,14 @@
 package com.rrs.rd.address.index;
 
 import java.util.List;
+import java.util.Map;
 
 import com.rrs.rd.address.persist.RegionEntity;
 import com.rrs.rd.address.persist.RegionType;
 import com.rrs.rd.address.similarity.TermType;
 
 /**
- * 线程安全。
+ * 
  * @author Richie 刘志斌 yudi@sina.com
  * 2016年10月17日
  */
@@ -48,6 +49,31 @@ public class TermIndexBuilder {
 		return null;
 	}
 	
+	public void deepMostQuery(String text, TermIndexVisitor visitor){
+		if(text==null || text.isEmpty()) return;
+		this.deepMostQuery(text, 0, visitor);
+	}
+	private void deepMostQuery(String text, int pos, TermIndexVisitor visitor){
+		visitor.startRound();
+		deepFirstQueryRound(text, pos, indexRoot.getChildren(), visitor);
+		visitor.endRound();
+	}
+	private void deepFirstQueryRound(String text, int pos, Map<Character, TermIndexEntry> entries, TermIndexVisitor visitor){
+		char c = text.charAt(pos);
+		TermIndexEntry entry = entries.get(c);
+		if(entry==null) return;
+		
+		if(entry.getChildren()!=null && pos+1 <= text.length()-1)
+			deepFirstQueryRound(text, pos + 1, entry.getChildren(), visitor);
+		if(entry.hasItem()) {
+			if(visitor.visit(entry, pos)) {
+				if(pos+1 <= text.length()-1) 
+					deepMostQuery(text, pos + 1, visitor);
+				visitor.endVisit(entry, pos);
+			}
+		}
+	}
+	
 	/**
 	 * 为忽略列表建立倒排索引
 	 * @param ignoreList
@@ -62,9 +88,5 @@ public class TermIndexBuilder {
 	
 	public TermIndexEntry getTermIndex(){
 		return this.indexRoot;
-	}
-	
-	public TermIndexQuery getQuery(){
-		return new TermIndexQuery(this);
 	}
 }

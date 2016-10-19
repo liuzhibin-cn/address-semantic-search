@@ -5,6 +5,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
+import com.rrs.rd.address.StdDivision;
+
 /**
  * 地址库地址实体。
  *
@@ -31,13 +33,10 @@ import java.util.List;
  * @author Richie 刘志斌 yudi@sina.com
  * @since 2016/9/4 1:22:41
  */
-public class AddressEntity implements Serializable {
+public class AddressEntity extends StdDivision implements Serializable {
     private static final long serialVersionUID = 111198101809627685L;
 
     private int id;
-    private RegionEntity province = null;
-    private RegionEntity city = null;
-    private RegionEntity county = null;
     private boolean provinceInferred = false;
     private boolean cityInferred = false;
     private boolean countyInferred = false;
@@ -77,28 +76,6 @@ public class AddressEntity implements Serializable {
     	return true;
     }
     
-    /**
-     * 区域匹配过程中，是否匹配上了省份。
-     * @return
-     */
-	public boolean hasProvince(){
-		return this.province!=null;
-	}
-	/**
-	 * 区域匹配过程中，是否匹配上了地级市。
-	 * @return
-	 */
-	public boolean hasCity(){
-		return this.city!=null;
-	}
-	/**
-	 * 区域匹配过程中，是否匹配上了区县。
-	 * @return
-	 */
-	public boolean hasCounty(){
-		return this.county!=null;
-	}
-	
 	/**
 	 * 区域匹配过程中，省份是否是推断出来的。
 	 * <p>如果不是推断出来，表示地址中有文本匹配上了这一级区域的名称；
@@ -128,12 +105,12 @@ public class AddressEntity implements Serializable {
 	}
 
 	public void clearExtractResult(){
-		this.province = this.city = this.county = null;
+		super.province = super.city = super.county = null;
 		this.provinceInferred = this.cityInferred = this.countyInferred = false;
 	}
 	
 	public int matchedRegionCount(){
-		return (this.province==null ? 0 : 1) + (this.city==null ? 0 : 1) + (this.county==null ? 0 : 1);
+		return (super.province==null ? 0 : 1) + (super.city==null ? 0 : 1) + (super.county==null ? 0 : 1);
 	}
 	public int inferredCount(){
 		return (this.provinceInferred ? 1 : 0) + (this.cityInferred ? 1 : 0) + (this.countyInferred ? 1 : 0);
@@ -155,62 +132,14 @@ public class AddressEntity implements Serializable {
         this.id = value;
     }
 
-    /**
-     * 获取 省份。
-     */
-    public RegionEntity getProvince() {
-        return this.province;
-    }
-
-    /**
-     * 设置 省份。
-     *
-     * @param value 属性值
-     */
-    public void setProvince(RegionEntity value) {
-        this.province = value;
-    }
-
     public void setProvinceInferred(boolean value){
     	this.provinceInferred = value;
     }
     
-    /**
-     * 获取 城市。
-     */
-    public RegionEntity getCity() {
-        return this.city;
-    }
-
-    /**
-     * 设置 城市。
-     *
-     * @param value 属性值
-     */
-    public void setCity(RegionEntity value) {
-        this.city = value;
-    }
-
     public void setCityInferred(boolean value){
     	this.cityInferred = value;
     }
     
-    /**
-     * 获取 区县。
-     */
-    public RegionEntity getCounty() {
-        return this.county;
-    }
-
-    /**
-     * 设置 区县。
-     *
-     * @param value 属性值
-     */
-    public void setCounty(RegionEntity value) {
-        this.county = value;
-    }
-
     public void setCountyInferred(boolean value){
     	this.countyInferred = value;
     }
@@ -236,17 +165,17 @@ public class AddressEntity implements Serializable {
 
     public String restoreText(){
     	StringBuilder sb = new StringBuilder();
-    	if(this.hasProvince()) sb.append(this.getProvince().getName());
-    	if(this.hasCity()) sb.append(this.getCity().getName());
-    	if(this.hasCounty()) sb.append(this.getCounty().getName());
-    	if(this.getTowns()!=null){
-    		for(String town : this.getTowns())
+    	if(hasProvince()) sb.append(getProvince().getName());
+    	if(hasCity()) sb.append(getCity().getName());
+    	if(hasCounty()) sb.append(getCounty().getName());
+    	if(getTowns()!=null){
+    		for(String town : getTowns())
     			sb.append(town);
     	}
-    	sb.append(this.getVillage())
-    		.append(this.getRoad())
-    		.append(this.getRoadNum())
-    		.append(this.getText());
+    	sb.append(getVillage())
+    		.append(getRoad())
+    		.append(getRoadNum())
+    		.append(getText());
     	return sb.toString();
     }
     
@@ -416,16 +345,16 @@ public class AddressEntity implements Serializable {
     public String toString(){
     	StringBuilder sb = new StringBuilder();
     	sb.append('{')
-    		.append(this.getId())
-    		.append('-').append(this.getProvince()==null ? "" : this.getProvince())
-    		.append('-').append(this.getCity()==null ? "" : this.getCity())
-    		.append('-').append(this.getCounty()==null ? "" : this.getCounty())
-    		.append('-').append(this.getTowns()==null ? "" : this.getTowns().toString())
-    		.append('-').append(this.getVillage())
-    		.append('-').append(this.getRoad())
-    		.append('-').append(this.getRoadNum())
-    		.append('-').append(this.getText())
-    		.append('-').append(this.getBuildingNum())
+    		.append(getId())
+    		.append('-').append(getProvince()==null ? "" : getProvince())
+    		.append('-').append(getCity()==null ? "" : getCity())
+    		.append('-').append(getCounty()==null ? "" : getCounty())
+    		.append('-').append(getTowns()==null ? "" : getTowns().toString())
+    		.append('-').append(getVillage())
+    		.append('-').append(getRoad())
+    		.append('-').append(getRoadNum())
+    		.append('-').append(getText())
+    		.append('-').append(getBuildingNum())
     		.append('}');
     	return sb.toString();
     }

@@ -11,6 +11,7 @@ import java.util.List;
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import com.rrs.rd.address.interpret.AddressInterpreter;
+import com.rrs.rd.address.interpret.RegionInterpreterVisitor;
 
 /**
  * 地址导入。
@@ -87,12 +88,14 @@ public class FileImporter {
 		List<String> addrTextList = new ArrayList<String>();
 		System.out.println("> 开始导入地址库");
 		
+		RegionInterpreterVisitor visitor = new RegionInterpreterVisitor(persister);
+		
 		try{
             while((line = br.readLine()) != null){
             	addrTextList.add(line);
             }
             try{
-            	List<AddressEntity> addresses = interpreter.interpret(addrTextList); 
+            	List<AddressEntity> addresses = interpreter.interpret(addrTextList, visitor); 
             	imported = persister.importAddresses(addresses);
         	}catch(RuntimeException ex){
         		System.out.println("> [错误] " + ex.getMessage());

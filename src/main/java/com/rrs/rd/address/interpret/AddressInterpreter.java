@@ -26,6 +26,7 @@ public class AddressInterpreter {
 	private List<String> forbiddenFollowingChars;
 	private List<String> invalidRegionNames;
 	private static char[] specialCharsToBeRemoved = " \r\n\t,，;；:：·.．。！、\"'“”|_-\\/{}【】〈〉<>[]「」".toCharArray();
+	private static TermIndexBuilder termIndex = null;
 	
 	private static Pattern BRACKET_PATTERN = Pattern.compile("(?<bracket>([\\(（\\{\\<〈\\[【「][^\\)）\\}\\>〉\\]】」]*[\\)）\\}\\>〉\\]】」]))");
 	
@@ -78,7 +79,7 @@ public class AddressInterpreter {
 	 * @throws IllegalStateException
 	 * @throws RuntimeException
 	 */
-	public List<AddressEntity> interpret(List<String> addrTextList) throws IllegalStateException, RuntimeException {
+	public List<AddressEntity> interpret(List<String> addrTextList, RegionInterpreterVisitor visitor) throws IllegalStateException, RuntimeException {
 		if(addrTextList==null) return null;
 		long start = System.currentTimeMillis();
 		int numSuccess=0, numFail=0;
@@ -86,7 +87,7 @@ public class AddressInterpreter {
 		for(String addrText : addrTextList){
 			try{
 				if(addrText==null || addrText.trim().isEmpty()) continue;
-				AddressEntity address = interpret(addrText);
+				AddressEntity address = interpret(addrText, visitor);
 				if(address==null || !address.hasCity() || !address.hasCounty()) {
 					numFail++;
 					continue;
@@ -129,6 +130,10 @@ public class AddressInterpreter {
 	 * @return 解析成功返回{@link AddressEntity}，解析失败返回null。
 	 */
 	public AddressEntity interpret(String addressText){
+		RegionInterpreterVisitor visitor = new RegionInterpreterVisitor(persister);
+		return interpret(addressText, visitor);
+	}
+	private AddressEntity interpret(String addressText, RegionInterpreterVisitor visitor){
 		if(addressText==null || addressText.trim().length()<=0) return null;
 		
 		long start = 0;
@@ -148,7 +153,7 @@ public class AddressInterpreter {
 		timeRmSpec += System.currentTimeMillis() - start;
 		
 		start = System.currentTimeMillis();
-		extractRegion(addr, false);
+		extractRegion2(addr, visitor);
 		timeRegion += System.currentTimeMillis() - start;
 		
 		start = System.currentTimeMillis();
@@ -179,17 +184,25 @@ public class AddressInterpreter {
 		return addr;
 	}
 	
-	public void extractRegion2(AddressEntity addr){
-		TermIndexBuilder manager = new TermIndexBuilder();
-		manager.indexRegions(persister.rootRegion().getChildren());
-		manager.indexIgnorings(invalidRegionNames);
+	public boolean extractRegion2(AddressEntity addr, RegionInterpreterVisitor visitor){
+		if(termIndex==null){
+			synchronized (this) {
+				if(termIndex==null){
+					termIndex = new TermIndexBuilder();
+					termIndex.indexRegions(persister.rootRegion().getChildren());
+					termIndex.indexIgnorings(invalidRegionNames);
+				}
+			}
+		}
 		
-//		int pos = 0;
-//		List<TermIndexEntry> entries = manager.searchOne(addr.getText(), pos);
-//		while(entries!=null){
-//			
-//			entries = manager.searchOne(addr.getText(), pos);
-//		}
+		visitor.reset();
+		termIndex.deepMostQuery(addr.getText(), visitor);
+		if(!visitor.hasResult()) return false;
+		addr.setProvince(visitor.resultDivision().getProvince());
+		addr.setCity(visitor.resultDivision().getCity());
+		addr.setCounty(visitor.resultDivision().getCounty());
+		addr.setText(StringUtil.substring(addr.getText(), visitor.resultPosition() + 1));
+		return true;
 	}
 	
 	//***************************************************************************************
@@ -722,6 +735,9 @@ public class AddressInterpreter {
 	}
 	public void setInvalidRegionNames(List<String> value){
 		invalidRegionNames = value;
+	}
+	public List<String> getInvalidRegionNames(){
+		return invalidRegionNames;
 	}
 
 }

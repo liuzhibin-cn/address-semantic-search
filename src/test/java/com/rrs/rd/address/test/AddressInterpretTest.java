@@ -9,13 +9,14 @@ import java.io.InputStreamReader;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import com.rrs.rd.address.StdDivision;
 import com.rrs.rd.address.index.TermIndexBuilder;
-import com.rrs.rd.address.index.TermIndexQuery;
-import com.rrs.rd.address.interpret.AcceptableRegion;
+import com.rrs.rd.address.interpret.RegionInterpreterVisitor;
 import com.rrs.rd.address.interpret.AddressInterpreter;
 import com.rrs.rd.address.persist.AddressEntity;
 import com.rrs.rd.address.persist.AddressPersister;
 import com.rrs.rd.address.persist.RegionEntity;
+import com.rrs.rd.address.utils.StringUtil;
 
 public class AddressInterpretTest extends TestBase {
 	@Test
@@ -94,15 +95,6 @@ public class AddressInterpretTest extends TestBase {
 		assertNotNull("未解析出乡镇", addr.getTowns());
 		assertEquals("乡镇错误", 1, addr.getTowns().size());
 		assertEquals("乡镇错误", "壶镇镇", addr.getTowns().get(0));
-		
-		//去冗余时，秦皇岛市昌黎镇马铁庄村，不能将【昌黎】匹配成区县。
-		addr = interpreter.interpret("河北秦皇岛昌黎县昌黎镇秦皇岛市昌黎镇马铁庄村");
-		assertNotNull("解析失败", addr);
-		LOG.info("> " + addr.getRawText() + " --> " + addr);
-		assertEquals("详细地址错误", "秦皇岛市昌黎镇马铁庄村", addr.getText());
-		assertNotNull("未解析出乡镇", addr.getTowns());
-		assertEquals("乡镇错误", 1, addr.getTowns().size());
-		assertEquals("乡镇错误", "昌黎镇", addr.getTowns().get(0));
 		
 		//两个乡，解析出最后出现的（目前逻辑）
 		addr = interpreter.interpret("云南文山壮族苗族自治州砚山县盘龙彝族乡盘龙乡白泥井村");
@@ -186,6 +178,15 @@ public class AddressInterpretTest extends TestBase {
 		assertNotNull("未解析出区县", addr.getCounty());
 		assertEquals("区县错误", 220106, addr.getCounty().getId());
 		assertEquals("道路错误", "长沈路", addr.getRoad());
+		
+		//去冗余时，秦皇岛市昌黎镇马铁庄村，不能将【昌黎】匹配成区县。
+		addr = interpreter.interpret("河北秦皇岛昌黎县昌黎镇秦皇岛市昌黎镇马铁庄村");
+		assertNotNull("解析失败", addr);
+		LOG.info("> " + addr.getRawText() + " --> " + addr);
+		assertEquals("详细地址错误", "秦皇岛市昌黎镇马铁庄村", addr.getText());
+		assertNotNull("未解析出乡镇", addr.getTowns());
+		assertEquals("乡镇错误", 1, addr.getTowns().size());
+		assertEquals("乡镇错误", "昌黎镇", addr.getTowns().get(0));
 	}
 	
 	@Test
@@ -196,106 +197,111 @@ public class AddressInterpretTest extends TestBase {
 		RegionEntity rootRegion = persister.rootRegion();
 		TermIndexBuilder builder = new TermIndexBuilder();
 		builder.indexRegions(rootRegion.getChildren());
-		TermIndexQuery query = builder.getQuery();
-		AcceptableRegion acceptable = new AcceptableRegion(persister);
-		
-		AddressEntity addr = new AddressEntity("");
+		RegionInterpreterVisitor visitor = new RegionInterpreterVisitor(persister);
 		
 		//预热
-		this.extractRegionPerf("山东青岛市市南区宁德路金梦花园", addr, interpreter);
-		this.extractRegionPerf("广东广州从化区温泉镇新田村", addr, interpreter);
-		this.extractRegionPerf("湖南湘潭市湘潭县易俗河镇中南建材市场", addr, interpreter);
-		this.indexSearchRegionPerf("山东青岛市市南区宁德路金梦花园", query, acceptable);
-		this.indexSearchRegionPerf("广东广州从化区温泉镇新田村", query, acceptable);
-		this.indexSearchRegionPerf("湖南湘潭市湘潭县易俗河镇中南建材市场", query, acceptable);
+		this.extractRegionPerf("山东青岛市市南区宁德路金梦花园", interpreter);
+		this.extractRegionPerf("广东广州从化区温泉镇新田村", interpreter);
+		this.extractRegionPerf("湖南湘潭市湘潭县易俗河镇中南建材市场", interpreter);
+		this.indexSearchRegionPerf("山东青岛市市南区宁德路金梦花园", builder, visitor);
+		this.indexSearchRegionPerf("广东广州从化区温泉镇新田村", builder, visitor);
+		this.indexSearchRegionPerf("湖南湘潭市湘潭县易俗河镇中南建材市场", builder, visitor);
 		
 		//性能测试
-		int loop = 5000000;
+		int loop = 3000000;
 		long start = System.nanoTime();
-		for(int i=0; i<loop; i++){
-			this.extractRegionPerf("山东青岛市市南区宁德路金梦花园", addr, interpreter);
-			this.extractRegionPerf("广东广州从化区温泉镇新田村", addr, interpreter);
-			this.extractRegionPerf("湖南湘潭市湘潭县易俗河镇中南建材市场", addr, interpreter);
-			this.extractRegionPerf("浙江省绍兴市绍兴县孙端镇村西村", addr, interpreter);
+		for(int i=0; i<loop; i++) {
+			this.extractRegionPerf("山东青岛市市南区宁德路金梦花园", interpreter);
+			this.extractRegionPerf("广东广州从化区温泉镇新田村", interpreter);
+			this.extractRegionPerf("湖南湘潭市湘潭县易俗河镇中南建材市场", interpreter);
+			this.extractRegionPerf("浙江省绍兴市绍兴县孙端镇村西村", interpreter);
 		}
 		long time1 = System.nanoTime() - start;
 		
 		start = System.nanoTime();
-		for(int i=0; i<loop; i++){
-			this.indexSearchRegionPerf("山东青岛市市南区宁德路金梦花园", query, acceptable);
-			this.indexSearchRegionPerf("广东广州从化区温泉镇新田村", query, acceptable);
-			this.indexSearchRegionPerf("湖南湘潭市湘潭县易俗河镇中南建材市场", query, acceptable);
-			this.indexSearchRegionPerf("浙江省绍兴市绍兴县孙端镇村西村", query, acceptable);
+		for(int i=0; i<loop; i++) {
+			this.indexSearchRegionPerf("山东青岛市市南区宁德路金梦花园", builder, visitor);
+			this.indexSearchRegionPerf("广东广州从化区温泉镇新田村", builder, visitor);
+			this.indexSearchRegionPerf("湖南湘潭市湘潭县易俗河镇中南建材市场", builder, visitor);
+			this.indexSearchRegionPerf("浙江省绍兴市绍兴县孙端镇村西村", builder, visitor);
 		}
 		long time2 = System.nanoTime() - start;
 		
 		LOG.info("硬编码解析耗时: " + (time1/1000000/1000.0) + "s, 倒排索引方式耗时: " + (time2/1000000/1000.0) + "s");
 	}
-	private void extractRegionPerf(String text, AddressEntity addr, AddressInterpreter interpreter){
-		addr.setText(text);
+	private void extractRegionPerf(String text, AddressInterpreter interpreter){
+		AddressEntity addr = new AddressEntity(text);
 		interpreter.extractRegion(addr, false);
 	}
-	private void indexSearchRegionPerf(String text, TermIndexQuery query, AcceptableRegion acceptable){
-		query.deepMostQuery(text, 0, acceptable);
+	private void indexSearchRegionPerf(String text, TermIndexBuilder builder, RegionInterpreterVisitor visitor){
+		builder.deepMostQuery(text, visitor);
+		visitor.reset();
 	}
 	
 	@Test
 	public void testExtractRegion(){
+		AddressPersister persister = context.getBean(AddressPersister.class);
 		AddressInterpreter interpreter = context.getBean(AddressInterpreter.class);
+		RegionEntity rootRegion = persister.rootRegion();
+		TermIndexBuilder builder = new TermIndexBuilder();
+		builder.indexRegions(rootRegion.getChildren());
+		builder.indexIgnorings(interpreter.getInvalidRegionNames());
+
+		RegionInterpreterVisitor visitor = new RegionInterpreterVisitor(persister);
 		
 		//测试 正常的地址解析
-		this.extractRegion(interpreter, "广东广州从化区温泉镇新田村", "温泉镇新田村", 440000, 440100, 440184, "测试-正常解析");
+		this.extractRegion(builder, visitor, "广东广州从化区温泉镇新田村", "温泉镇新田村", 440000, 440100, 440184, "测试-正常解析");
 		//测试 地址中缺失省份的情况
-		this.extractRegion(interpreter, "广州从化区温泉镇新田村", "温泉镇新田村", 440000, 440100, 440184, "测试-省份缺失情况");
+		this.extractRegion(builder, visitor, "广州从化区温泉镇新田村", "温泉镇新田村", 440000, 440100, 440184, "测试-省份缺失情况");
 		
 		//测试 直辖市3级表示的情况
-		this.extractRegion(interpreter, "上海上海崇明县横沙乡", "横沙乡", 310000, 310100, 310230, "测试-直辖市-3级地址表示法");
+		this.extractRegion(builder, visitor, "上海上海崇明县横沙乡", "横沙乡", 310000, 310100, 310230, "测试-直辖市-3级地址表示法");
 		//测试 直辖市2级表示的情况
-		this.extractRegion(interpreter, "上海崇明县横沙乡", "横沙乡", 310000, 310100, 310230, "测试-直辖市-2级地址表示法");
+		this.extractRegion(builder, visitor, "上海崇明县横沙乡", "横沙乡", 310000, 310100, 310230, "测试-直辖市-2级地址表示法");
 		
 		//特殊区县名称：以【市】字开头的区县，例如：山东青岛的市南区、市北区。
 		//测试完整表示法：山东青岛市市南区
-		this.extractRegion(interpreter, "山东青岛市市南区宁德路金梦花园", "宁德路金梦花园"
+		this.extractRegion(builder, visitor, "山东青岛市市南区宁德路金梦花园", "宁德路金梦花园"
 				, 370000, 370200, 370202, "测试-市南区-完整表示");
 		//特殊区县名称：以【市】字开头的区县，例如：山东青岛的市南区、市北区。
 		//测试简写表示法：山东青岛市南区
 		//错误匹配方式：山东 青岛市 南区，会导致区县无法匹配
 		//正确匹配方式：山东 青岛 市南区
-		this.extractRegion(interpreter, "山东青岛市南区宁德路金梦花园", "宁德路金梦花园"
+		this.extractRegion(builder, visitor, "山东青岛市南区宁德路金梦花园", "宁德路金梦花园"
 				, 370000, 370200, 370202, "测试-市南区-简写表示");
 		
 		//地级市下面存在与地级市名称相同的县级行政区划，例如：湖南湘潭市湘潭县易俗河镇中南建材市场
 		//测试 正常表示法（省市区完整）：湖南湘潭市湘潭县易俗河镇中南建材市场
-		this.extractRegion(interpreter, "湖南湘潭市湘潭县易俗河镇中南建材市场", "易俗河镇中南建材市场"
+		this.extractRegion(builder, visitor, "湖南湘潭市湘潭县易俗河镇中南建材市场", "易俗河镇中南建材市场"
 				, 430000, 430300, 430321, "测试-区市同名-完整表示");
 		//地级市下面存在与地级市名称相同的县级行政区划，例如：湖南湘潭市湘潭县易俗河镇中南建材市场
 		//测试 地级市缺失情况：湖南湘潭县易俗河镇中南建材市场
-		this.extractRegion(interpreter, "湖南湘潭县易俗河镇中南建材市场", "易俗河镇中南建材市场"
+		this.extractRegion(builder, visitor, "湖南湘潭县易俗河镇中南建材市场", "易俗河镇中南建材市场"
 				, 430000, 430300, 430321, "测试-区市同名-地级市缺失");
-		this.extractRegion(interpreter, "湖南浏阳市镇头镇回龙村5组", "镇头镇回龙村5组"
+		this.extractRegion(builder, visitor, "湖南浏阳市镇头镇回龙村5组", "镇头镇回龙村5组"
 				, 430000, 430100, 430181, "测试-区市同名-地级市缺失");
 		
 		//地级市下面存在与地级市名称相同的县级行政区划，但后来改名了，例如：浙江省绍兴市绍兴县，后改名为：浙江省绍兴市柯桥区
 		//在标准行政区域数据中，将绍兴县放在了柯桥区的别名中
 		//测试 地址完整的情况：湖南湘潭县易俗河镇中南建材市场
-		this.extractRegion(interpreter, "浙江省绍兴市绍兴县孙端镇村西村", "孙端镇村西村"
+		this.extractRegion(builder, visitor, "浙江省绍兴市绍兴县孙端镇村西村", "孙端镇村西村"
 				, 330000, 330600, 330621, "测试-区市同名-后来县改区-完整表示");
 		//地级市下面存在与地级市名称相同的县级行政区划，但后来改名了，例如：浙江省绍兴市绍兴县，后改名为：浙江省绍兴市柯桥区
 		//在标准行政区域数据中，将绍兴县放在了柯桥区的别名中
 		//测试 地址完整的情况：湖南湘潭县易俗河镇中南建材市场
-		this.extractRegion(interpreter, "浙江省绍兴县孙端镇村西村", "孙端镇村西村"
+		this.extractRegion(builder, visitor, "浙江省绍兴县孙端镇村西村", "孙端镇村西村"
 				, 330000, 330600, 330621, "测试-区市同名-后来县改区-地级市缺失");
 		
 		//省直辖县级行政区划，采用特殊的3级地址表示法（国家统计局官网公布的数据，采用的这种形式）
 		//海南海南省直辖市县昌江黎族自治县
 		//正确匹配方式：海南 海南省直辖市县 昌江黎族自治县，忽略掉中间的【海南省直辖市县】部分，最后解析为：海南 昌江黎族自治县
-		this.extractRegion(interpreter, "海南海南省直辖市县昌江黎族自治县石碌镇", "石碌镇"
+		this.extractRegion(builder, visitor, "海南海南省直辖市县昌江黎族自治县石碌镇", "石碌镇"
 				, 460000, 469031, 469031, "测试-省直辖县市-3级特殊表示法");
 		//省直辖县级行政区划，采用较常用的3级地址表示法
-		this.extractRegion(interpreter, "海南省文昌文昌市文建东路13号", "文建东路13号"
+		this.extractRegion(builder, visitor, "海南省文昌文昌市文建东路13号", "文建东路13号"
 				, 460000, 469005, 469005, "测试-省直辖县市-3级通用表示法");
 		//省直辖县级行政区划，采用2级地址表示法
-		this.extractRegion(interpreter, "海南省文昌市文建东路13号", "文建东路13号"
+		this.extractRegion(builder, visitor, "海南省文昌市文建东路13号", "文建东路13号"
 				, 460000, 469005, 469005, "测试-省直辖县市-2级表示法");
 		
 		//新疆阿克苏地区阿拉尔市
@@ -307,20 +313,8 @@ public class AddressInterpretTest extends TestBase {
 		//新疆->阿拉尔市
 		//错误匹配方式：新疆 阿克苏地区 阿拉尔市，会导致在【阿克苏地区】下面无法匹配到【阿拉尔市】
 		//正确匹配结果：新疆 阿拉尔市
-		this.extractRegion(interpreter, "新疆阿克苏地区阿拉尔市新苑祥和小区", "新苑祥和小区"
+		this.extractRegion(builder, visitor, "新疆阿克苏地区阿拉尔市新苑祥和小区", "新苑祥和小区"
 				, 650000, 659002, 659002, "测试-省直辖县市-由非直辖升级");
-		
-		AddressEntity addr = new AddressEntity("河a南商丘睢阳区新城街道长江东路");
-		interpreter.extractRegion(addr, false);
-		assertTrue("[测试省份错误情况]: 解析结果不正确：", !addr.hasProvince() && !addr.hasCity() && !addr.hasCounty());
-		
-		addr = new AddressEntity("河南商a丘睢阳区新城街道长江东路");
-		interpreter.extractRegion(addr, false);
-		assertTrue("[测试城市错误情况]: 解析结果不正确：", addr.getProvince().getId()==410000 && !addr.hasCity() && !addr.hasCounty());
-		
-		addr = new AddressEntity("河南商丘睢a阳区新城街道长江东路");
-		interpreter.extractRegion(addr, false);
-		assertTrue("[测试区县错误情况]: 解析结果不正确：", addr.getProvince().getId()==410000 && addr.getCity().getId()==411400 && !addr.hasCounty());
 	}
 	
 	@Test
@@ -384,18 +378,21 @@ public class AddressInterpretTest extends TestBase {
 //		assertEquals("四川成都(武侯区武侯大道铁佛段千】盛百货对面200米金履三路288号绿地圣路易名邸", addr.getText());
 	}
 
-	private void extractRegion(AddressInterpreter interpreter, String text, String expected, int pid, int cid, int did, String title){
-		AddressEntity addr = new AddressEntity(text);
-		interpreter.extractRegion(addr, false);
-		assertNotNull(title + ": 省份未解析", addr.getProvince());
-		assertNotNull(title + ": 地级市未解析", addr.getCity());
-		assertNotNull(title + ": 区县未解析", addr.getCounty());
-		LOG.info("> " + title + ": " + addr.getRawText() + " --> " + addr.getProvince().getName() + " " +
-				addr.getCity().getName() + " " + addr.getCounty().getName() + " " + addr.getText());
-		assertEquals(title + ": 省份错误", pid, addr.getProvince().getId());
-		assertEquals(title + ": 地级市错误", cid, addr.getCity().getId());
-		assertEquals(title + ": 区县错误", did, addr.getCounty().getId());
-		assertEquals(title + ": 解析后的地址错误", expected, addr.getText());
+	private void extractRegion(TermIndexBuilder index, RegionInterpreterVisitor visitor
+			, String text, String expected, int pid, int cid, int did, String title){
+		visitor.reset();
+		index.deepMostQuery(text, visitor);
+		StdDivision division = visitor.resultDivision();
+		assertNotNull(title + ": 省份未解析", division.getProvince());
+		assertNotNull(title + ": 地级市未解析", division.getCity());
+		assertNotNull(title + ": 区县未解析", division.getCounty());
+		String left = StringUtil.substring(text, visitor.resultPosition()+1);
+		LOG.info("> " + title + ": " + text + " --> " + division.getProvince().getName() + " " +
+			division.getCity().getName() + " " + division.getCounty().getName() + " " + left);
+		assertEquals(title + ": 省份错误", pid, division.getProvince().getId());
+		assertEquals(title + ": 地级市错误", cid, division.getCity().getId());
+		assertEquals(title + ": 区县错误", did, division.getCounty().getId());
+		assertEquals(title + ": 解析后的地址错误", expected, left);
 	}
 	
 	private void removeRedundancy(AddressInterpreter interpreter, AddressPersister persister

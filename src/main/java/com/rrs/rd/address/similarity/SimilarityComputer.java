@@ -17,7 +17,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import com.rrs.rd.address.interpret.AddressInterpreter;
+import com.rrs.rd.address.interpret.RegionInterpreterVisitor;
 import com.rrs.rd.address.persist.AddressEntity;
+import com.rrs.rd.address.persist.AddressPersister;
 import com.rrs.rd.address.persist.RegionEntity;
 import com.rrs.rd.address.persist.RegionType;
 import com.rrs.rd.address.similarity.segment.SimpleSegmenter;
@@ -401,7 +403,7 @@ public class SimilarityComputer {
 	 * @return
 	 */
 	public Query findSimilarAddress(String addressText, int topN, boolean explain){
-		Query query = new Query(topN);
+		Query query = new Query(topN); 
 		
 		//解析地址
 		if(addressText==null || addressText.trim().isEmpty())

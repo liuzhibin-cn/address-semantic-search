@@ -31,16 +31,15 @@
         </layout>
     </appender>
  
- 	<logger name="com.rrs.rd.address.regression.test.RegressionRunTest" additivity="false">
-        <level value="INFO"/>
-        <appender-ref ref="regression"/>
-    </logger>
-    
 	<root>
 		<level value="INFO" />
 		<appender-ref ref="file" />
 	</root>
-	
+
+	<logger name="com.rrs.rd.address.regression.test.RegressionRunTest" additivity="false">
+        <level value="INFO"/>
+        <appender-ref ref="regression"/>
+    </logger>	
 	<logger name="com.rrs.rd.address.demo" additivity="false">
         <level value="ERROR"/>
         <appender-ref ref="file"/>
@@ -48,5 +47,13 @@
     <logger name="com.alibaba.dubbo.rpc.protocol.rest" additivity="false">
         <level value="ERROR"/>
         <appender-ref ref="file"/>
+    </logger>
+    <logger name="com.rrs.rd.address.test" additivity="false">
+        <level value="debug"/>
+        <appender-ref ref="console"/>
+    </logger>
+    <logger name="com.rrs.rd.address.interpret.RegionInterpreterVisitor" additivity="false">
+        <level value="debug"/>
+        <appender-ref ref="console"/>
     </logger>
 </log4j:configuration>

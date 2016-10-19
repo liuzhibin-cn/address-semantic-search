@@ -1,32 +1,43 @@
 package com.rrs.rd.address.test;
 
-import java.util.List;
-
 import org.junit.Test;
 
-import com.rrs.rd.address.index.TermIndexItem;
-import com.rrs.rd.address.index.TermIndexQuery;
-import com.rrs.rd.address.interpret.AcceptableRegion;
+import com.rrs.rd.address.interpret.RegionInterpreterVisitor;
 import com.rrs.rd.address.index.TermIndexBuilder;
 import com.rrs.rd.address.persist.AddressPersister;
 import com.rrs.rd.address.persist.RegionEntity;
+import com.rrs.rd.address.utils.StringUtil;
 
 public class IndexTest extends TestBase {
 	@Test
-	public void testBuildIndex(){
+	public void testQueryIndex(){
 		AddressPersister persister = context.getBean(AddressPersister.class);
 		RegionEntity rootRegion = persister.rootRegion();
 		TermIndexBuilder builder = new TermIndexBuilder();
 		builder.indexRegions(rootRegion.getChildren());
-		TermIndexQuery query = builder.getQuery();
+		RegionInterpreterVisitor visitor = new RegionInterpreterVisitor(persister);
 		
-		List<TermIndexItem> items = query.deepMostQuery("新疆阿克苏地区阿拉尔市新苑祥和小区", 0, new AcceptableRegion(persister));
-		if(items==null){
-			LOG.info("> Not found");
-			return;
-		}
-		for(TermIndexItem item : items){
-			LOG.info("> " + item.toString());
-		}
+		String text = "青岛市南区";
+		builder.deepMostQuery(text, visitor);
+		LOG.info("> " + text);
+		LOG.info("> " + StringUtil.substring(text, 0, visitor.resultPosition()) + " -> " + visitor.resultDivision().toString());
+		
+		visitor.reset();
+		text = "新疆阿克苏地区阿拉尔市新苑祥和小区";
+		builder.deepMostQuery(text, visitor);
+		LOG.info("> " + text);
+		LOG.info("> " + StringUtil.substring(text, 0, visitor.resultPosition()) + " -> " + visitor.resultDivision().toString());
+		
+		visitor.reset();
+		text = "湖南湘潭市湘潭县易俗河镇中南建材市场";
+		builder.deepMostQuery(text, visitor);
+		LOG.info("> " + text);
+		LOG.info("> " + StringUtil.substring(text, 0, visitor.resultPosition()) + " -> " + visitor.resultDivision().toString());
+		
+		visitor.reset();
+		text = "广东从化区温泉镇新田村";
+		builder.deepMostQuery(text, visitor);
+		LOG.info("> " + text);
+		LOG.info("> " + StringUtil.substring(text, 0, visitor.resultPosition()) + " -> " + visitor.resultDivision().toString());
 	}
 }
