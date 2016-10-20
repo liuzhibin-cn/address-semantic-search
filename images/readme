@@ -6,5 +6,7 @@ LaTeX:
 } 
 
 MySQL导出命令备份：
+导出数据库结构：
 mysqldump -hlocalhost -uroot -p --comments --no-data --skip-add-locks --skip-compact --skip-disable-keys my_research > db-schema.sql
+导出bas_region表数据：
 mysqldump -hlocalhost -uroot -p --no-create-db --no-create-info --skip-set-charset --skip-add-locks --skip-lock-tables --quick --complete-insert --extended-insert --compact --databases my_research --tables bas_region > db-init-data.sql

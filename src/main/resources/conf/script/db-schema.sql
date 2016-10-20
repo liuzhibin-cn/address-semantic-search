@@ -55,9 +55,10 @@ CREATE TABLE `bas_region` (
   `id` int(11) NOT NULL DEFAULT '0',
   `parent_id` int(11) NOT NULL DEFAULT '0',
   `type` int(11) NOT NULL DEFAULT '0',
-  `name` varchar(20) NOT NULL DEFAULT '',
-  `alias` varchar(20) NOT NULL DEFAULT '',
+  `name` varchar(25) NOT NULL DEFAULT '',
+  `alias` varchar(25) NOT NULL DEFAULT '',
   `zip` varchar(8) NOT NULL DEFAULT '',
+  `source` varchar(5) NOT NULL DEFAULT 'TB' COMMENT '来源',
   PRIMARY KEY (`id`),
   KEY `ix_parentid` (`parent_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
