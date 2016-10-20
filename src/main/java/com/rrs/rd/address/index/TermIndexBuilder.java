@@ -3,6 +3,7 @@ package com.rrs.rd.address.index;
 import java.util.List;
 import java.util.Map;
 
+import com.rrs.rd.address.persist.AddressPersister;
 import com.rrs.rd.address.persist.RegionEntity;
 import com.rrs.rd.address.persist.RegionType;
 import com.rrs.rd.address.similarity.TermType;
@@ -14,6 +15,11 @@ import com.rrs.rd.address.similarity.TermType;
  */
 public class TermIndexBuilder {
 	private TermIndexEntry indexRoot = new TermIndexEntry();
+
+	public TermIndexBuilder(AddressPersister persister, List<String> ingoringRegionNames){
+		this.indexRegions(persister.rootRegion().getChildren());
+		this.indexIgnorings(ingoringRegionNames);
+	}
 	
 	/**
 	 * 为行政区划建立倒排索引。
@@ -32,6 +38,17 @@ public class TermIndexBuilder {
 			if(region.getChildren()!=null)
 				this.indexRegions(region.getChildren(), index);
 		}
+	}
+	/**
+	 * 为忽略列表建立倒排索引
+	 * @param ignoreList
+	 * @return
+	 */
+	public TermIndexBuilder indexIgnorings(List<String> ignoreList){
+		if(ignoreList==null || ignoreList.isEmpty()) return this;
+		for(String str : ignoreList)
+			this.indexRoot.buildIndex(str, 0, TermType.Undefined, null);
+		return this;
 	}
 	private TermType convertRegionType(RegionType type){
 		switch(type){
@@ -53,7 +70,7 @@ public class TermIndexBuilder {
 		if(text==null || text.isEmpty()) return;
 		this.deepMostQuery(text, 0, visitor);
 	}
-	private void deepMostQuery(String text, int pos, TermIndexVisitor visitor){
+	public void deepMostQuery(String text, int pos, TermIndexVisitor visitor){
 		visitor.startRound();
 		deepFirstQueryRound(text, pos, indexRoot.getChildren(), visitor);
 		visitor.endRound();
@@ -66,27 +83,16 @@ public class TermIndexBuilder {
 		if(entry.getChildren()!=null && pos+1 <= text.length()-1)
 			deepFirstQueryRound(text, pos + 1, entry.getChildren(), visitor);
 		if(entry.hasItem()) {
-			if(visitor.visit(entry, pos)) {
+			if(visitor.visit(entry, text, pos)) {
 				if(pos+1 <= text.length()-1) 
 					deepMostQuery(text, pos + 1, visitor);
-				visitor.endVisit(entry, pos);
+				visitor.endVisit(entry, text, pos);
 			}
 		}
-	}
-	
-	/**
-	 * 为忽略列表建立倒排索引
-	 * @param ignoreList
-	 * @return
-	 */
-	public TermIndexBuilder indexIgnorings(List<String> ignoreList){
-		if(ignoreList==null || ignoreList.isEmpty()) return this;
-		for(String str : ignoreList)
-			this.indexRoot.buildIndex(str, 0, TermType.Undefined, null);
-		return this;
 	}
 	
 	public TermIndexEntry getTermIndex(){
 		return this.indexRoot;
 	}
+	
 }

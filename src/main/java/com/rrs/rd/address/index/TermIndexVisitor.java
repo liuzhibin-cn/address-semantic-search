@@ -57,13 +57,13 @@ public interface TermIndexVisitor {
 	 * @param pos 当前匹配位置
 	 * @return 是可接受的匹配项时返回true，否则返回false。对于可接受的匹配项会调用{@link #endVisit(TermIndexEntry)}，否则不会调用。
 	 */
-	boolean visit(TermIndexEntry entry, int pos);
+	boolean visit(TermIndexEntry entry, String text, int pos);
 	/**
 	 * 结束索引条目的访问。
 	 * @param entry 当前索引条目。
 	 * @param pos 当前匹配位置
 	 */
-	void endVisit(TermIndexEntry entry, int pos);
+	void endVisit(TermIndexEntry entry, String text, int pos);
 	/**
 	 * 结束一轮词条匹配。
 	 */

@@ -23,10 +23,12 @@ import com.rrs.rd.address.utils.StringUtil;
 public class AddressInterpreter {
 	private final static Logger LOG = LoggerFactory.getLogger(AddressInterpreter.class);
 	
+	private TermIndexBuilder termIndex = null;
+	private AddressPersister persister;
+	
 	private List<String> forbiddenFollowingChars;
 	private List<String> invalidRegionNames;
 	private static char[] specialCharsToBeRemoved = " \r\n\t,，;；:：·.．。！、\"'“”|_-\\/{}【】〈〉<>[]「」".toCharArray();
-	private static TermIndexBuilder termIndex = null;
 	
 	private static Pattern BRACKET_PATTERN = Pattern.compile("(?<bracket>([\\(（\\{\\<〈\\[【「][^\\)）\\}\\>〉\\]】」]*[\\)）\\}\\>〉\\]】」]))");
 	
@@ -53,8 +55,6 @@ public class AddressInterpreter {
 	 */
 	private static final Pattern P_TOWN = Pattern.compile("^((?<j>[\u4e00-\u9fa5]{2,4}街道)*(?<z>[\u4e00-\u9fa5]{1,4}镇(?!(公路|大街|大道|路|街|乡|村|镇)))*(?<x>[^乡]{2,4}乡(?!(公路|大街|大道|路|街|村|镇)))*(?<c>[^村]{1,4}村(?!(公路|大街|大道|路|街道|镇|乡)))*)");
 	private static final Pattern P_ROAD = Pattern.compile("^(?<road>([\u4e00-\u9fa5]{2,4}(路|街坊|街|道|大街|大道)))(?<ex>[甲乙丙丁])?(?<roadnum>[0-9０１２３４５６７８９一二三四五六七八九十]+(号院|号楼|号大院|号|號|巷|弄|院|区|条|\\#院|\\#))?");
-	
-	private AddressPersister persister;
 	
 	//***************************************************************************************
 	// AddressService对外提供的服务接口
@@ -157,7 +157,7 @@ public class AddressInterpreter {
 		timeRegion += System.currentTimeMillis() - start;
 		
 		start = System.currentTimeMillis();
-		removeRedundancy(addr);
+		removeRedundancy2(addr, visitor);
 		timeRmRed += System.currentTimeMillis() - start;
 		
 		start = System.currentTimeMillis();
@@ -165,7 +165,7 @@ public class AddressInterpreter {
 		timeTown += System.currentTimeMillis() - start;
 		
 		start = System.currentTimeMillis();
-		removeRedundancy(addr);
+		removeRedundancy2(addr, visitor);
 		timeRmRed += System.currentTimeMillis() - start;
 		
 		start = System.currentTimeMillis();
@@ -185,23 +185,13 @@ public class AddressInterpreter {
 	}
 	
 	public boolean extractRegion2(AddressEntity addr, RegionInterpreterVisitor visitor){
-		if(termIndex==null){
-			synchronized (this) {
-				if(termIndex==null){
-					termIndex = new TermIndexBuilder();
-					termIndex.indexRegions(persister.rootRegion().getChildren());
-					termIndex.indexIgnorings(invalidRegionNames);
-				}
-			}
-		}
-		
 		visitor.reset();
 		termIndex.deepMostQuery(addr.getText(), visitor);
 		if(!visitor.hasResult()) return false;
 		addr.setProvince(visitor.resultDivision().getProvince());
 		addr.setCity(visitor.resultDivision().getCity());
 		addr.setCounty(visitor.resultDivision().getCounty());
-		addr.setText(StringUtil.substring(addr.getText(), visitor.resultPosition() + 1));
+		addr.setText(StringUtil.substring(addr.getText(), visitor.resultEndPosition() + 1));
 		return true;
 	}
 	
@@ -222,7 +212,7 @@ public class AddressInterpreter {
 	 *   会在头部删除已经匹配上的区域名称。匹配上的区域对象通过{@link AddressEntity#getProvince() addr.getProvince()}、
 	 *   {@link AddressEntity#getCity() addr.getCity()}、{@link AddressEntity#getCounty() addr.getCounty()}获取。
 	 */
-	public boolean extractRegion(AddressEntity addr, boolean isTrial){
+	public boolean extractRegion1(AddressEntity addr, boolean isTrial){
 		RegionEntity province = addr.getProvince(), city = addr.getCity();
 		addr.clearExtractResult();
 		//匹配省份
@@ -534,7 +524,36 @@ public class AddressInterpreter {
 		return result;
 	}
 	
-	public boolean removeRedundancy(AddressEntity addr){
+	public boolean removeRedundancy2(AddressEntity addr, RegionInterpreterVisitor visitor) {
+		if(addr.getText().length()<=0 || !addr.hasProvince() || !addr.hasCity()) return false;
+		
+		boolean removed = false;
+		//采用后序数组方式匹配省市区
+		int endIndex = addr.getText().length();
+		for(int i=0; i<endIndex; ){
+			visitor.reset();
+			termIndex.deepMostQuery(addr.getText(), i, visitor);
+			if(visitor.resultMatchCount()<2 && visitor.resultFullMatchCount()<1) { 
+				//没有匹配上，或者匹配上的行政区域个数少于2个认当做无效匹配
+				i++;
+				continue;
+			}
+			if(!addr.getProvince().equals(visitor.resultDivision().getProvince()) 
+					|| !addr.getCity().equals(visitor.resultDivision().getCity())) { //匹配上的省份、地级市不正确
+				i++;
+				continue;
+			}
+			//正确匹配上，删除
+			addr.setText(StringUtil.substring(addr.getText(), visitor.resultEndPosition()+1));
+			endIndex=addr.getText().length();
+			i=0;
+			removed = true;
+		}
+		
+		return removed;
+	}
+	
+	public boolean removeRedundancy1(AddressEntity addr){
 		if(addr.getText().length()<=0 || !addr.hasProvince() || !addr.hasCity()) return false;
 		
 		boolean removed = false;
@@ -556,7 +575,7 @@ public class AddressInterpreter {
 			newAddr.setProvince(addr.getProvince());
 			newAddr.setCity(addr.getCity());
 			newAddr.setCounty(addr.getCounty());
-			extractRegion(newAddr, true);
+			extractRegion1(newAddr, true);
 			if(newAddr.matchedRegionCount() - newAddr.inferredCount() >= 2){ //省市区至少连续匹配两个以上部分
 				if(addr.getProvince().equals(newAddr.getProvince()) && addr.getCity().equals(newAddr.getCity())){
 					addr.setText(newAddr.getText());
@@ -727,6 +746,9 @@ public class AddressInterpreter {
 	//***************************************************************************************
 	// Spring IoC
 	//***************************************************************************************
+	public void setTermIndex(TermIndexBuilder value){
+		this.termIndex = value;
+	}
 	public void setPersister(AddressPersister value){
 		persister = value;
 	}

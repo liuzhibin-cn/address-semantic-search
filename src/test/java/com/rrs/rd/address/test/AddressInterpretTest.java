@@ -6,7 +6,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 
-import org.junit.Ignore;
 import org.junit.Test;
 
 import com.rrs.rd.address.StdDivision;
@@ -15,7 +14,6 @@ import com.rrs.rd.address.interpret.RegionInterpreterVisitor;
 import com.rrs.rd.address.interpret.AddressInterpreter;
 import com.rrs.rd.address.persist.AddressEntity;
 import com.rrs.rd.address.persist.AddressPersister;
-import com.rrs.rd.address.persist.RegionEntity;
 import com.rrs.rd.address.utils.StringUtil;
 
 public class AddressInterpretTest extends TestBase {
@@ -91,7 +89,7 @@ public class AddressInterpretTest extends TestBase {
 		addr = interpreter.interpret("浙江丽水缙云县壶镇镇缙云县壶镇镇 下潜村257号");
 		assertNotNull("解析失败", addr);
 		LOG.info("> " + addr.getRawText() + " --> " + addr);
-		assertEquals("详细地址错误", "缙云县壶镇镇下潜村257号", addr.getText());
+		assertEquals("详细地址错误", "257号", addr.getText());
 		assertNotNull("未解析出乡镇", addr.getTowns());
 		assertEquals("乡镇错误", 1, addr.getTowns().size());
 		assertEquals("乡镇错误", "壶镇镇", addr.getTowns().get(0));
@@ -183,7 +181,7 @@ public class AddressInterpretTest extends TestBase {
 		addr = interpreter.interpret("河北秦皇岛昌黎县昌黎镇秦皇岛市昌黎镇马铁庄村");
 		assertNotNull("解析失败", addr);
 		LOG.info("> " + addr.getRawText() + " --> " + addr);
-		assertEquals("详细地址错误", "秦皇岛市昌黎镇马铁庄村", addr.getText());
+		assertEquals("详细地址错误", "", addr.getText());
 		assertNotNull("未解析出乡镇", addr.getTowns());
 		assertEquals("乡镇错误", 1, addr.getTowns().size());
 		assertEquals("乡镇错误", "昌黎镇", addr.getTowns().get(0));
@@ -192,11 +190,8 @@ public class AddressInterpretTest extends TestBase {
 	@Test
 	public void testExtractRegionPerf(){
 		AddressInterpreter interpreter = context.getBean(AddressInterpreter.class);
-		
 		AddressPersister persister = context.getBean(AddressPersister.class);
-		RegionEntity rootRegion = persister.rootRegion();
-		TermIndexBuilder builder = new TermIndexBuilder();
-		builder.indexRegions(rootRegion.getChildren());
+		TermIndexBuilder builder = context.getBean(TermIndexBuilder.class);
 		RegionInterpreterVisitor visitor = new RegionInterpreterVisitor(persister);
 		
 		//预热
@@ -231,7 +226,7 @@ public class AddressInterpretTest extends TestBase {
 	}
 	private void extractRegionPerf(String text, AddressInterpreter interpreter){
 		AddressEntity addr = new AddressEntity(text);
-		interpreter.extractRegion(addr, false);
+		interpreter.extractRegion1(addr, false);
 	}
 	private void indexSearchRegionPerf(String text, TermIndexBuilder builder, RegionInterpreterVisitor visitor){
 		builder.deepMostQuery(text, visitor);
@@ -241,11 +236,7 @@ public class AddressInterpretTest extends TestBase {
 	@Test
 	public void testExtractRegion(){
 		AddressPersister persister = context.getBean(AddressPersister.class);
-		AddressInterpreter interpreter = context.getBean(AddressInterpreter.class);
-		RegionEntity rootRegion = persister.rootRegion();
-		TermIndexBuilder builder = new TermIndexBuilder();
-		builder.indexRegions(rootRegion.getChildren());
-		builder.indexIgnorings(interpreter.getInvalidRegionNames());
+		TermIndexBuilder builder = context.getBean(TermIndexBuilder.class);
 
 		RegionInterpreterVisitor visitor = new RegionInterpreterVisitor(persister);
 		
@@ -386,7 +377,7 @@ public class AddressInterpretTest extends TestBase {
 		assertNotNull(title + ": 省份未解析", division.getProvince());
 		assertNotNull(title + ": 地级市未解析", division.getCity());
 		assertNotNull(title + ": 区县未解析", division.getCounty());
-		String left = StringUtil.substring(text, visitor.resultPosition()+1);
+		String left = StringUtil.substring(text, visitor.resultEndPosition()+1);
 		LOG.info("> " + title + ": " + text + " --> " + division.getProvince().getName() + " " +
 			division.getCity().getName() + " " + division.getCounty().getName() + " " + left);
 		assertEquals(title + ": 省份错误", pid, division.getProvince().getId());
@@ -397,11 +388,12 @@ public class AddressInterpretTest extends TestBase {
 	
 	private void removeRedundancy(AddressInterpreter interpreter, AddressPersister persister
 			, String text, String expected, int pid, int cid, int did, String title){
+		RegionInterpreterVisitor visitor = new RegionInterpreterVisitor(persister);
 		AddressEntity addr = new AddressEntity(text);
 		addr.setProvince(persister.getRegion(pid));
 		addr.setCity(persister.getRegion(cid));
 		addr.setCounty(persister.getRegion(did));
-		interpreter.removeRedundancy(addr);
+		interpreter.removeRedundancy2(addr, visitor);
 		LOG.info("> " + addr.getRawText() + " -> " + addr.getText());
 		assertEquals(title + ": 删冗余后的结果错误", expected, addr.getText());
 	}
@@ -409,10 +401,11 @@ public class AddressInterpretTest extends TestBase {
 	/**
 	 * 从一批地址中删除冗余部分，根据日志记录的删除情况找出一些特殊格式，用作测试用例，以保证删除冗余的逻辑正确性。
 	 */
-	@Ignore
+	//@Ignore
 	@Test
-	public void removeRedundancyFromAddressFile(){
+	public void testRemoveRedundancyFromAddressFile(){
 		AddressInterpreter interpreter = context.getBean(AddressInterpreter.class);
+		RegionInterpreterVisitor visitor = new RegionInterpreterVisitor(context.getBean(AddressPersister.class));
 		
 		File file = new File(AddressInterpretTest.class.getClassLoader().getResource("test-addresses.txt").getPath());
 		InputStreamReader sr = null;
@@ -429,7 +422,8 @@ public class AddressInterpretTest extends TestBase {
 		try{
             while((line = br.readLine()) != null){
             	AddressEntity addr = new AddressEntity(line);
-            	if(!interpreter.extractRegion(addr, true)) continue;
+            	if(!interpreter.extractRegion2(addr, visitor)) 
+            		continue;
             	interpreter.extractBrackets(addr);
             	interpreter.removeSpecialChars(addr);
             	
@@ -437,7 +431,7 @@ public class AddressInterpretTest extends TestBase {
             	removed.setProvince(addr.getProvince());
             	removed.setCity(addr.getCity());
             	removed.setCounty(addr.getCounty());
-            	if(interpreter.removeRedundancy(removed))
+            	if(interpreter.removeRedundancy2(removed, visitor))
             		LOG.info("> " + addr.getText() + " --> " + removed.getText());
             }
 		} catch (Exception ex) {
