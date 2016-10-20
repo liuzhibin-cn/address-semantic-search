@@ -1,4 +1,4 @@
-package com.rrs.rd.address.similarity;
+package com.rrs.rd.address;
 
 import java.util.EnumSet;
 

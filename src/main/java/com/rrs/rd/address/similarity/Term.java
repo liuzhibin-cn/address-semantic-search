@@ -1,5 +1,7 @@
 package com.rrs.rd.address.similarity;
 
+import com.rrs.rd.address.TermType;
+
 /**
  * 词条。
  * @author Richie 刘志斌 yudi@sina.com

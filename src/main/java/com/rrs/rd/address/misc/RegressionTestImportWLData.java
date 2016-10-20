@@ -1,33 +1,32 @@
-package com.rrs.rd.address.persist;
+package com.rrs.rd.address.misc;
 
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.context.support.ClassPathXmlApplicationContext;
 
 import com.rrs.rd.address.interpret.AddressInterpreter;
-import com.rrs.rd.address.interpret.RegionInterpreterVisitor;
+import com.rrs.rd.address.persist.AddressEntity;
+import com.rrs.rd.address.persist.AddressPersister;
+import com.rrs.rd.address.utils.StringUtil;
 
 /**
  * 地址导入。
  * @author Richie 刘志斌 yudi@sina.com
  */
-public class FileImporter {
+public class RegressionTestImportWLData {
 	private static ClassPathXmlApplicationContext context = null;
 	
 	/**
-	 * 第一个输入参数必须是地址文件路径。地址文件格式：省份;城市;区县;详细地址
-	 * <pre>例如：
-	 * 安徽;安庆;宿松县;孚玉镇园林路赛富巷3号
-	 * 河南省;周口市;沈丘县;石槽乡石槽集石槽行政村前门周国兵干菜店
-	 * 北京市;北京市;丰台区;黄陈路期颐百年小区22号楼102室
-	 * 陕西;咸阳;渭城区;文林路紫韵东城小区二期17#1单元101
-	 * </pre>
+	 * 样例数据：<br />
+	 * "TB107629083-01-01","广东省","汕头市","金平区","金厦街道金厦街道龙腾嘉园九栋507房2号门","07/02/2016 11:54:23","GZG7057"
 	 * @param args
 	 */
 	public static void main(String[] args){
@@ -85,22 +84,53 @@ public class FileImporter {
 		}
 		
 		String line = null;
-		List<String> addrTextList = new ArrayList<String>();
+		SimpleDateFormat format = new SimpleDateFormat("MM/dd/yyy HH:mm:ss");
+		@SuppressWarnings("deprecation")
+		Date defaultDate = new Date(1900,1,1);
+		
 		System.out.println("> 开始导入地址库");
 		
-		RegionInterpreterVisitor visitor = new RegionInterpreterVisitor(persister);
-		
 		try{
+			int lineNum = 0;
+			List<AddressEntity> addrList = new ArrayList<AddressEntity>();
             while((line = br.readLine()) != null){
-            	addrTextList.add(line);
+            	try{
+            		lineNum++;
+            		String[] tokens = StringUtil.substring(line, 1, line.length()-2).split("\",\"");
+            		if(tokens.length!=7){
+            			//System.out.println("> [format-error] " + lineNum +" - " + line);
+            			continue;
+            		}
+            		
+            		AddressEntity addr = interpreter.interpret(tokens[1]+tokens[2]+tokens[3]+tokens[4]);
+            		if(addr==null){
+            			System.out.println("> [inter-error] " + lineNum + " - " + line);
+            			continue;
+            		}
+            		if(!addr.hasProvince() || !addr.hasCity() || !addr.hasCounty()){
+            			System.out.println("> [region-error] " + lineNum + " - " + line);
+            			continue;
+            		}
+            		
+            		String orderNo = tokens[0], gridId = tokens[6];
+            		addr.setProp1(orderNo);
+            		addr.setProp2(gridId);
+            		
+            		addr.setCreateTime(defaultDate);
+            		try{
+	            		if(tokens[5]!=null && tokens[5].length()==19){
+	            			addr.setCreateTime(format.parse(tokens[5]));
+	            		}
+            		}catch(Exception e) {}
+            		
+            		addrList.add(addr);
+            	}catch(RuntimeException ex){
+            		System.out.println("> [错误] " + ex.getMessage());
+            		ex.printStackTrace(System.out);
+            	}
             }
-            try{
-            	List<AddressEntity> addresses = interpreter.interpret(addrTextList, visitor); 
-            	imported = persister.importAddresses(addresses);
-        	}catch(RuntimeException ex){
-        		System.out.println("> [错误] " + ex.getMessage());
-        		ex.printStackTrace(System.out);
-        	}
+            System.out.println("> 开始插入数据库，共" + addrList.size() + "条数据");
+            persister.importAddresses(addrList);
 		} catch (Exception ex) {
 			System.out.println("> [错误] 导入失败：" + ex.getMessage());
 			ex.printStackTrace(System.out);

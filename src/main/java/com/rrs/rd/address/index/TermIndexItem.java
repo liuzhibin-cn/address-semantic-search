@@ -1,6 +1,6 @@
 package com.rrs.rd.address.index;
 
-import com.rrs.rd.address.similarity.TermType;
+import com.rrs.rd.address.TermType;
 
 /**
  * 索引对象。

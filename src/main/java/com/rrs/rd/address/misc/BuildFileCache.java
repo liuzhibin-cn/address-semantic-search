@@ -1,4 +1,4 @@
-package com.rrs.rd.address.similarity;
+package com.rrs.rd.address.misc;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -9,8 +9,9 @@ import org.springframework.context.support.ClassPathXmlApplicationContext;
 import com.rrs.rd.address.persist.AddressEntity;
 import com.rrs.rd.address.persist.AddressPersister;
 import com.rrs.rd.address.persist.RegionEntity;
+import com.rrs.rd.address.similarity.SimilarityComputer;
 
-public class VectorBuilder {
+public class BuildFileCache {
 	private static ClassPathXmlApplicationContext context = null;
 	private static AddressPersister persister = null;
 	private static SimilarityComputer computer = null;

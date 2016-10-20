@@ -16,6 +16,7 @@ import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.rrs.rd.address.TermType;
 import com.rrs.rd.address.interpret.AddressInterpreter;
 import com.rrs.rd.address.persist.AddressEntity;
 import com.rrs.rd.address.persist.RegionEntity;

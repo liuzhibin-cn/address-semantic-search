@@ -3,10 +3,10 @@ package com.rrs.rd.address.index;
 import java.util.List;
 import java.util.Map;
 
+import com.rrs.rd.address.TermType;
 import com.rrs.rd.address.persist.AddressPersister;
 import com.rrs.rd.address.persist.RegionEntity;
 import com.rrs.rd.address.persist.RegionType;
-import com.rrs.rd.address.similarity.TermType;
 
 /**
  * 

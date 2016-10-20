@@ -9,12 +9,12 @@ import org.slf4j.LoggerFactory;
 import com.alibaba.dubbo.common.utils.Stack;
 import com.rrs.rd.address.index.TermIndexVisitor;
 import com.rrs.rd.address.StdDivision;
+import com.rrs.rd.address.TermType;
 import com.rrs.rd.address.index.TermIndexEntry;
 import com.rrs.rd.address.index.TermIndexItem;
 import com.rrs.rd.address.persist.AddressPersister;
 import com.rrs.rd.address.persist.RegionEntity;
 import com.rrs.rd.address.persist.RegionType;
-import com.rrs.rd.address.similarity.TermType;
 import com.rrs.rd.address.utils.StringUtil;
 
 /**

@@ -5,10 +5,10 @@ import java.util.List;
 
 import org.junit.Test;
 
+import com.rrs.rd.address.TermType;
 import com.rrs.rd.address.similarity.Document;
 import com.rrs.rd.address.similarity.SimilarityComputer;
 import com.rrs.rd.address.similarity.Term;
-import com.rrs.rd.address.similarity.TermType;
 
 public class SimilarityServiceTest extends TestBase {
 	@Test

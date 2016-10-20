@@ -1,4 +1,4 @@
-package com.rrs.rd.address.regression.test;
+package com.rrs.rd.address.misc;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -23,8 +23,8 @@ import com.rrs.rd.address.utils.StringUtil;
  * 地址导入。
  * @author Richie 刘志斌 yudi@sina.com
  */
-public class RegressionRunTest {
-	private static Logger LOG = LoggerFactory.getLogger(RegressionRunTest.class);
+public class RegressionTestRunTest {
+	private static Logger LOG = LoggerFactory.getLogger(RegressionTestRunTest.class);
 	private static ClassPathXmlApplicationContext context = null;
 	
 	/**

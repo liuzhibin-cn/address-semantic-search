@@ -5,7 +5,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import com.rrs.rd.address.similarity.TermType;
+import com.rrs.rd.address.TermType;
 import com.rrs.rd.address.utils.StringUtil;
 
 /**
