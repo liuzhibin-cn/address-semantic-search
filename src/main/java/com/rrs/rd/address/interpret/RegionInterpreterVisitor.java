@@ -72,7 +72,7 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 	private StdDivision deepMostDivision = new StdDivision();
 	private StdDivision curDivision = new StdDivision();
 	private Stack<TermIndexItem> stack = new Stack<TermIndexItem>(); 
-	
+
 	static {
 		ambiguousChars = new ArrayList<String>();
 		ambiguousChars.add("路");
@@ -80,7 +80,7 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 		ambiguousChars.add("大街");
 		ambiguousChars.add("大道");
 	}
-	
+
 	public RegionInterpreterVisitor(AddressPersister persister){
 		this.persister = persister;
 	}
@@ -91,16 +91,7 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 	@Override
 	public void startRound() {
 		currentLevel++;
-		
-		//打印调试信息
-		if(isDebug && LOG.isDebugEnabled()){
-			StringBuilder sb = new StringBuilder();
-			sb.append("|");
-			for(int i=1; i<currentLevel; i++)
-				sb.append("--------");
-			sb.append("> ").append("[round-").append(currentLevel).append("-start]");
-			LOG.debug(sb.toString());
-		}
+		if(isDebug && LOG.isDebugEnabled()) printDebugInfo("round", "start", null);
 	}
 
 	/**
@@ -114,19 +105,125 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 	 */
 	@Override
 	public boolean visit(TermIndexEntry entry, String text, int pos) {
-		//======================================================================
 		//找到最匹配的 被索引对象
-		RegionEntity mostRegion = null;
+		TermIndexItem acceptableItem = findAcceptableItem(entry, text, pos);
+		if(acceptableItem==null) return false; //没有匹配对象，匹配不成功，返回
+		
+		//acceptableItem可能为TermType.Ignore类型，此时其value并不是RegionEntity对象，因此下面region的值可能为null
+		RegionEntity region = (RegionEntity)acceptableItem.getValue();
+		
+		//特殊情况处理：
+		//河北秦皇岛昌黎县昌黎镇秦皇岛市昌黎镇马铁庄村
+		//在移除冗余时匹配：秦皇岛市昌黎镇，会将【昌黎】匹配成为区县【昌黎县】，导致剩下的文本为【镇马铁庄村】
+		if(region!=null && RegionType.County.equals(region.getType()) 
+				&& !entry.getKey().equals(region.getName()) && entry.getKey().length()<region.getName().length()){ //使用别名匹配上的
+			String left = StringUtil.substring(text, pos + 1);
+			if(left.length()>0 && left.startsWith("大街") || left.startsWith("大道") || left.startsWith("街道") 
+					|| left.startsWith("镇") || left.startsWith("乡") || left.startsWith("村")
+					|| left.startsWith("路") || left.startsWith("公路"))
+				return false;
+		}
+		
+		//打印调试信息
+		if(isDebug && LOG.isDebugEnabled())
+			printDebugInfo("visit", null, entry.getKey() + " : " + acceptableItem.getValue().toString());
+		
+		//更新当前状态
+		stack.push(acceptableItem); //匹配项压栈
+		if(region!=null && entry.getKey().equals(region.getName()))
+			fullMatchCount++; //使用全名匹配的词条数
+		currentPos = pos; //当前结束的位置
+		updateCurrentDivisionState(region); //刷新当前已经匹配上的省市区
+		
+		return true;
+	}
+
+	/**
+	 * 职责：<br />
+	 * 1. 恢复stack。<br />
+	 * 2. 更新curDiv状体，保持与stack同步。<br />
+	 * 3. 检查是否达到最大匹配。
+	 * @param entry
+	 * @param pos
+	 */
+	@Override
+	public void endVisit(TermIndexEntry entry, String text, int pos) {
+		if(isDebug && LOG.isDebugEnabled()) 
+			printDebugInfo("visit", "end", entry.getKey());
+		
+		this.checkDeepMost();
+		
+		TermIndexItem tii = stack.pop();
+		currentPos = pos - entry.getKey().length();
+		RegionEntity region = (RegionEntity)tii.getValue();
+		if(region!=null && entry.getKey().equals(region.getName()))
+			fullMatchCount++;
+		if(tii.getType()==TermType.Ignore) return;
+		
+		RegionEntity least = null;
+		for(int i=0; i<stack.size(); i++) {
+			tii = stack.get(i);
+			if(tii.getType()==TermType.Ignore) continue;
+			RegionEntity r = (RegionEntity)tii.getValue();
+			if(least==null) {
+				least = r;
+				continue;
+			}
+			if(r.getType().toValue() > least.getType().toValue())
+				least = r;
+		}
+		
+		if(least==null) return;
+		switch(least.getType()){
+			case Province:
+			case ProvinceLevelCity1:
+				curDivision.setCity(null);
+				curDivision.setCounty(null);
+				curDivision.setTown(null);
+				break;
+			case City:
+			case ProvinceLevelCity2:
+			case CityLevelCounty:
+				curDivision.setCounty(null);
+				curDivision.setTown(null);
+				break;
+			case County:
+				curDivision.setTown(null);
+				break;
+			default:
+		}
+	}
+
+	/**
+	 * 检查是否达到最大匹配。
+	 */
+	@Override
+	public void endRound() {
+		if(isDebug && LOG.isDebugEnabled()) 
+			printDebugInfo("round", "end", null);
+		
+		this.checkDeepMost();
+		currentLevel--;
+	}
+	
+	
+	/**
+	 * 从索引条目中找出最匹配的索引对象，如果索引对象都无法匹配，则返回null。
+	 * <p>因为省市区同名或者部分前缀字符相同的原因，倒排索引中同一个索引条目下面可能存在多个索引对象。</p>
+	 * @param entry
+	 * @param text
+	 * @param pos
+	 * @return
+	 */
+	private TermIndexItem findAcceptableItem(TermIndexEntry entry, String text, int pos){
 		int mostPriority = -1;
 		TermIndexItem acceptableItem = null;
 		for(TermIndexItem item : entry.getItems()){ //每个 被索引对象循环，找出最匹配的
 			//仅处理省市区类型的 被索引对象，忽略其它类型的
-			if(item.getType()!=TermType.Province && item.getType()!=TermType.City && item.getType()!=TermType.County
-					&& item.getType()!=TermType.Undefined)
-				continue;
+			if(!isAcceptableItemType(item.getType())) continue;
 			
 			//省市区中的特殊名称
-			if(item.getType()==TermType.Undefined) {
+			if(item.getType()==TermType.Ignore) {
 				if(acceptableItem==null) {
 					mostPriority = 4;
 					acceptableItem = item;
@@ -139,12 +236,10 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 			//从未匹配上任何一个省市区，则从全部被索引对象中找出一个级别最高的
 			if(!curDivision.hasProvince()) { 
 				if(mostPriority == -1) {
-					mostRegion = region;
 					mostPriority = region.getType().toValue();
 					acceptableItem = item;
 				}
 				if(region.getType().toValue() < mostPriority) {
-					mostRegion = region;
 					mostPriority = region.getType().toValue();
 					acceptableItem = item;
 				}
@@ -155,16 +250,15 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 			
 			//1. 匹配度最高的情况，正好是下一级行政区域
 			if(region.getParentId() == curDivision.leastRegion().getId()) { 
-				mostRegion = region;
 				acceptableItem = item;
 				break;
 			}
-			//2. 中间缺一级的情况（已经匹配到省份了，则中间缺一级只可能是缺地级市）
+			//2. 中间缺一级的情况。已经匹配上省份，则中间缺一级只可能是缺地级市或者区县（使用了4级地址，因此可能缺区县）。
+			//缺地级市，region为街道乡镇的情况最后考虑
 			if((mostPriority==-1 || mostPriority>2) && region.getType()==RegionType.County && !curDivision.hasCity()) {
 				RegionEntity city = persister.getRegion(region.getParentId());
 				if(city.getParentId() == curDivision.getProvince().getId()) {
 					mostPriority = 2;
-					mostRegion = region;
 					acceptableItem = item;
 					continue;
 				}
@@ -172,12 +266,14 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 			//3. 地址中省市区重复出现的情况
 			if(mostPriority==-1 || mostPriority>3) {
 				if(
-						(curDivision.hasProvince() && region.getId()==curDivision.getProvince().getId())
+						(curDivision.hasProvince() && curDivision.getProvince().equals(region))
 						||
-						(curDivision.hasCity() && region.getId()==curDivision.getCity().getId())
+						(curDivision.hasCity() && curDivision.getCity().equals(region))
 						||
-						(curDivision.hasCounty() && region.getId()==curDivision.getCounty().getId())
-					){
+						(curDivision.hasCounty() && curDivision.getCounty().equals(region))
+						||
+						(curDivision.hasTown() && curDivision.getTown().equals(region))
+					) {
 					mostPriority = 3;
 					acceptableItem = item;
 					continue;
@@ -197,158 +293,92 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 						&& curDivision.hasProvince() && curDivision.getProvince().getId()==region.getParentId()){
 					mostPriority = 4;
 					acceptableItem = item;
-					mostRegion = region;
+					continue;
+				}
+			}
+			//5. 街道、乡镇，且不符合上述情况
+			if(region.getType()==RegionType.Street || region.getType()==RegionType.Town || region.getType()==RegionType.SpecialDistrict){
+				if(!curDivision.hasCounty()){
+					//TODO，需要哪些检查？如果街道不属于已匹配的区县需要容错？
+					mostPriority = 5;
+					acceptableItem = item;
 					continue;
 				}
 			}
 		}
-			
-		if(acceptableItem==null) return false;
-		
-		//======================================================================
-		//特殊情况处理：
-		//河北秦皇岛昌黎县昌黎镇秦皇岛市昌黎镇马铁庄村
-		//在移除冗余时匹配：秦皇岛市昌黎镇，会将【昌黎】匹配成为区县【昌黎县】，导致剩下的文本为【镇马铁庄村】
-		RegionEntity region = (RegionEntity)acceptableItem.getValue();
-		if(region!=null && RegionType.County.equals(region.getType()) 
-				&& !entry.getKey().equals(region.getName()) && entry.getKey().length()<region.getName().length()){ //使用别名匹配上的
-			String left = StringUtil.substring(text, pos + 1);
-			if(left.length()>0 && left.startsWith("大街") || left.startsWith("大道") || left.startsWith("街道") 
-					|| left.startsWith("镇") || left.startsWith("乡") || left.startsWith("村")
-					|| left.startsWith("路") || left.startsWith("公路"))
+		return acceptableItem;
+	}
+	/**
+	 * 索引对象是否是可接受的省市区等类型。
+	 * @param type
+	 * @return
+	 */
+	private boolean isAcceptableItemType(TermType type){
+		switch(type){
+			case Province:
+			case City:
+			case County:
+			case Street:
+			case Town:
+			case SpecialTown:
+			case Ignore:
+				return true;
+			default:
 				return false;
 		}
-		
-		//======================================================================
-		//打印调试信息
-		if(isDebug && LOG.isDebugEnabled()) {
-			StringBuilder sb = new StringBuilder();
-			sb.append("|");
-			for(int i=1; i<currentLevel; i++)
-				sb.append("--------");
-			sb.append("> [visit-").append(currentLevel).append("] ").append(entry.getKey());
-			sb.append(" : ");
-			sb.append(acceptableItem.getValue().toString());
-			LOG.info(sb.toString());
-		}
-		
-		//======================================================================
-		//更新当前状态
-		stack.push(acceptableItem); //匹配项压栈
-		if(region!=null && entry.getKey().equals(region.getName()))
-			fullMatchCount++; //使用全名匹配的词条数
-		currentPos = pos; //当前结束的位置
-		if(mostRegion!=null){ //刷新当前已经匹配上的省市区
-			switch(mostRegion.getType()){
-				case Province:
-				case ProvinceLevelCity1:
-					curDivision.setProvince(mostRegion);
-					curDivision.setCity(null);
-					curDivision.setCounty(null);
-					break;
-				case City:
-				case ProvinceLevelCity2:
-					curDivision.setCity(mostRegion);
-					if(!curDivision.hasProvince())
-						curDivision.setProvince(persister.getRegion(mostRegion.getParentId()));
-					curDivision.setCounty(null);
-					break;
-				case CityLevelCounty:
-					curDivision.setCity(mostRegion);
-					curDivision.setCounty(mostRegion);
-					if(!curDivision.hasProvince())
-						curDivision.setProvince(persister.getRegion(mostRegion.getParentId()));
-					break;
-				case County:
-					curDivision.setCounty(mostRegion);
-					if(!curDivision.hasCity())
-						curDivision.setCity(persister.getRegion(curDivision.getCounty().getParentId()));
-					if(!curDivision.hasProvince())
-						curDivision.setProvince(persister.getRegion(curDivision.getCity().getParentId()));
-					break;
-				default:
-			}
-		}
-		return true;
 	}
-	
 	/**
-	 * 职责：<br />
-	 * 1. 恢复stack。<br />
-	 * 2. 更新curDiv状体，保持与stack同步。<br />
-	 * 3. 检查是否达到最大匹配。
-	 * @param entry
-	 * @param pos
+	 * 更新当前已匹配区域对象的状态。
+	 * @param region
 	 */
-	@Override
-	public void endVisit(TermIndexEntry entry, String text, int pos) {
-		//打印调试信息
-		if(isDebug && LOG.isDebugEnabled()) {
-			StringBuilder sb = new StringBuilder();
-			sb.append("|");
-			for(int i=1; i<currentLevel; i++)
-				sb.append("--------");
-			sb.append("> [visit-").append(currentLevel).append("-end] ");
-			LOG.info(sb.toString());
-		}
+	private void updateCurrentDivisionState(RegionEntity region){
+		if(region==null) return ;
+		//region为重复项，无需更新状态
+		if(region.equals(curDivision.getProvince()) || region.equals(curDivision.getCity()) 
+				|| region.equals(curDivision.getCounty()) || region.equals(curDivision.getTown()))
+			return;
 		
-		this.checkDeepMost();
-		
-		TermIndexItem tii = stack.pop();
-		currentPos = pos - entry.getKey().length();
-		RegionEntity region = (RegionEntity)tii.getValue();
-		if(region!=null && entry.getKey().equals(region.getName()))
-			fullMatchCount++;
-		if(tii.getType()==TermType.Undefined) return;
-		
-		RegionEntity least = null;
-		for(int i=0; i<stack.size(); i++) {
-			tii = stack.get(i);
-			if(tii.getType()==TermType.Undefined) continue;
-			RegionEntity r = (RegionEntity)tii.getValue();
-			if(least==null) {
-				least = r;
-				continue;
-			}
-			if(r.getType().toValue() > least.getType().toValue())
-				least = r;
-		}
-		
-		if(least==null) return;
-		switch(least.getType()){
+		switch(region.getType()){
 			case Province:
 			case ProvinceLevelCity1:
+				curDivision.setProvince(region);
 				curDivision.setCity(null);
 				curDivision.setCounty(null);
 				break;
 			case City:
 			case ProvinceLevelCity2:
-			case CityLevelCounty:
+				curDivision.setCity(region);
+				if(!curDivision.hasProvince())
+					curDivision.setProvince(persister.getRegion(region.getParentId()));
 				curDivision.setCounty(null);
+				break;
+			case CityLevelCounty:
+				curDivision.setCity(region);
+				curDivision.setCounty(region);
+				if(!curDivision.hasProvince())
+					curDivision.setProvince(persister.getRegion(region.getParentId()));
+				break;
+			case County:
+				curDivision.setCounty(region);
+				if(!curDivision.hasCity())
+					curDivision.setCity(persister.getRegion(curDivision.getCounty().getParentId()));
+				if(!curDivision.hasProvince())
+					curDivision.setProvince(persister.getRegion(curDivision.getCity().getParentId()));
+				break;
+			case Street:
+			case Town:
+			case SpecialDistrict:
+				curDivision.setTown(region);
+				if(!curDivision.hasCounty())
+					curDivision.setCounty(persister.getRegion(curDivision.getTown().getParentId()));
+				if(!curDivision.hasCity())
+					curDivision.setCity(persister.getRegion(curDivision.getCounty().getParentId()));
+				if(!curDivision.hasProvince())
+					curDivision.setProvince(persister.getRegion(curDivision.getCity().getParentId()));
 				break;
 			default:
 		}
 	}
-
-	/**
-	 * 检查是否达到最大匹配。
-	 */
-	@Override
-	public void endRound() {
-		//打印调试信息
-		if(isDebug && LOG.isDebugEnabled()) {
-			StringBuilder sb = new StringBuilder();
-			sb.append("|");
-			for(int i=1; i<currentLevel; i++)
-				sb.append("--------");
-			sb.append("> ").append("[round-").append(currentLevel).append("-end]");
-			LOG.info(sb.toString());
-		}
-		
-		this.checkDeepMost();
-		currentLevel--;
-	}
-	
 	private void checkDeepMost(){
 		if(stack.size() > deepMostLevel) {
 			deepMostLevel = stack.size();
@@ -357,8 +387,23 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 			deepMostDivision.setProvince(curDivision.getProvince());
 			deepMostDivision.setCity(curDivision.getCity());
 			deepMostDivision.setCounty(curDivision.getCounty());
+			deepMostDivision.setTown(curDivision.getTown());
 		}
 	}
+	
+	
+	private void printDebugInfo(String actionStart, String actionEnd, String value){
+		StringBuilder sb = new StringBuilder();
+		sb.append("|");
+		for(int i=1; i<currentLevel; i++)
+			sb.append("--------");
+		sb.append("> [").append(actionStart).append("-").append(currentLevel);
+		if(actionEnd!=null && !actionEnd.isEmpty()) sb.append('-').append(actionEnd);
+		sb.append("]");
+		if(value!=null && !value.isEmpty()) sb.append(' ').append(value);
+		LOG.info(sb.toString());
+	}
+	
 	
 	/**
 	 * 是否成功匹配上省市区。
@@ -408,8 +453,10 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 		deepMostDivision.setProvince(null);
 		deepMostDivision.setCity(null);
 		deepMostDivision.setCounty(null);
+		deepMostDivision.setTown(null);
 		curDivision.setProvince(null);
 		curDivision.setCity(null);
 		curDivision.setCounty(null);
+		curDivision.setTown(null);
 	}
 }

@@ -278,7 +278,8 @@ public class AddressPersister implements ApplicationContextAware {
 	
 	private void loadRegionChildren(RegionEntity parent){
 		//已经到最底层，结束
-		if(parent==null || parent.getType().equals(RegionType.County) || parent.getType().equals(RegionType.CityLevelCounty)) 
+		if(parent==null || parent.getType()==RegionType.Town || parent.getType()==RegionType.Street 
+				|| parent.getType()==RegionType.SpecialDistrict) 
 			return;
 		//递归加载下一级
 		List<RegionEntity> children = this.regionDao.findByParent(parent.getId());

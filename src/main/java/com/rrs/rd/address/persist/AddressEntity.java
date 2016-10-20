@@ -291,9 +291,7 @@ public class AddressEntity extends StdDivision implements Serializable {
     	StringBuilder sb = new StringBuilder();
     	sb.append('{')
     		.append(getId())
-    		.append('-').append(getProvince()==null ? "" : getProvince())
-    		.append('-').append(getCity()==null ? "" : getCity())
-    		.append('-').append(getCounty()==null ? "" : getCounty())
+    		.append('-').append(super.toString())
     		.append('-').append(getTowns()==null ? "" : getTowns().toString())
     		.append('-').append(getVillage())
     		.append('-').append(getRoad())

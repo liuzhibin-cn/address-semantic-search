@@ -24,7 +24,8 @@ public class AddressInterpreter {
 	private TermIndexBuilder termIndex = null;
 	private AddressPersister persister;
 	
-	private static char[] specialCharsToBeRemoved = " \r\n\t,，;；:：·.．。！、\"'“”|_-\\/{}【】〈〉<>[]「」".toCharArray();
+	private static char[] specialChars1 = " \r\n\t,，。·.．;；:：、！@$%*^`~=+&\"'“”|_-\\/".toCharArray();
+	private static char[] specialChars2 = "{}【】〈〉<>[]「」".toCharArray();
 	
 	private static Pattern BRACKET_PATTERN = Pattern.compile("(?<bracket>([\\(（\\{\\<〈\\[【「][^\\)）\\}\\>〉\\]】」]*[\\)）\\}\\>〉\\]】」]))");
 	
@@ -137,10 +138,6 @@ public class AddressInterpreter {
 		AddressEntity addr = new AddressEntity(addressText);
 		
 		start = System.currentTimeMillis();
-		String brackets = extractBrackets(addr);
-		timeBrc += System.currentTimeMillis() - start;
-		
-		start = System.currentTimeMillis();
 		extractBuildingNum(addr);
 		timeBuild += System.currentTimeMillis() - start;
 		
@@ -151,6 +148,10 @@ public class AddressInterpreter {
 		start = System.currentTimeMillis();
 		extractRegion(addr, visitor);
 		timeRegion += System.currentTimeMillis() - start;
+		
+		start = System.currentTimeMillis();
+		String brackets = extractBrackets(addr);
+		timeBrc += System.currentTimeMillis() - start;
 		
 		start = System.currentTimeMillis();
 		removeRedundancy(addr, visitor);
@@ -187,6 +188,7 @@ public class AddressInterpreter {
 		addr.setProvince(visitor.resultDivision().getProvince());
 		addr.setCity(visitor.resultDivision().getCity());
 		addr.setCounty(visitor.resultDivision().getCounty());
+		addr.setTown(visitor.resultDivision().getTown());
 		addr.setText(StringUtil.substring(addr.getText(), visitor.resultEndPosition() + 1));
 		return true;
 	}
@@ -201,7 +203,7 @@ public class AddressInterpreter {
 		//性能优化：使用String.replaceAll()和Matcher.replaceAll()方法性能相差不大，都比较耗时
 		//这种简单替换场景，自定义方法的性能比String.replaceAll()和Matcher.replaceAll()快10多倍接近20倍
 		//1. 删除特殊字符
-		text = StringUtil.remove(text, specialCharsToBeRemoved);
+		text = StringUtil.remove(text, specialChars1);
 		//2. 删除连续出现5个以上的数字
 		StringBuilder sb = new StringBuilder();
 		int digitCharNum = 0, minDigitCharNum=5; 

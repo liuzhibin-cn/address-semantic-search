@@ -49,7 +49,11 @@ public enum TermType {
 	/**
 	 * 其他地址文本
 	 */
-	Text('X');
+	Text('X'),
+	/**
+	 * 忽略项
+	 */
+	Ignore('I');
 	
 	private char value;
 	TermType(char val){

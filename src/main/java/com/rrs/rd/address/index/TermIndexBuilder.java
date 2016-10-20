@@ -47,7 +47,7 @@ public class TermIndexBuilder {
 	public TermIndexBuilder indexIgnorings(List<String> ignoreList){
 		if(ignoreList==null || ignoreList.isEmpty()) return this;
 		for(String str : ignoreList)
-			this.indexRoot.buildIndex(str, 0, TermType.Undefined, null);
+			this.indexRoot.buildIndex(str, 0, TermType.Ignore, null);
 		return this;
 	}
 	private TermType convertRegionType(RegionType type){
