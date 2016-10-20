@@ -38,13 +38,13 @@
 		<constructor-arg index="0" ref="persister" />
 		<constructor-arg index="1">
 			<list>
-				<value>省直辖市县</value>
+				<value>其它区</value>
 				<value>省直辖县级行政区划</value>
+				<value>省直辖市县</value>
 				<value>市辖区</value>
 				<value>县级直管村级单位（特殊镇）</value>
 				<value>县级直管村级单位</value>
 				<value>县区直属镇</value>
-				
 				<value>（镇）直辖</value>
 				<value>（镇）直辖地域</value>
 				<value>区直辖村</value>
