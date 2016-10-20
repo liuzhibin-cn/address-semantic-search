@@ -189,15 +189,11 @@ public class AddressInterpretTest extends TestBase {
 	
 	@Test
 	public void testExtractRegionPerf(){
-		AddressInterpreter interpreter = context.getBean(AddressInterpreter.class);
 		AddressPersister persister = context.getBean(AddressPersister.class);
 		TermIndexBuilder builder = context.getBean(TermIndexBuilder.class);
 		RegionInterpreterVisitor visitor = new RegionInterpreterVisitor(persister);
 		
 		//预热
-		this.extractRegionPerf("山东青岛市市南区宁德路金梦花园", interpreter);
-		this.extractRegionPerf("广东广州从化区温泉镇新田村", interpreter);
-		this.extractRegionPerf("湖南湘潭市湘潭县易俗河镇中南建材市场", interpreter);
 		this.indexSearchRegionPerf("山东青岛市市南区宁德路金梦花园", builder, visitor);
 		this.indexSearchRegionPerf("广东广州从化区温泉镇新田村", builder, visitor);
 		this.indexSearchRegionPerf("湖南湘潭市湘潭县易俗河镇中南建材市场", builder, visitor);
@@ -205,15 +201,7 @@ public class AddressInterpretTest extends TestBase {
 		//性能测试
 		int loop = 3000000;
 		long start = System.nanoTime();
-		for(int i=0; i<loop; i++) {
-			this.extractRegionPerf("山东青岛市市南区宁德路金梦花园", interpreter);
-			this.extractRegionPerf("广东广州从化区温泉镇新田村", interpreter);
-			this.extractRegionPerf("湖南湘潭市湘潭县易俗河镇中南建材市场", interpreter);
-			this.extractRegionPerf("浙江省绍兴市绍兴县孙端镇村西村", interpreter);
-		}
-		long time1 = System.nanoTime() - start;
 		
-		start = System.nanoTime();
 		for(int i=0; i<loop; i++) {
 			this.indexSearchRegionPerf("山东青岛市市南区宁德路金梦花园", builder, visitor);
 			this.indexSearchRegionPerf("广东广州从化区温泉镇新田村", builder, visitor);
@@ -222,11 +210,7 @@ public class AddressInterpretTest extends TestBase {
 		}
 		long time2 = System.nanoTime() - start;
 		
-		LOG.info("硬编码解析耗时: " + (time1/1000000/1000.0) + "s, 倒排索引方式耗时: " + (time2/1000000/1000.0) + "s");
-	}
-	private void extractRegionPerf(String text, AddressInterpreter interpreter){
-		AddressEntity addr = new AddressEntity(text);
-		interpreter.extractRegion1(addr, false);
+		LOG.info("倒排索引方式耗时: " + (time2/1000000/1000.0) + "s");
 	}
 	private void indexSearchRegionPerf(String text, TermIndexBuilder builder, RegionInterpreterVisitor visitor){
 		builder.deepMostQuery(text, visitor);

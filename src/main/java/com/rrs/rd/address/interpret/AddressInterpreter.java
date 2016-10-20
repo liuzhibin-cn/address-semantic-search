@@ -11,8 +11,6 @@ import org.slf4j.LoggerFactory;
 import com.rrs.rd.address.index.TermIndexBuilder;
 import com.rrs.rd.address.persist.AddressEntity;
 import com.rrs.rd.address.persist.AddressPersister;
-import com.rrs.rd.address.persist.RegionEntity;
-import com.rrs.rd.address.persist.RegionType;
 import com.rrs.rd.address.utils.StringUtil;
 
 /**
@@ -26,7 +24,6 @@ public class AddressInterpreter {
 	private TermIndexBuilder termIndex = null;
 	private AddressPersister persister;
 	
-	private List<String> forbiddenFollowingChars;
 	private List<String> invalidRegionNames;
 	private static char[] specialCharsToBeRemoved = " \r\n\t,，;；:：·.．。！、\"'“”|_-\\/{}【】〈〉<>[]「」".toCharArray();
 	
@@ -198,299 +195,6 @@ public class AddressInterpreter {
 	//***************************************************************************************
 	// 私有方法，出于单元测试目的部分方法设置为了public
 	//***************************************************************************************
-	/**
-	 * 匹配详细地址开头部分的省市区。
-	 * <p>
-	 * 
-	 * </p>
-	 * 
-	 * @param addr 输入参数和结果输出。输入: {@link AddressEntity#getText() addr.getText()}。
-	 *   输出{@link AddressEntity#getProvince() addr.getProvince()}、{@link AddressEntity#getCity() addr.getCity()}、
-	 *   {@link AddressEntity#getCounty() addr.getCounty()}等属性和判定方法。
-	 * @param isTrial 是否测试性匹配。
-	 * @return 匹配后的详细地址{@link AddressEntity#getText() addr.getText()}，
-	 *   会在头部删除已经匹配上的区域名称。匹配上的区域对象通过{@link AddressEntity#getProvince() addr.getProvince()}、
-	 *   {@link AddressEntity#getCity() addr.getCity()}、{@link AddressEntity#getCounty() addr.getCounty()}获取。
-	 */
-	public boolean extractRegion1(AddressEntity addr, boolean isTrial){
-		RegionEntity province = addr.getProvince(), city = addr.getCity();
-		addr.clearExtractResult();
-		//匹配省份
-		if(!simpleExtractRegion(addr, RegionType.Province, persister.rootRegion().getChildren(), isTrial)){
-			//特殊情况1：
-			//  处理地址中缺失省份的情况，例如：
-			//  广州从化区温泉镇新田村山岗社22号
-			//  这种情况下尝试匹配地级市，如果匹配到地级市自然可以得到省份
-			for(RegionEntity rgProvince : persister.rootRegion().getChildren()){
-				//处理限定性匹配
-				if(isTrial && province!=null && !province.equals(rgProvince)) continue;
-				List<RegionEntity> cities = null;
-				if(isTrial && city!=null){
-					cities = new ArrayList<RegionEntity>(1);
-					cities.add(city);
-				} else 
-					cities = rgProvince.getChildren();
-				//尝试匹配地级市
-				if(simpleExtractRegion(addr, RegionType.City, cities, isTrial)){
-					addr.setProvince(persister.getRegion(addr.getCity().getParentId())); //匹配到地级市，找出相应省份
-					addr.setProvinceInferred(true);
-					if(!isTrial && LOG.isDebugEnabled()){
-						LOG.debug("[addr-inter] [ex-regn] [no-prov] "
-							+ StringUtil.head(addr.getRawText(), addr.getRawText().length() - addr.getText().length())
-							+ ", try " + addr.getProvince().getName() + addr.getCity().getName());
-					}
-					break;
-				}
-			}
-			if(!addr.hasCity()){ //未匹配到地级市，匹配失败
-				if(!isTrial && LOG.isDebugEnabled()) 
-					LOG.debug("[addr-inter] [ex-regn] [no-prov] " + debugString(addr.getRawText()));
-				return false;
-			}
-		}
-		
-		//匹配地级市
-		if(!addr.hasCity()){
-			//处理限定性匹配
-			List<RegionEntity> cities = null;
-			if(isTrial && city!=null){
-				cities = new ArrayList<RegionEntity>(1);
-				cities.add(city);
-			} else 
-				cities = addr.getProvince().getChildren();
-			//先尝试一次简单匹配
-			if(!simpleExtractRegion(addr, RegionType.City, cities, isTrial)){
-				if(RegionType.ProvinceLevelCity1.equals(addr.getProvince().getType())){
-					//直辖市，匹配不到城市一级，直接进行设置
-					addr.setCity(addr.getProvince().getChildren().get(0));
-					addr.setProvinceInferred(true); //这种情况下，将省份或城市中任何一个设置为推导出来（而非直接匹配上）效果是一样的。
-				}
-				//特殊情况2：
-				//  对于省直辖县级市情况，在待解析的地址中可能的表示法：
-				//  1.【海南 -> 文昌市】
-				//  2.【海南 -> 文昌 -> 文昌市】
-				//  3.【海南 -> 海南省直辖市县 -> 文昌市】
-				//  第1、2种表示法在匹配区县时处理即可，这里处理第3种情况，移除特殊区域名称“海南省直辖市县”后再尝试进行匹配
-				if(!addr.hasCity() && removeInvalidRegionNames(addr, addr.getProvince())){
-					if(simpleExtractRegion(addr, RegionType.City, cities, isTrial)){
-						if(!isTrial && LOG.isDebugEnabled())
-							LOG.debug("[addr-inter] [ex-regn] [no-city] "
-								+ StringUtil.head(addr.getRawText(), addr.getRawText().length() - addr.getText().length())
-								+ ", try " + addr.getProvince().getName() + " " + addr.getCity().getName());
-					}
-				}
-				//特殊情况处理：
-				//无法匹配到地级市，尝试一次匹配区县
-				if(!addr.hasCity()){
-					for(RegionEntity theCity : cities){
-						if(simpleExtractRegion(addr, RegionType.County, theCity.getChildren(), isTrial)){
-							addr.setCity(theCity);
-							addr.setCityInferred(true);
-							if(!isTrial && LOG.isDebugEnabled())
-								LOG.debug("[addr-inter] [ex-regn] [no-city] "
-										+ StringUtil.head(addr.getRawText(), addr.getRawText().length() - addr.getText().length())
-										+ ", try " + addr.getProvince().getName() + " " + addr.getCity().getName() + " " + addr.getCounty().getName());
-						}
-					}
-				}
-			}
-		}
-		if(!addr.hasCity()){ //未匹配到地级市，匹配失败
-			if(!isTrial && LOG.isDebugEnabled())
-				LOG.debug("[addr-inter] [ex-regn] [no-city] " + debugString(addr.getRawText()));
-			return false;
-		}
-		
-		if(!addr.hasCounty()){
-			//匹配区县
-			if(RegionType.CityLevelCounty.equals(addr.getCity().getType())){
-				//特殊情况3：
-				//  省直辖县级行政区划，在标准行政区域中只有2级，例如【海南 -> 文昌市】
-				//  1. 先尝试使用地级市进行一次区县匹配，如果地址中采用的是3级表示法【海南 -> 文昌 -> 文昌市】，这次尝试会将地址中的【文昌市】匹配掉；
-				//  2. 直接将地址的区县设置为地级市的ID；
-				if(!simpleExtractRegion(addr, RegionType.County, addr.getCity() , isTrial))
-					addr.setCountyInferred(true);
-				addr.setCounty(addr.getCity());
-			}else{
-				//正常匹配区县
-				simpleExtractRegion(addr, RegionType.County, addr.getCity().getChildren(), isTrial);
-				if(!addr.hasCounty()){
-					//特殊情况4：
-					//  无法匹配的地址示例：新疆阿克苏地区阿拉尔市新苑祥和小区
-					//  原因：【阿拉尔市】原属于地级市【阿克苏地区】，后来调整为【新疆】的省直辖县级行政区划，在标准行政区域中的关系为：【新疆 -> 阿拉尔市】，
-					//	  因此代码能够匹配出省份【新疆】和地级市【阿克苏地区】，但无法在【阿克苏地区】下匹配出【阿拉尔市】
-					String matchedRegionString = addr.getProvince().getName() + addr.getCity().getName();
-					if(simpleExtractRegion(addr, RegionType.City, addr.getProvince().getChildren(), isTrial)){
-						if(RegionType.CityLevelCounty.equals(addr.getCity().getType())){ //确保是省直辖县级行政区划
-							addr.setCounty(addr.getCity());
-							addr.setCountyInferred(true);
-							if(!isTrial && LOG.isDebugEnabled())
-								LOG.debug("[addr-inter] [ex-regn] [no-coun] " + matchedRegionString + addr.getCity().getName()
-									+ ", try " + addr.getProvince().getName() + addr.getCity().getName());
-						}
-					}
-				}
-			}
-		}
-		
-		if(!addr.hasCounty()){
-			if(!isTrial && LOG.isDebugEnabled()) 
-				LOG.debug("[addr-inter] [ex-regn] [no-coun] " + debugString(addr.getRawText()));
-			return false;
-		}
-		return true;
-	}
-	
-	private boolean removeInvalidRegionNames(AddressEntity addr, RegionEntity parentRegion){
-		if(addr.getText().length()<=0) return false;
-		for(int i=0; invalidRegionNames!=null && i<invalidRegionNames.size(); i++){
-			String ignoreName = invalidRegionNames.get(i).trim();
-			if(addr.getText().startsWith(ignoreName)){
-				addr.setText(StringUtil.substring(addr.getText(), ignoreName.length()));
-				return true;
-			}
-			for(String regionName : parentRegion.orderedNameAndAlias()){
-				if(addr.getText().startsWith(regionName + ignoreName)){
-					addr.setText(StringUtil.substring(addr.getText(), (regionName + ignoreName).length()));
-					return true;
-				}
-			}
-		}
-		return false;
-	}
-	
-	private boolean simpleExtractRegion(AddressEntity addr, RegionType level, List<RegionEntity> regions, boolean isTrial){
-		if(addr.getText().length()<=0) return false;
-		if(regions==null || regions.isEmpty()) return false;
-		for(RegionEntity region : regions){
-			if(simpleExtractRegion(addr, level, region, isTrial)){
-				return true;
-			}
-		}
-		return false;
-	}
-	
-	private boolean simpleExtractRegion(AddressEntity addr, RegionType level, RegionEntity region, boolean isTrial){
-		if(region==null || addr.getText().length()<=0) return false;
-		
-		String match = tryMatchRegion(addr.getText(), region, isTrial);
-		if(match==null) return false;
-		
-		//特殊情况处理：
-		//湖南省湘潭市湘潭县、西藏那曲地区那曲县、新疆哈密地区哈密市、新疆可克达拉市可克达拉市、新疆克拉玛依市克拉玛依区等
-		//地级市与下属某个区县别名相同，如果地址中出现：湖南湘潭县，会将【湘潭】匹配为地级市，剩下一个【县】字无法匹配区县
-		if(region.getChildren()!=null 
-				&& RegionType.City.equals(level) //仅在地级市匹配时才进行该特殊情况处理
-				&& !match.equals(region.getName())){ //使用的别名，而不是全名匹配
-			RegionEntity childWithSameAlias = null;
-			for(RegionEntity child : region.getChildren()){
-				if(!match.equals(child.getName())){ //寻找是否存在别名相同的下级行政区域
-					for(String childName : child.orderedNameAndAlias()){
-						if(childName.startsWith(match)){
-							childWithSameAlias = child;
-							break;
-						}
-					}
-				}
-				if(childWithSameAlias!=null) break;
-			}
-			//使用下级行政区域全名能够成功匹配
-			if(childWithSameAlias!=null) {
-				String newMatch = tryMatchRegion(addr.getText(), childWithSameAlias, true);
-				if(newMatch!=null && newMatch.length()>match.length()){
-					//成功匹配到区县
-					addr.setCity(region);
-					addr.setCityInferred(true);
-					addr.setCounty(childWithSameAlias);
-					if(addr.getProvince()==null)
-						addr.setProvince(persister.getRegion(region.getParentId()));
-					addr.setText(StringUtil.substring(addr.getText(), newMatch.length()));
-					if(!isTrial && LOG.isDebugEnabled()) {
-						LOG.debug("[addr-inter] [ex-regn] [no-city] "
-							+ StringUtil.head(addr.getRawText(), addr.getRawText().length() - addr.getText().length())
-							+ ", try " + addr.getProvince().getName() + " " + addr.getCity().getName() + " " + addr.getCounty().getName());
-					}
-					return true;
-				}
-			}
-		}
-
-		if(RegionType.Province.equals(level)) addr.setProvince(region);
-		else if(RegionType.City.equals(level)) addr.setCity(region);
-		else if(RegionType.County.equals(level)) addr.setCounty(region);
-		else throw new IllegalArgumentException("Argument {level} must be one of Province, City or County");
-		addr.setText(StringUtil.substring(addr.getText(), match.length()));
-		return true;
-	}
-	
-	/**
-	 * 尝试文本text开头部分是否可以匹配省市区名称。
-	 * @param text
-	 * @param region
-	 * @param isTrial 是否需要输出日志
-	 * @return 成功匹配返回匹配到的省市区名称（明确使用的全名还是别名匹配），匹配失败返回null。
-	 */
-	private String tryMatchRegion(String text, RegionEntity region, boolean isTrial){
-		if(text==null || text.length()<=0 || region==null) return null;
-		
-		boolean conflictOccurs = false;
-		for(String name : region.orderedNameAndAlias()){
-			if(text.length() < name.length()) continue;
-			if(text.startsWith(name)){ //初步匹配上区域名称
-				//特殊情况处理：
-				//河北秦皇岛昌黎县昌黎镇秦皇岛市昌黎镇马铁庄村
-				//在移除冗余时匹配：秦皇岛市昌黎镇，会将【昌黎】匹配成为区县【昌黎县】，导致剩下的文本为【镇马铁庄村】
-				if(RegionType.County.equals(region.getType()) 
-						&& !name.equals(region.getName()) && name.length()<region.getName().length()){ //使用别名匹配上的
-					String left = StringUtil.tail(text, text.length() - name.length());
-					if(left.length()>0 && left.startsWith("大街") || left.startsWith("大道") || left.startsWith("街道") 
-							|| left.startsWith("镇") || left.startsWith("乡") || left.startsWith("村")
-							|| left.startsWith("路") || left.startsWith("公路"))
-						return null;
-				}
-				//特殊情况处理：
-				//山东青岛市北区、山东青岛市南区、山东济南市中区、山东济宁市中区、山东枣庄市中区、四川乐山市中区、四川内江市中区
-				//上面地址，区县都以【市】字开头，如果使用【青岛市】匹配地级市，则区县部分剩下【南区】、【北区】、【中区】等，无法匹配
-				boolean successMatch = true;
-				for(int i=0; region.getChildren()!=null && i<region.getChildren().size(); i++){
-					RegionEntity child = region.getChildren().get(i);
-					if(
-						name.length()>=3 //匹配到的区域名称只有2个字，无需冲突判断 
-						//匹配到的区域名称最后一个字，与下级区域名称的第一个字相同，则可能发生上述冲突
-						&& name.charAt(name.length()-1) == child.getName().charAt(0) 
-						//地址中随后出现的2个字无法匹配下级区域
-						&& !child.getName().startsWith(StringUtil.substring(text, name.length(), name.length()+1))
-						//但匹配到的区域名称最后一个字 + 地址中随后出现的第一个字，可以匹配下级区域
-						&& child.getName().startsWith(StringUtil.substring(text, name.length()-1, name.length()))
-						){
-						if(!isTrial && LOG.isDebugEnabled()){
-							LOG.debug("[addr-inter] [ex-regn] [conflic] " + StringUtil.head(text, name.length()+2) 
-								+ ", now match " + name + "-" + StringUtil.tail(child.getName(), child.getName().length()-1)
-								+ ", will try " + StringUtil.head(name, name.length()-1) + "-" + child.getName());
-						}
-						conflictOccurs = true;
-						successMatch = false;
-						break;
-					}
-				}
-				//紧邻匹配部分之后的字符不能出现在forbiddenFollowingChars中
-				if(successMatch && !conflictOccurs 
-						&& !name.equals(region.getName()) && !name.endsWith("县")) { //仅使用别名匹配时才做该处理
-					for(int i=0; forbiddenFollowingChars!=null && i<forbiddenFollowingChars.size(); i++){
-						String forbidden = forbiddenFollowingChars.get(i);
-						if(text.length() < name.length() + forbidden.length()) continue;
-						if(StringUtil.substring(text, name.length()).startsWith(forbidden)){
-							successMatch = false;
-							break;
-						}
-					}
-				}
-				if(successMatch) return name;
-			}
-		}
-		return null;
-	}
-	
 	public boolean removeSpecialChars(AddressEntity addr){
 		if(addr.getText().length()<=0) return false;
 		String text = addr.getText();
@@ -548,44 +252,6 @@ public class AddressInterpreter {
 			endIndex=addr.getText().length();
 			i=0;
 			removed = true;
-		}
-		
-		return removed;
-	}
-	
-	public boolean removeRedundancy1(AddressEntity addr){
-		if(addr.getText().length()<=0 || !addr.hasProvince() || !addr.hasCity()) return false;
-		
-		boolean removed = false;
-		
-		//采用后序数组方式匹配省市区
-		int endIndex = addr.getText().length();
-		char provinceFirstChar = addr.getProvince().getName().charAt(0);
-		char cityFirstChar = addr.getCity().getName().charAt(0);
-		for(int i=0; i<endIndex; ){
-			//不可能匹配上省市区的情况
-			char c = addr.getText().charAt(i);
-			if(c!=provinceFirstChar && c!=cityFirstChar) {
-				i++;
-				continue;
-			}
-			AddressEntity newAddr = new AddressEntity();
-			newAddr.setRawText(StringUtil.substring(addr.getText(), i));
-			newAddr.setText(newAddr.getRawText());
-			newAddr.setProvince(addr.getProvince());
-			newAddr.setCity(addr.getCity());
-			newAddr.setCounty(addr.getCounty());
-			extractRegion1(newAddr, true);
-			if(newAddr.matchedRegionCount() - newAddr.inferredCount() >= 2){ //省市区至少连续匹配两个以上部分
-				if(addr.getProvince().equals(newAddr.getProvince()) && addr.getCity().equals(newAddr.getCity())){
-					addr.setText(newAddr.getText());
-					endIndex=addr.getText().length();
-					i=0;
-					removed = true;
-					continue;
-				}
-			}
-			i++;
 		}
 		
 		return removed;
@@ -737,11 +403,7 @@ public class AddressInterpreter {
     	
     	return found;
 	}
-	
-	private String debugString(String text){
-		if(text==null) return "";
-		return text.length() <= 25 ? text : StringUtil.head(text, 25) + "...";
-	}
+
 	
 	//***************************************************************************************
 	// Spring IoC
@@ -752,9 +414,6 @@ public class AddressInterpreter {
 	public void setPersister(AddressPersister value){
 		persister = value;
 	}
-	public void setForbiddenFollowingChars(List<String> value){
-		forbiddenFollowingChars = value;
-	}
 	public void setInvalidRegionNames(List<String> value){
 		invalidRegionNames = value;
 	}
@@ -762,4 +421,346 @@ public class AddressInterpreter {
 		return invalidRegionNames;
 	}
 
+	//***************************************************************************************
+	// 作废代码
+	//***************************************************************************************
+//	private List<String> forbiddenFollowingChars;
+//	public void setForbiddenFollowingChars(List<String> value){
+//		forbiddenFollowingChars = value;
+//	}
+//	
+//	public boolean removeRedundancy1(AddressEntity addr){
+//		if(addr.getText().length()<=0 || !addr.hasProvince() || !addr.hasCity()) return false;
+//		
+//		boolean removed = false;
+//		
+//		//采用后序数组方式匹配省市区
+//		int endIndex = addr.getText().length();
+//		char provinceFirstChar = addr.getProvince().getName().charAt(0);
+//		char cityFirstChar = addr.getCity().getName().charAt(0);
+//		for(int i=0; i<endIndex; ){
+//			//不可能匹配上省市区的情况
+//			char c = addr.getText().charAt(i);
+//			if(c!=provinceFirstChar && c!=cityFirstChar) {
+//				i++;
+//				continue;
+//			}
+//			AddressEntity newAddr = new AddressEntity();
+//			newAddr.setRawText(StringUtil.substring(addr.getText(), i));
+//			newAddr.setText(newAddr.getRawText());
+//			newAddr.setProvince(addr.getProvince());
+//			newAddr.setCity(addr.getCity());
+//			newAddr.setCounty(addr.getCounty());
+//			extractRegion1(newAddr, true);
+//			if(newAddr.matchedRegionCount() - newAddr.inferredCount() >= 2){ //省市区至少连续匹配两个以上部分
+//				if(addr.getProvince().equals(newAddr.getProvince()) && addr.getCity().equals(newAddr.getCity())){
+//					addr.setText(newAddr.getText());
+//					endIndex=addr.getText().length();
+//					i=0;
+//					removed = true;
+//					continue;
+//				}
+//			}
+//			i++;
+//		}
+//		
+//		return removed;
+//	}
+//	
+//	private boolean simpleExtractRegion(AddressEntity addr, RegionType level, List<RegionEntity> regions, boolean isTrial){
+//		if(addr.getText().length()<=0) return false;
+//		if(regions==null || regions.isEmpty()) return false;
+//		for(RegionEntity region : regions){
+//			if(simpleExtractRegion(addr, level, region, isTrial)){
+//				return true;
+//			}
+//		}
+//		return false;
+//	}
+//	
+//	private boolean simpleExtractRegion(AddressEntity addr, RegionType level, RegionEntity region, boolean isTrial){
+//		if(region==null || addr.getText().length()<=0) return false;
+//		
+//		String match = tryMatchRegion(addr.getText(), region, isTrial);
+//		if(match==null) return false;
+//		
+//		//特殊情况处理：
+//		//湖南省湘潭市湘潭县、西藏那曲地区那曲县、新疆哈密地区哈密市、新疆可克达拉市可克达拉市、新疆克拉玛依市克拉玛依区等
+//		//地级市与下属某个区县别名相同，如果地址中出现：湖南湘潭县，会将【湘潭】匹配为地级市，剩下一个【县】字无法匹配区县
+//		if(region.getChildren()!=null 
+//				&& RegionType.City.equals(level) //仅在地级市匹配时才进行该特殊情况处理
+//				&& !match.equals(region.getName())){ //使用的别名，而不是全名匹配
+//			RegionEntity childWithSameAlias = null;
+//			for(RegionEntity child : region.getChildren()){
+//				if(!match.equals(child.getName())){ //寻找是否存在别名相同的下级行政区域
+//					for(String childName : child.orderedNameAndAlias()){
+//						if(childName.startsWith(match)){
+//							childWithSameAlias = child;
+//							break;
+//						}
+//					}
+//				}
+//				if(childWithSameAlias!=null) break;
+//			}
+//			//使用下级行政区域全名能够成功匹配
+//			if(childWithSameAlias!=null) {
+//				String newMatch = tryMatchRegion(addr.getText(), childWithSameAlias, true);
+//				if(newMatch!=null && newMatch.length()>match.length()){
+//					//成功匹配到区县
+//					addr.setCity(region);
+//					addr.setCityInferred(true);
+//					addr.setCounty(childWithSameAlias);
+//					if(addr.getProvince()==null)
+//						addr.setProvince(persister.getRegion(region.getParentId()));
+//					addr.setText(StringUtil.substring(addr.getText(), newMatch.length()));
+//					if(!isTrial && LOG.isDebugEnabled()) {
+//						LOG.debug("[addr-inter] [ex-regn] [no-city] "
+//							+ StringUtil.head(addr.getRawText(), addr.getRawText().length() - addr.getText().length())
+//							+ ", try " + addr.getProvince().getName() + " " + addr.getCity().getName() + " " + addr.getCounty().getName());
+//					}
+//					return true;
+//				}
+//			}
+//		}
+//
+//		if(RegionType.Province.equals(level)) addr.setProvince(region);
+//		else if(RegionType.City.equals(level)) addr.setCity(region);
+//		else if(RegionType.County.equals(level)) addr.setCounty(region);
+//		else throw new IllegalArgumentException("Argument {level} must be one of Province, City or County");
+//		addr.setText(StringUtil.substring(addr.getText(), match.length()));
+//		return true;
+//	}
+//	
+//	/**
+//	 * 尝试文本text开头部分是否可以匹配省市区名称。
+//	 * @param text
+//	 * @param region
+//	 * @param isTrial 是否需要输出日志
+//	 * @return 成功匹配返回匹配到的省市区名称（明确使用的全名还是别名匹配），匹配失败返回null。
+//	 */
+//	private String tryMatchRegion(String text, RegionEntity region, boolean isTrial){
+//		if(text==null || text.length()<=0 || region==null) return null;
+//		
+//		boolean conflictOccurs = false;
+//		for(String name : region.orderedNameAndAlias()){
+//			if(text.length() < name.length()) continue;
+//			if(text.startsWith(name)){ //初步匹配上区域名称
+//				//特殊情况处理：
+//				//河北秦皇岛昌黎县昌黎镇秦皇岛市昌黎镇马铁庄村
+//				//在移除冗余时匹配：秦皇岛市昌黎镇，会将【昌黎】匹配成为区县【昌黎县】，导致剩下的文本为【镇马铁庄村】
+//				if(RegionType.County.equals(region.getType()) 
+//						&& !name.equals(region.getName()) && name.length()<region.getName().length()){ //使用别名匹配上的
+//					String left = StringUtil.tail(text, text.length() - name.length());
+//					if(left.length()>0 && left.startsWith("大街") || left.startsWith("大道") || left.startsWith("街道") 
+//							|| left.startsWith("镇") || left.startsWith("乡") || left.startsWith("村")
+//							|| left.startsWith("路") || left.startsWith("公路"))
+//						return null;
+//				}
+//				//特殊情况处理：
+//				//山东青岛市北区、山东青岛市南区、山东济南市中区、山东济宁市中区、山东枣庄市中区、四川乐山市中区、四川内江市中区
+//				//上面地址，区县都以【市】字开头，如果使用【青岛市】匹配地级市，则区县部分剩下【南区】、【北区】、【中区】等，无法匹配
+//				boolean successMatch = true;
+//				for(int i=0; region.getChildren()!=null && i<region.getChildren().size(); i++){
+//					RegionEntity child = region.getChildren().get(i);
+//					if(
+//						name.length()>=3 //匹配到的区域名称只有2个字，无需冲突判断 
+//						//匹配到的区域名称最后一个字，与下级区域名称的第一个字相同，则可能发生上述冲突
+//						&& name.charAt(name.length()-1) == child.getName().charAt(0) 
+//						//地址中随后出现的2个字无法匹配下级区域
+//						&& !child.getName().startsWith(StringUtil.substring(text, name.length(), name.length()+1))
+//						//但匹配到的区域名称最后一个字 + 地址中随后出现的第一个字，可以匹配下级区域
+//						&& child.getName().startsWith(StringUtil.substring(text, name.length()-1, name.length()))
+//						){
+//						if(!isTrial && LOG.isDebugEnabled()){
+//							LOG.debug("[addr-inter] [ex-regn] [conflic] " + StringUtil.head(text, name.length()+2) 
+//								+ ", now match " + name + "-" + StringUtil.tail(child.getName(), child.getName().length()-1)
+//								+ ", will try " + StringUtil.head(name, name.length()-1) + "-" + child.getName());
+//						}
+//						conflictOccurs = true;
+//						successMatch = false;
+//						break;
+//					}
+//				}
+//				//紧邻匹配部分之后的字符不能出现在forbiddenFollowingChars中
+//				if(successMatch && !conflictOccurs 
+//						&& !name.equals(region.getName()) && !name.endsWith("县")) { //仅使用别名匹配时才做该处理
+//					for(int i=0; forbiddenFollowingChars!=null && i<forbiddenFollowingChars.size(); i++){
+//						String forbidden = forbiddenFollowingChars.get(i);
+//						if(text.length() < name.length() + forbidden.length()) continue;
+//						if(StringUtil.substring(text, name.length()).startsWith(forbidden)){
+//							successMatch = false;
+//							break;
+//						}
+//					}
+//				}
+//				if(successMatch) return name;
+//			}
+//		}
+//		return null;
+//	}
+//	
+//	/**
+//	 * 匹配详细地址开头部分的省市区。
+//	 * <p>
+//	 * 
+//	 * </p>
+//	 * 
+//	 * @param addr 输入参数和结果输出。输入: {@link AddressEntity#getText() addr.getText()}。
+//	 *   输出{@link AddressEntity#getProvince() addr.getProvince()}、{@link AddressEntity#getCity() addr.getCity()}、
+//	 *   {@link AddressEntity#getCounty() addr.getCounty()}等属性和判定方法。
+//	 * @param isTrial 是否测试性匹配。
+//	 * @return 匹配后的详细地址{@link AddressEntity#getText() addr.getText()}，
+//	 *   会在头部删除已经匹配上的区域名称。匹配上的区域对象通过{@link AddressEntity#getProvince() addr.getProvince()}、
+//	 *   {@link AddressEntity#getCity() addr.getCity()}、{@link AddressEntity#getCounty() addr.getCounty()}获取。
+//	 */
+//	public boolean extractRegion1(AddressEntity addr, boolean isTrial){
+//		RegionEntity province = addr.getProvince(), city = addr.getCity();
+//		addr.clearExtractResult();
+//		//匹配省份
+//		if(!simpleExtractRegion(addr, RegionType.Province, persister.rootRegion().getChildren(), isTrial)){
+//			//特殊情况1：
+//			//  处理地址中缺失省份的情况，例如：
+//			//  广州从化区温泉镇新田村山岗社22号
+//			//  这种情况下尝试匹配地级市，如果匹配到地级市自然可以得到省份
+//			for(RegionEntity rgProvince : persister.rootRegion().getChildren()){
+//				//处理限定性匹配
+//				if(isTrial && province!=null && !province.equals(rgProvince)) continue;
+//				List<RegionEntity> cities = null;
+//				if(isTrial && city!=null){
+//					cities = new ArrayList<RegionEntity>(1);
+//					cities.add(city);
+//				} else 
+//					cities = rgProvince.getChildren();
+//				//尝试匹配地级市
+//				if(simpleExtractRegion(addr, RegionType.City, cities, isTrial)){
+//					addr.setProvince(persister.getRegion(addr.getCity().getParentId())); //匹配到地级市，找出相应省份
+//					addr.setProvinceInferred(true);
+//					if(!isTrial && LOG.isDebugEnabled()){
+//						LOG.debug("[addr-inter] [ex-regn] [no-prov] "
+//							+ StringUtil.head(addr.getRawText(), addr.getRawText().length() - addr.getText().length())
+//							+ ", try " + addr.getProvince().getName() + addr.getCity().getName());
+//					}
+//					break;
+//				}
+//			}
+//			if(!addr.hasCity()){ //未匹配到地级市，匹配失败
+//				if(!isTrial && LOG.isDebugEnabled()) 
+//					LOG.debug("[addr-inter] [ex-regn] [no-prov] " + debugString(addr.getRawText()));
+//				return false;
+//			}
+//		}
+//		
+//		//匹配地级市
+//		if(!addr.hasCity()){
+//			//处理限定性匹配
+//			List<RegionEntity> cities = null;
+//			if(isTrial && city!=null){
+//				cities = new ArrayList<RegionEntity>(1);
+//				cities.add(city);
+//			} else 
+//				cities = addr.getProvince().getChildren();
+//			//先尝试一次简单匹配
+//			if(!simpleExtractRegion(addr, RegionType.City, cities, isTrial)){
+//				if(RegionType.ProvinceLevelCity1.equals(addr.getProvince().getType())){
+//					//直辖市，匹配不到城市一级，直接进行设置
+//					addr.setCity(addr.getProvince().getChildren().get(0));
+//					addr.setProvinceInferred(true); //这种情况下，将省份或城市中任何一个设置为推导出来（而非直接匹配上）效果是一样的。
+//				}
+//				//特殊情况2：
+//				//  对于省直辖县级市情况，在待解析的地址中可能的表示法：
+//				//  1.【海南 -> 文昌市】
+//				//  2.【海南 -> 文昌 -> 文昌市】
+//				//  3.【海南 -> 海南省直辖市县 -> 文昌市】
+//				//  第1、2种表示法在匹配区县时处理即可，这里处理第3种情况，移除特殊区域名称“海南省直辖市县”后再尝试进行匹配
+//				if(!addr.hasCity() && removeInvalidRegionNames(addr, addr.getProvince())){
+//					if(simpleExtractRegion(addr, RegionType.City, cities, isTrial)){
+//						if(!isTrial && LOG.isDebugEnabled())
+//							LOG.debug("[addr-inter] [ex-regn] [no-city] "
+//								+ StringUtil.head(addr.getRawText(), addr.getRawText().length() - addr.getText().length())
+//								+ ", try " + addr.getProvince().getName() + " " + addr.getCity().getName());
+//					}
+//				}
+//				//特殊情况处理：
+//				//无法匹配到地级市，尝试一次匹配区县
+//				if(!addr.hasCity()){
+//					for(RegionEntity theCity : cities){
+//						if(simpleExtractRegion(addr, RegionType.County, theCity.getChildren(), isTrial)){
+//							addr.setCity(theCity);
+//							addr.setCityInferred(true);
+//							if(!isTrial && LOG.isDebugEnabled())
+//								LOG.debug("[addr-inter] [ex-regn] [no-city] "
+//										+ StringUtil.head(addr.getRawText(), addr.getRawText().length() - addr.getText().length())
+//										+ ", try " + addr.getProvince().getName() + " " + addr.getCity().getName() + " " + addr.getCounty().getName());
+//						}
+//					}
+//				}
+//			}
+//		}
+//		if(!addr.hasCity()){ //未匹配到地级市，匹配失败
+//			if(!isTrial && LOG.isDebugEnabled())
+//				LOG.debug("[addr-inter] [ex-regn] [no-city] " + debugString(addr.getRawText()));
+//			return false;
+//		}
+//		
+//		if(!addr.hasCounty()){
+//			//匹配区县
+//			if(RegionType.CityLevelCounty.equals(addr.getCity().getType())){
+//				//特殊情况3：
+//				//  省直辖县级行政区划，在标准行政区域中只有2级，例如【海南 -> 文昌市】
+//				//  1. 先尝试使用地级市进行一次区县匹配，如果地址中采用的是3级表示法【海南 -> 文昌 -> 文昌市】，这次尝试会将地址中的【文昌市】匹配掉；
+//				//  2. 直接将地址的区县设置为地级市的ID；
+//				if(!simpleExtractRegion(addr, RegionType.County, addr.getCity() , isTrial))
+//					addr.setCountyInferred(true);
+//				addr.setCounty(addr.getCity());
+//			}else{
+//				//正常匹配区县
+//				simpleExtractRegion(addr, RegionType.County, addr.getCity().getChildren(), isTrial);
+//				if(!addr.hasCounty()){
+//					//特殊情况4：
+//					//  无法匹配的地址示例：新疆阿克苏地区阿拉尔市新苑祥和小区
+//					//  原因：【阿拉尔市】原属于地级市【阿克苏地区】，后来调整为【新疆】的省直辖县级行政区划，在标准行政区域中的关系为：【新疆 -> 阿拉尔市】，
+//					//	  因此代码能够匹配出省份【新疆】和地级市【阿克苏地区】，但无法在【阿克苏地区】下匹配出【阿拉尔市】
+//					String matchedRegionString = addr.getProvince().getName() + addr.getCity().getName();
+//					if(simpleExtractRegion(addr, RegionType.City, addr.getProvince().getChildren(), isTrial)){
+//						if(RegionType.CityLevelCounty.equals(addr.getCity().getType())){ //确保是省直辖县级行政区划
+//							addr.setCounty(addr.getCity());
+//							addr.setCountyInferred(true);
+//							if(!isTrial && LOG.isDebugEnabled())
+//								LOG.debug("[addr-inter] [ex-regn] [no-coun] " + matchedRegionString + addr.getCity().getName()
+//									+ ", try " + addr.getProvince().getName() + addr.getCity().getName());
+//						}
+//					}
+//				}
+//			}
+//		}
+//		
+//		if(!addr.hasCounty()){
+//			if(!isTrial && LOG.isDebugEnabled()) 
+//				LOG.debug("[addr-inter] [ex-regn] [no-coun] " + debugString(addr.getRawText()));
+//			return false;
+//		}
+//		return true;
+//	}
+//	
+//	private boolean removeInvalidRegionNames(AddressEntity addr, RegionEntity parentRegion){
+//		if(addr.getText().length()<=0) return false;
+//		for(int i=0; invalidRegionNames!=null && i<invalidRegionNames.size(); i++){
+//			String ignoreName = invalidRegionNames.get(i).trim();
+//			if(addr.getText().startsWith(ignoreName)){
+//				addr.setText(StringUtil.substring(addr.getText(), ignoreName.length()));
+//				return true;
+//			}
+//			for(String regionName : parentRegion.orderedNameAndAlias()){
+//				if(addr.getText().startsWith(regionName + ignoreName)){
+//					addr.setText(StringUtil.substring(addr.getText(), (regionName + ignoreName).length()));
+//					return true;
+//				}
+//			}
+//		}
+//		return false;
+//	}
+//	private String debugString(String text){
+//		if(text==null) return "";
+//		return text.length() <= 25 ? text : StringUtil.head(text, 25) + "...";
+//	}
 }
