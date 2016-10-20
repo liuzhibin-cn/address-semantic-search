@@ -153,13 +153,11 @@ public class AddressPersister implements ApplicationContextAware {
 		if(REGION_TREE==null) throw new IllegalStateException("Region data not initialized");
 		return REGION_TREE;
 	}
-	
 	public RegionEntity getRegion(int id){
 		if(!REGION_LOADED) this.loadRegions();
 		if(REGION_TREE==null) throw new IllegalStateException("Region data not initialized");
 		return REGION_CACHE.get(id);
 	}
-	
 	/**
 	 * 初始化导入全国标准行政区域数据。
 	 * @param china 最顶层区域对象-中国，其他全部区域对象必须通过children设置好
@@ -216,6 +214,12 @@ public class AddressPersister implements ApplicationContextAware {
 		REGION_TREE = china;
 		
 		return importedCount;
+	}
+	public void createRegion(RegionEntity region){
+		this.regionDao.create(region);
+	}
+	public RegionEntity findRegion(int parentId, String name){
+		return this.regionDao.findByParentAndName(parentId, name);
 	}
 	
 	public List<AddressEntity> loadAddresses(int provinceId, int cityId, int countyId){

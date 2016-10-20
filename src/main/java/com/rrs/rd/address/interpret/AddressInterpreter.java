@@ -149,11 +149,11 @@ public class AddressInterpreter {
 		timeRmSpec += System.currentTimeMillis() - start;
 		
 		start = System.currentTimeMillis();
-		extractRegion2(addr, visitor);
+		extractRegion(addr, visitor);
 		timeRegion += System.currentTimeMillis() - start;
 		
 		start = System.currentTimeMillis();
-		removeRedundancy2(addr, visitor);
+		removeRedundancy(addr, visitor);
 		timeRmRed += System.currentTimeMillis() - start;
 		
 		start = System.currentTimeMillis();
@@ -161,7 +161,7 @@ public class AddressInterpreter {
 		timeTown += System.currentTimeMillis() - start;
 		
 		start = System.currentTimeMillis();
-		removeRedundancy2(addr, visitor);
+		removeRedundancy(addr, visitor);
 		timeRmRed += System.currentTimeMillis() - start;
 		
 		start = System.currentTimeMillis();
@@ -180,7 +180,7 @@ public class AddressInterpreter {
 		return addr;
 	}
 	
-	public boolean extractRegion2(AddressEntity addr, RegionInterpreterVisitor visitor){
+	public boolean extractRegion(AddressEntity addr, RegionInterpreterVisitor visitor){
 		visitor.reset();
 		termIndex.deepMostQuery(addr.getText(), visitor);
 		if(!visitor.hasResult()) return false;
@@ -227,7 +227,7 @@ public class AddressInterpreter {
 		return result;
 	}
 	
-	public boolean removeRedundancy2(AddressEntity addr, RegionInterpreterVisitor visitor) {
+	public boolean removeRedundancy(AddressEntity addr, RegionInterpreterVisitor visitor) {
 		if(addr.getText().length()<=0 || !addr.hasProvince() || !addr.hasCity()) return false;
 		
 		boolean removed = false;

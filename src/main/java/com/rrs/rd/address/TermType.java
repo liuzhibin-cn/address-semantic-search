@@ -33,6 +33,7 @@ public enum TermType {
 	 * 乡镇
 	 */
 	Town('T'),
+	SpecialTown('D'),
 	/**
 	 * 村
 	 */

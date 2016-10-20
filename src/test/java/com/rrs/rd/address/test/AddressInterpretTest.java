@@ -377,7 +377,7 @@ public class AddressInterpretTest extends TestBase {
 		addr.setProvince(persister.getRegion(pid));
 		addr.setCity(persister.getRegion(cid));
 		addr.setCounty(persister.getRegion(did));
-		interpreter.removeRedundancy2(addr, visitor);
+		interpreter.removeRedundancy(addr, visitor);
 		LOG.info("> " + addr.getRawText() + " -> " + addr.getText());
 		assertEquals(title + ": 删冗余后的结果错误", expected, addr.getText());
 	}
@@ -406,7 +406,7 @@ public class AddressInterpretTest extends TestBase {
 		try{
             while((line = br.readLine()) != null){
             	AddressEntity addr = new AddressEntity(line);
-            	if(!interpreter.extractRegion2(addr, visitor)) 
+            	if(!interpreter.extractRegion(addr, visitor)) 
             		continue;
             	interpreter.extractBrackets(addr);
             	interpreter.removeSpecialChars(addr);
@@ -415,7 +415,7 @@ public class AddressInterpretTest extends TestBase {
             	removed.setProvince(addr.getProvince());
             	removed.setCity(addr.getCity());
             	removed.setCounty(addr.getCounty());
-            	if(interpreter.removeRedundancy2(removed, visitor))
+            	if(interpreter.removeRedundancy(removed, visitor))
             		LOG.info("> " + addr.getText() + " --> " + removed.getText());
             }
 		} catch (Exception ex) {

@@ -56,4 +56,8 @@
         <level value="debug"/>
         <appender-ref ref="console"/>
     </logger>
+    <logger name="com.rrs.rd.address.misc.RegionCrawlerForTmall" additivity="false">
+        <level value="debug"/>
+        <appender-ref ref="console"/>
+    </logger>
 </log4j:configuration>

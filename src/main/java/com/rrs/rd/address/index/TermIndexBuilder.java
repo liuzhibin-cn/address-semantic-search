@@ -61,9 +61,12 @@ public class TermIndexBuilder {
 			case County: 
 			case CityLevelCounty:
 				return TermType.County;
+			case Street: return TermType.Street;
+			case Town: return TermType.Town;
+			case SpecialDistrict: return TermType.SpecialTown;
 			default:
 		}
-		return null;
+		return TermType.Undefined;
 	}
 	
 	public void deepMostQuery(String text, TermIndexVisitor visitor){

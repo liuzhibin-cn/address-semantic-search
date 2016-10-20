@@ -187,12 +187,22 @@
 					<groupId>javax.servlet</groupId>
       				<artifactId>javax.servlet-api</artifactId>
 				</exclusion>
+				<exclusion>
+			    	<groupId>org.apache.httpcomponents</groupId>
+			    	<artifactId>httpclient</artifactId>
+		    	</exclusion>
 			</exclusions>
 		</dependency>
 		<dependency>
 		    <groupId>org.jboss.resteasy</groupId>
 		    <artifactId>resteasy-jaxrs</artifactId>
 		    <version>3.0.19.Final</version>
+		    <exclusions>
+		    	<exclusion>
+			    	<groupId>org.apache.httpcomponents</groupId>
+			    	<artifactId>httpclient</artifactId>
+		    	</exclusion>
+		    </exclusions>
 		</dependency>
 		<dependency>
 		    <groupId>org.jboss.resteasy</groupId>
@@ -215,6 +225,16 @@
 		    <groupId>org.apache.velocity</groupId>
 		    <artifactId>velocity</artifactId>
 		    <version>1.7</version>
+		</dependency>
+		<dependency>
+		    <groupId>org.apache.httpcomponents</groupId>
+		    <artifactId>httpclient</artifactId>
+		    <version>4.5.2</version>
+		</dependency>
+		<dependency>
+		    <groupId>com.google.code.gson</groupId>
+		    <artifactId>gson</artifactId>
+		    <version>2.7</version>
 		</dependency>
 		
 		<!-- <dependency>
@@ -350,12 +370,6 @@
 			<artifactId>junit</artifactId>
 			<version>4.12</version>
 			<scope>test</scope>
-		</dependency>
-		<dependency>
-		    <groupId>com.google.code.gson</groupId>
-		    <artifactId>gson</artifactId>
-		    <version>2.7</version>
-		    <scope>test</scope>
 		</dependency>
 	</dependencies>
 

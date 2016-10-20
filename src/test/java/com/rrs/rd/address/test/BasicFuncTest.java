@@ -149,4 +149,10 @@ public class BasicFuncTest {
 		}
 		System.out.println("List耗时: " + (System.nanoTime()-start)/1000000);
 	}
+	
+	@Test
+	public void testStringContains(){
+		String str = "callback({success:true,result:{'370405001':['运河街道','370405','yun he jie dao'],'370405100':['邳庄镇','370405','pi zhuang zhen'],'370405101':['张山子镇','370405','zhang shan zi zhen'],'370405102':['泥沟镇','370405','ni gou zhen'],'370405103':['涧头集镇','370405','jian tou ji zhen'],'370405104':['马兰屯镇','370405','ma lan tun zhen']}});";
+		System.out.println(str.startsWith("callback({success:true,result:"));
+	}
 }
