@@ -37,9 +37,6 @@ public class AddressEntity extends StdDivision implements Serializable {
     private static final long serialVersionUID = 111198101809627685L;
 
     private int id;
-    private boolean provinceInferred = false;
-    private boolean cityInferred = false;
-    private boolean countyInferred = false;
     private String text = "";
     private List<String> towns = null;
     private String village = "";
@@ -75,46 +72,6 @@ public class AddressEntity extends StdDivision implements Serializable {
     	this.towns.add(value.trim());
     	return true;
     }
-    
-	/**
-	 * 区域匹配过程中，省份是否是推断出来的。
-	 * <p>如果不是推断出来，表示地址中有文本匹配上了这一级区域的名称；
-	 * 如果是推断出来的，则表示地址中这一级区域名称缺失，没有匹配上，但通过一些规则推断出来这个区域对象。</p>
-	 * @return
-	 */
-	public boolean isProvinceInferred(){
-		return this.provinceInferred;
-	}
-	/**
-	 * 区域匹配过程中，地级市是否是推断出来的。
-	 * <p>如果不是推断出来，表示地址中有文本匹配上了这一级区域的名称；
-	 * 如果是推断出来的，则表示地址中这一级区域名称缺失，没有匹配上，但通过一些规则推断出来这个区域对象。</p>
-	 * @return
-	 */
-	public boolean isCityInferred(){
-		return this.cityInferred;
-	}
-	/**
-	 * 区域匹配过程中，区县是否是推断出来的。
-	 * <p>如果不是推断出来，表示地址中有文本匹配上了这一级区域的名称；
-	 * 如果是推断出来的，则表示地址中这一级区域名称缺失，没有匹配上，但通过一些规则推断出来这个区域对象。</p>
-	 * @return
-	 */
-	public boolean isCountyInferred(){
-		return this.countyInferred;
-	}
-
-	public void clearExtractResult(){
-		super.province = super.city = super.county = null;
-		this.provinceInferred = this.cityInferred = this.countyInferred = false;
-	}
-	
-	public int matchedRegionCount(){
-		return (super.province==null ? 0 : 1) + (super.city==null ? 0 : 1) + (super.county==null ? 0 : 1);
-	}
-	public int inferredCount(){
-		return (this.provinceInferred ? 1 : 0) + (this.cityInferred ? 1 : 0) + (this.countyInferred ? 1 : 0);
-	}
 	
     /**
      * 获取 地址ID。
@@ -130,18 +87,6 @@ public class AddressEntity extends StdDivision implements Serializable {
      */
     public void setId(int value) {
         this.id = value;
-    }
-
-    public void setProvinceInferred(boolean value){
-    	this.provinceInferred = value;
-    }
-    
-    public void setCityInferred(boolean value){
-    	this.cityInferred = value;
-    }
-    
-    public void setCountyInferred(boolean value){
-    	this.countyInferred = value;
     }
     
     /**

@@ -24,7 +24,6 @@ public class AddressInterpreter {
 	private TermIndexBuilder termIndex = null;
 	private AddressPersister persister;
 	
-	private List<String> invalidRegionNames;
 	private static char[] specialCharsToBeRemoved = " \r\n\t,，;；:：·.．。！、\"'“”|_-\\/{}【】〈〉<>[]「」".toCharArray();
 	
 	private static Pattern BRACKET_PATTERN = Pattern.compile("(?<bracket>([\\(（\\{\\<〈\\[【「][^\\)）\\}\\>〉\\]】」]*[\\)）\\}\\>〉\\]】」]))");
@@ -414,13 +413,8 @@ public class AddressInterpreter {
 	public void setPersister(AddressPersister value){
 		persister = value;
 	}
-	public void setInvalidRegionNames(List<String> value){
-		invalidRegionNames = value;
-	}
-	public List<String> getInvalidRegionNames(){
-		return invalidRegionNames;
-	}
-
+	
+	
 	//***************************************************************************************
 	// 作废代码
 	//***************************************************************************************

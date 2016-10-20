@@ -33,29 +33,6 @@
 	<bean id="interpreter" class="com.rrs.rd.address.interpret.AddressInterpreter">
 		<property name="persister" ref="persister" />
 		<property name="termIndex" ref="termIndex" />
-		<property name="forbiddenFollowingChars">
-			<list>
-				<value>路</value>
-				<value>街道</value>
-				<value>大道</value>
-				<value>大街</value>
-			</list>
-		</property>
-		<property name="invalidRegionNames">
-			<list>
-				<value>省直辖市县</value>
-				<value>省直辖县级行政区划</value>
-				<value>市辖区</value>
-				<value>县级直管村级单位（特殊镇）</value>
-				<value>县级直管村级单位</value>
-				<value>县区直属镇</value>
-				
-				<value>（镇）直辖</value>
-				<value>（镇）直辖地域</value>
-				<value>区直辖村</value>
-				<value>（省级）（特殊乡镇）</value>
-			</list>
-		</property>
 	</bean>
 	<bean id="termIndex" class="com.rrs.rd.address.index.TermIndexBuilder">
 		<constructor-arg index="0" ref="persister" />

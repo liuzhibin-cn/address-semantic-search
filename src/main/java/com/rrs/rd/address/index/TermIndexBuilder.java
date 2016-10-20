@@ -91,8 +91,4 @@ public class TermIndexBuilder {
 		}
 	}
 	
-	public TermIndexEntry getTermIndex(){
-		return this.indexRoot;
-	}
-	
 }
