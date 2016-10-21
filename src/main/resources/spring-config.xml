@@ -53,15 +53,7 @@
 				<value>经济开发区</value>
 				<value>经济技术开发区</value>
 				<!-- ehaier -->
-				<value>省直辖县级行政区划</value>
 				<value>省直辖市县</value>
-				<value>市辖区</value>
-				<value>县级直管村级单位（特殊镇）</value>
-				<value>县级直管村级单位</value>
-				<value>县区直属镇</value>
-				<value>（镇）直辖</value>
-				<value>（镇）直辖地域</value>
-				<value>区直辖村</value>
 			</list>
 		</constructor-arg>
 	</bean>
