@@ -132,7 +132,11 @@ public class SimilarityComputer {
 				else break;
 			}
 		}
-		if(town!=null){
+		if(addr.hasTown()){
+			doc.setTown(new Term(TermType.Town, addr.getTown().getName()));
+			terms.add(doc.getTown());
+		}
+		else if(town!=null){
 			doc.setTown(new Term(TermType.Town, town));
 			terms.add(doc.getTown());
 		}
