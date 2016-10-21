@@ -93,15 +93,30 @@ public class ImportAddress {
 		RegionInterpreterVisitor visitor = new RegionInterpreterVisitor(persister);
 		
 		try{
+			int count=0;
             while((line = br.readLine()) != null){
             	addrTextList.add(line);
+            	count++;
+            	if(count % 40000 == 0){
+            		try{
+                    	List<AddressEntity> addresses = interpreter.interpret(addrTextList, visitor); 
+                    	imported += persister.importAddresses(addresses);
+                	}catch(RuntimeException ex){
+                		System.out.println("> [错误] " + ex.getMessage());
+                		ex.printStackTrace(System.out);
+                	}finally{
+                		addrTextList.clear();
+            		}
+            	}
             }
-            try{
-            	List<AddressEntity> addresses = interpreter.interpret(addrTextList, visitor); 
-            	imported = persister.importAddresses(addresses);
-        	}catch(RuntimeException ex){
-        		System.out.println("> [错误] " + ex.getMessage());
-        		ex.printStackTrace(System.out);
+            if(count % 40000 != 0){
+        		try{
+                	List<AddressEntity> addresses = interpreter.interpret(addrTextList, visitor); 
+                	imported += persister.importAddresses(addresses);
+            	}catch(RuntimeException ex){
+            		System.out.println("> [错误] " + ex.getMessage());
+            		ex.printStackTrace(System.out);
+            	}
         	}
 		} catch (Exception ex) {
 			System.out.println("> [错误] 导入失败：" + ex.getMessage());
