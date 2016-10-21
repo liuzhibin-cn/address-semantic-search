@@ -38,7 +38,21 @@
 		<constructor-arg index="0" ref="persister" />
 		<constructor-arg index="1">
 			<list>
+				<!-- JD, Tmall -->
 				<value>其它区</value>
+				<value>其他地区</value>
+				<value>其它地区</value>
+				<value>全境</value>
+				<value>城区</value>
+				<value>城区以内</value>
+				<value>城区以外</value>
+				<value>郊区</value>
+				<value>县城内</value>
+				<value>内环以内</value>
+				<value>开发区</value>
+				<value>经济开发区</value>
+				<value>经济技术开发区</value>
+				<!-- ehaier -->
 				<value>省直辖县级行政区划</value>
 				<value>省直辖市县</value>
 				<value>市辖区</value>

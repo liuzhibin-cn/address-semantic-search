@@ -15,16 +15,21 @@ public final class StringUtil {
 	 * @return
 	 */
 	public static String remove(String text, char[] chars){
-		if(text==null || text.length()<=0 || chars==null || chars.length<=0)
+		if(text==null || text.isEmpty() || chars==null || chars.length<=0)
 			return text;
 		Set<Character> charsSet = getReplaceCharsSet(chars);
-		StringBuilder sb = new StringBuilder();
+		StringBuilder sb = new StringBuilder(text.length());
+		boolean removed = false;
 		for(int i=0; i<text.length(); i++){
 			char c = text.charAt(i);
-			if(charsSet.contains(c)) continue;
+			if(charsSet.contains(c))  {
+				removed = true;
+				continue;
+			}
 			sb.append(c);
 		}
-		return sb.toString();
+		if(removed) return sb.toString();
+		else return text;
 	}
 	
 	/**
@@ -83,7 +88,7 @@ public final class StringUtil {
 	 * @return
 	 */
 	public static String substring(String text, int beginIndex){
-		if(text==null || text.length()<=0 || beginIndex<=0) return text;
+		if(text==null || text.isEmpty() || beginIndex<=0) return text;
 		if(beginIndex>text.length()-1) return "";
 		return text.substring(beginIndex);
 	}
@@ -97,9 +102,10 @@ public final class StringUtil {
 	 * @return
 	 */
 	public static String substring(String text, int beginIndex, int endIndex){
-		if(text==null || text.length()<=0) return text;
-		int s = beginIndex<=0 ? 0 : beginIndex, e = endIndex>=text.length()-1 ? text.length()-1 : endIndex;
+		if(text==null || text.isEmpty()) return text;
+		int s = (beginIndex<=0 ? 0 : beginIndex), e = (endIndex>=text.length()-1 ? text.length()-1 : endIndex);
 		if(s>e) return "";
+		if(s==0 && e==text.length()-1) return text;
 		return text.substring(s, e+1);
 	}
 	
@@ -216,20 +222,20 @@ public final class StringUtil {
 	
 	private static Set<Character> getReplaceCharsSet(char[] chars){
 		String key = String.copyValueOf(chars);
-		Set<Character> charsSet = REPLACE_CHARS_CACHE.get(key);
-		if(charsSet!=null) return charsSet;
+		Set<Character> cs = REPLACE_CHARS_CACHE.get(key);
+		if(cs!=null) return cs;
 		
 		synchronized (StringUtil.class) {
-			charsSet = REPLACE_CHARS_CACHE.get(key);
-			if(charsSet!=null) return charsSet;
+			cs = REPLACE_CHARS_CACHE.get(key);
+			if(cs!=null) return cs;
 			
-			charsSet = new HashSet<Character>(chars.length);
+			cs = new HashSet<Character>(chars.length);
 			for(int i=0; i<chars.length; i++){
-				charsSet.add(chars[i]);
+				cs.add(chars[i]);
 			}
 			
-			REPLACE_CHARS_CACHE.put(key, charsSet);
-			return charsSet;
+			REPLACE_CHARS_CACHE.put(key, cs);
+			return cs;
 		}
 	}
 }

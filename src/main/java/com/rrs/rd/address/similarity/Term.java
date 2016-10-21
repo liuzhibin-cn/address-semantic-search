@@ -15,7 +15,21 @@ public class Term {
 	
 	public Term(TermType type, String text){
 		this.type = type;
-		this.text = text;
+		if(text==null) {
+			text = null;
+			return;
+		}
+		switch(type){
+		case Province:
+		case City:
+		case County:
+		case Street:
+		case Town:
+		case Ignore:
+			this.text = text.intern();
+		default:
+			this.text = text;
+		}
 	}
 	
 	/**

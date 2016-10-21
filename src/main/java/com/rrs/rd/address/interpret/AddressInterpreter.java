@@ -24,8 +24,8 @@ public class AddressInterpreter {
 	private TermIndexBuilder termIndex = null;
 	private AddressPersister persister;
 	
-	private static char[] specialChars1 = " \r\n\t,，。·.．;；:：、！@$%*^`~=+&\"'“”|_-\\/".toCharArray();
-	private static char[] specialChars2 = "{}【】〈〉<>[]「」".toCharArray();
+	private static char[] specialChars1 = " \r\n\t,，。·.．;；:：、！@$%*^`~=+&'\"|_-\\/".toCharArray();
+	private static char[] specialChars2 = "{}【】〈〉<>[]「」“”".toCharArray();
 	
 	private static Pattern BRACKET_PATTERN = Pattern.compile("(?<bracket>([\\(（\\{\\<〈\\[【「][^\\)）\\}\\>〉\\]】」]*[\\)）\\}\\>〉\\]】」]))");
 	

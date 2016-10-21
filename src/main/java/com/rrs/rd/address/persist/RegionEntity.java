@@ -60,7 +60,8 @@ public class RegionEntity implements Serializable {
     }
 
     public void setName(String value) {
-        this.name = value;
+    	if(value==null) this.name = null;
+    	else this.name = value.intern();
     }
     
     private String alias = "";
@@ -127,7 +128,7 @@ public class RegionEntity implements Serializable {
     	if(tokens!=null){
 	    	for(String token : tokens){
 	    		if(token==null || token.trim().length()<=0) continue;
-	    		this.orderedNames.add(token.trim());
+	    		this.orderedNames.add(token.trim().intern());
 	    	}
     	}
     	
