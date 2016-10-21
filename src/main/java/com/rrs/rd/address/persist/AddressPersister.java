@@ -42,7 +42,7 @@ public class AddressPersister implements ApplicationContextAware {
 	private static HashMap<Integer, RegionEntity> REGION_CACHE = null;
 	private static boolean REGION_LOADED = false;
 	
-	private static HashMap<Integer, AddressEntity> ADDRESS_INDEX_BY_HASH = null;
+	private static Set<Integer> ADDRESS_INDEX_BY_HASH = null;
 	private static boolean ADDRESS_INDEX_BY_HASH_CREATED = false;
 	
 	static{
@@ -97,7 +97,7 @@ public class AddressPersister implements ApplicationContextAware {
 				}
 				
 				address.setHash(address.getRawText().hashCode());
-				ADDRESS_INDEX_BY_HASH.put(address.getHash(), address);
+				ADDRESS_INDEX_BY_HASH.add(address.getHash());
 				
 				if(address.getCreateTime()==null) 
 					address.setCreateTime(new Date());
@@ -229,7 +229,7 @@ public class AddressPersister implements ApplicationContextAware {
 	public boolean isDuplicatedAddress(String address){
 		this.checkAddressIndexByHash();
 		//检查地址是否重复
-		if(ADDRESS_INDEX_BY_HASH.containsKey(address.hashCode())){
+		if(ADDRESS_INDEX_BY_HASH.contains(address.hashCode())){
 			return true;
 		}
 		return false;
@@ -242,13 +242,13 @@ public class AddressPersister implements ApplicationContextAware {
 		if(ADDRESS_INDEX_BY_HASH_CREATED) return;
 		List<AddressEntity> all = this.addressDao.findAll();
 		if(all==null){
-			ADDRESS_INDEX_BY_HASH = new HashMap<Integer, AddressEntity>(0);
+			ADDRESS_INDEX_BY_HASH = new HashSet<Integer>(0);
 			ADDRESS_INDEX_BY_HASH_CREATED = true;
 			return;
 		}
-		ADDRESS_INDEX_BY_HASH = new HashMap<Integer, AddressEntity>(all.size());
+		ADDRESS_INDEX_BY_HASH = new HashSet<Integer>(all.size());
 		for(AddressEntity addr : all) {
-			ADDRESS_INDEX_BY_HASH.put(addr.getHash(), addr);
+			ADDRESS_INDEX_BY_HASH.add(addr.getHash());
 		}
 		ADDRESS_INDEX_BY_HASH_CREATED = true;
 	}
