@@ -87,8 +87,11 @@ public class AddressInterpreter {
 				AddressEntity address = interpret(addrText, visitor);
 				if(address==null || !address.hasCity() || !address.hasCounty()) {
 					numFail++;
+					LOG.error("[addr-inter] [fail] " + addrTextList + " > " 
+							+ (address==null ? "null" : address.toString()));
 					continue;
 				}
+				numSuccess++;
 				addresses.add(address);
 			}catch(Exception ex){
 				LOG.error("[addr-imp] [error] " + addrText + ": " + ex.getMessage(), ex);
@@ -97,8 +100,8 @@ public class AddressInterpreter {
 		timeInter += System.currentTimeMillis() - start;
 		
 		if(LOG.isInfoEnabled()){
-			LOG.info("[addr-inter] [perf] " + numSuccess + " success, " + numFail + " failed");
-			LOG.info("[addr-inter] [perf] tot=" + timeInter/1000.0 + ": rms=" + timeRmSpec/1000.0 + ", rmr=" + timeRmRed/1000.0
+			LOG.info("[addr-inter] [perf] " + numSuccess + " success, " + numFail + " failed. "
+				+ "tot=" + timeInter/1000.0 + ": rms=" + timeRmSpec/1000.0 + ", rmr=" + timeRmRed/1000.0
 				+ ", brc=" + timeBrc/1000.0 + ", reg=" + timeRegion/1000.0 + ", tow=" + timeTown/1000.0
 				+ ", rod=" + timeRoad/1000.0 + ", bud=" + timeBuild/1000.0);
 		}
