@@ -100,7 +100,8 @@ public class ImportAddress {
             	if(count % 40000 == 0){
             		try{
                     	List<AddressEntity> addresses = interpreter.interpret(addrTextList, visitor); 
-                    	imported += persister.importAddresses(addresses);
+                    	//TODO:测试
+                    	//imported += persister.importAddresses(addresses);
                 	}catch(RuntimeException ex){
                 		System.out.println("> [错误] " + ex.getMessage());
                 		ex.printStackTrace(System.out);

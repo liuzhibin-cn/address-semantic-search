@@ -22,6 +22,9 @@ public class VelocityUtils extends StringUtils {
 	public boolean notEmpty(String str){
 		return !isEmpty(str);
 	}
+	public boolean notNull(Object obj){
+		return obj!=null;
+	}
 	public String round(double value, int precision){
 		if(value<0) return "";
 		if(precision<0) precision=0;

@@ -43,7 +43,7 @@
 		</tr>
 		#end
 	</table>
-	<span>[$!{r.queryAddr.province.name} $!{r.queryAddr.city.name} $!{r.queryAddr.county.name}]: 共 </span>
+	<span>[$!{r.queryAddr.province.name}-$!{r.queryAddr.city.name}-$!{r.queryAddr.county.name}]: 共 </span>
 	<span class=em1>$!{docsNum}</span><span> 条历史地址.</span>
 	<span class="left10">匹配耗时: </span><span class=em1>$!{elapsedTime}</span><span> 毫秒.</span>
 </div>
@@ -52,7 +52,7 @@
 	<h3>输入地址解析情况:</h3>
 	<span>[$!{r.queryAddr.rawText}</span>]
 	<span class=left10>&gt;&gt;</span>
-	<span class=left10>[</span><span class="em1">$!{r.queryAddr.province.name} $!{r.queryAddr.city.name} $!{r.queryAddr.county.name}</span>]
+	<span class=left10>[</span><span class="em1">$!{r.queryAddr.province.name}-$!{r.queryAddr.city.name}-$!{r.queryAddr.county.name}-$!{r.queryAddr.town.name}</span>]
 	#if($utils.notEmpty($r.queryAddr.towns))<span class="left10">[</span><span class="em1">#foreach($town in ${r.queryAddr.towns})$!{town} #end</span>]#end
 	#if($utils.notEmpty($r.queryAddr.village))<span class="left10">[</span><span class="em1">$!{r.queryAddr.village}</span>]#end
 	#if($utils.notEmpty($r.queryAddr.road))<span class="left10">[</span><span class="em1">$!{r.queryAddr.road}</span>]#end
