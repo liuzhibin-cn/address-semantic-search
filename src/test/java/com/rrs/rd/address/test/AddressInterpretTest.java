@@ -228,11 +228,17 @@ public class AddressInterpretTest extends TestBase {
 		TermIndexBuilder builder = context.getBean(TermIndexBuilder.class);
 
 		RegionInterpreterVisitor visitor = new RegionInterpreterVisitor(persister);
-		
+
 		//测试 正常的地址解析
 		this.extractRegion(builder, visitor, "广东广州从化区温泉镇新田村", "新田村", 440000, 440100, 440184, 440184103, "测试-正常解析");
 		//测试 地址中缺失省份的情况
 		this.extractRegion(builder, visitor, "广州从化区温泉镇新田村", "新田村", 440000, 440100, 440184, 440184103, "测试-省份缺失情况");
+		//测试 地址中缺失地级市，且乡镇名称以特殊字符【镇】开头的情况
+		this.extractRegion(builder, visitor, "湖南浏阳镇头镇回龙村", "回龙村", 430000, 430100, 430181, 430181115, "测试-正常解析");
+		
+		//测试：容错性，都匀市属于【黔南】，而不是【黔东南】
+		this.extractRegion(builder, visitor, "贵州黔东南都匀市大西门州中医院食堂4楼", "大西门州中医院食堂4楼"
+				, 520000, 522700, 522701, 0, "测试-容错性-地级市错误");
 		
 		//测试 直辖市3级表示的情况
 		this.extractRegion(builder, visitor, "上海上海崇明县横沙乡", "", 310000, 310100, 310230, 310230203, "测试-直辖市-3级地址表示法");

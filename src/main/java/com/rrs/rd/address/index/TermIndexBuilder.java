@@ -33,8 +33,17 @@ public class TermIndexBuilder {
 	private void indexRegions(List<RegionEntity> regions, TermIndexEntry index){
 		if(regions==null) return;
 		for(RegionEntity region : regions){
-			for(String name : region.orderedNameAndAlias()) 
+			for(String name : region.orderedNameAndAlias()) {
 				index.buildIndex(name, 0, convertRegionType(region.getType()), region);
+//				switch(region.getName().charAt(region.getName().length()-1)){
+//					case '省':
+//					case '市':
+//					case '县':
+//					case '区':
+//					case '镇':
+//					case '乡':
+//				}
+			}
 			if(region.getChildren()!=null)
 				this.indexRegions(region.getChildren(), index);
 		}

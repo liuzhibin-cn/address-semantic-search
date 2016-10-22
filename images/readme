@@ -10,3 +10,17 @@ MySQL导出命令备份：
 mysqldump -hlocalhost -uroot -p --comments --no-data --skip-add-locks --skip-compact --skip-disable-keys my_research > db-schema.sql
 导出bas_region表数据：
 mysqldump -hlocalhost -uroot -p --no-create-db --no-create-info --skip-set-charset --skip-add-locks --skip-lock-tables --quick --complete-insert --extended-insert --compact --databases my_research --tables bas_region > db-init-data.sql
+
+导出有效shop地址
+select replace(replace(replace(replace(replace( concat( case when ( char_length(trim(o.address))>9 and substring(trim(o.address),3,1)<>'路' and substring(trim(o.address),4,1)<>'路' and left(trim(o.address), 2) in (select distinct regionname from regions where regiontype=1) ) then '' when char_length(trim(o.regionName))>0 and instr(trim(o.regionName),' ')>0 then o.regionName  when char_length(trim(o.originRegionName))>0 and instr(trim(o.originRegionName),' ')>0 then o.originRegionName  else concat(p.regionName, c.regionName, d.regionName)  end, o.address) , '\t',''), '\n', ''),'\r',''),';',''),' ','') as n
+from Orders o
+inner join regions p on p.id=o.province  
+inner join regions c on c.id=o.city  
+inner join regions d on d.id=o.region  
+where o.isTest=0 
+	and not o.address like '%测试%' and not o.address like '%test%' and not o.address like '%ceshi%' 
+    and not o.consignee like '%测试%' and not o.consignee like '%test%' and not o.consignee like '%ceshi%' 
+    and not o.remark like '%测试%' and not o.remark like '%test%' and not o.remark like '%ceshi%'
+    and ((orderStatus<>200 and orderStatus<>202) or (paymentStatus<>100) )
+into outfile '/mnt/mysql/data/tmp/addr.txt' 
+fields terminated by ';' optionally enclosed by '' lines terminated by '\n';

@@ -93,7 +93,6 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 		currentLevel++;
 		if(isDebug && LOG.isDebugEnabled()) printDebugInfo("round", "start", null);
 	}
-
 	/**
 	 * 职责：<br />
 	 * 1. 确定是否是可接受的索引项，并找出最匹配的 被索引对象。<br />
@@ -112,18 +111,6 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 		//acceptableItem可能为TermType.Ignore类型，此时其value并不是RegionEntity对象，因此下面region的值可能为null
 		RegionEntity region = (RegionEntity)acceptableItem.getValue();
 		
-		//特殊情况处理：
-		//河北秦皇岛昌黎县昌黎镇秦皇岛市昌黎镇马铁庄村
-		//在移除冗余时匹配：秦皇岛市昌黎镇，会将【昌黎】匹配成为区县【昌黎县】，导致剩下的文本为【镇马铁庄村】
-		if(region!=null && RegionType.County.equals(region.getType()) 
-				&& !entry.getKey().equals(region.getName()) && entry.getKey().length()<region.getName().length()){ //使用别名匹配上的
-			String left = StringUtil.substring(text, pos + 1);
-			if(left.length()>0 && left.startsWith("大街") || left.startsWith("大道") || left.startsWith("街道") 
-					|| left.startsWith("镇") || left.startsWith("乡") || left.startsWith("村")
-					|| left.startsWith("路") || left.startsWith("公路"))
-				return false;
-		}
-		
 		//打印调试信息
 		if(isDebug && LOG.isDebugEnabled())
 			printDebugInfo("visit", null, entry.getKey() + " : " + acceptableItem.getValue().toString());
@@ -137,7 +124,6 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 		
 		return true;
 	}
-
 	/**
 	 * 职责：<br />
 	 * 1. 恢复stack。<br />
@@ -193,7 +179,6 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 			default:
 		}
 	}
-
 	/**
 	 * 检查是否达到最大匹配。
 	 */
@@ -279,21 +264,33 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 					continue;
 				}
 			}
-			//4. 特殊情况1：新疆阿克苏地区阿拉尔市
-			//到目前为止，新疆下面仍然有地级市【阿克苏地区】
-			//【阿拉尔市】是县级市，以前属于地级市【阿克苏地区】，目前已变成新疆的省直辖县级行政区划
-			//即，老的行政区划关系为：新疆->阿克苏地区->阿拉尔市
-			//新的行政区划关系为：
-			//新疆->阿克苏地区
-			//新疆->阿拉尔市
-			//错误匹配方式：新疆 阿克苏地区 阿拉尔市，会导致在【阿克苏地区】下面无法匹配到【阿拉尔市】
-			//正确匹配结果：新疆 阿拉尔市
+			//4. 容错
 			if(mostPriority==-1 || mostPriority>4) {
+				//4.1 新疆阿克苏地区阿拉尔市
+				//到目前为止，新疆下面仍然有地级市【阿克苏地区】
+				//【阿拉尔市】是县级市，以前属于地级市【阿克苏地区】，目前已变成新疆的省直辖县级行政区划
+				//即，老的行政区划关系为：新疆->阿克苏地区->阿拉尔市
+				//新的行政区划关系为：
+				//新疆->阿克苏地区
+				//新疆->阿拉尔市
+				//错误匹配方式：新疆 阿克苏地区 阿拉尔市，会导致在【阿克苏地区】下面无法匹配到【阿拉尔市】
+				//正确匹配结果：新疆 阿拉尔市
 				if(region.getType()==RegionType.CityLevelCounty 
 						&& curDivision.hasProvince() && curDivision.getProvince().getId()==region.getParentId()){
 					mostPriority = 4;
 					acceptableItem = item;
 					continue;
+				}
+				//4.2 地级市-区县从属关系错误，但区县对应的省份正确，则将使用区县的地级市覆盖已匹配的地级市
+				if(region.getType()==RegionType.County 
+						&& curDivision.hasCity() && curDivision.hasProvince() 
+						&& curDivision.getCity().getId()!=region.getParentId()) {
+					RegionEntity city = persister.getRegion(region.getParentId()); //区县的地级市
+					if(city.getParentId()==curDivision.getProvince().getId()) {
+						mostPriority = 4;
+						acceptableItem = item;
+						continue;
+					}
 				}
 			}
 			//5. 街道、乡镇，且不符合上述情况
@@ -360,8 +357,8 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 				break;
 			case County:
 				curDivision.setCounty(region);
-				if(!curDivision.hasCity())
-					curDivision.setCity(persister.getRegion(curDivision.getCounty().getParentId()));
+				//成功匹配了区县，则强制更新地级市
+				curDivision.setCity(persister.getRegion(curDivision.getCounty().getParentId()));
 				if(!curDivision.hasProvince())
 					curDivision.setProvince(persister.getRegion(curDivision.getCity().getParentId()));
 				break;
