@@ -87,7 +87,7 @@ public class AddressInterpreter {
 				AddressEntity address = interpret(addrText, visitor);
 				if(address==null || !address.hasCity() || !address.hasCounty()) {
 					numFail++;
-					LOG.error("[addr-inter] [fail] " + addrTextList + " > " 
+					LOG.error("[addr-inter] [fail] " + addrText + " > " 
 							+ (address==null ? "null" : address.toString()));
 					continue;
 				}
