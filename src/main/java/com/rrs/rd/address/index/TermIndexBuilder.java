@@ -6,6 +6,7 @@ import java.util.Map;
 import com.rrs.rd.address.TermType;
 import com.rrs.rd.address.persist.AddressPersister;
 import com.rrs.rd.address.persist.RegionEntity;
+import com.rrs.rd.address.utils.StringUtil;
 
 /**
  * 
@@ -35,6 +36,21 @@ public class TermIndexBuilder {
 			for(String name : region.orderedNameAndAlias()) {
 				index.buildIndex(name, 0, convertRegionType(region), region);
 			}
+			String shortName = null;
+			switch(region.getType()){
+				case Town:
+				case Village:
+					shortName = StringUtil.head(region.getName(), region.getName().length()-1);
+					break;
+				case Street:
+					if(region.isTown()) shortName = StringUtil.head(region.getName(), region.getName().length()-1);
+					else if(region.getName().endsWith("街道"))
+						shortName = StringUtil.head(region.getName(), region.getName().length()-2);
+					break;
+				default:
+			}
+			if(shortName!=null && !region.orderedNameAndAlias().contains(shortName))
+				index.buildIndex(shortName, 0, convertRegionType(region), region);
 			if(region.getChildren()!=null)
 				this.indexRegions(region.getChildren(), index);
 		}
