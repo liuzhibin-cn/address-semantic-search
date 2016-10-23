@@ -52,8 +52,12 @@
 				<value>开发区</value>
 				<value>经济开发区</value>
 				<value>经济技术开发区</value>
-				<!-- ehaier -->
+				<!-- ehaier (来自TMall或HP) -->
+				<value>省直辖</value>
 				<value>省直辖市县</value>
+				<!-- 其他 -->
+				<value>地区</value>
+				<value>市区</value>
 			</list>
 		</constructor-arg>
 	</bean>

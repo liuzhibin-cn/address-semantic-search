@@ -12,7 +12,7 @@ mysqldump -hlocalhost -uroot -p --comments --no-data --skip-add-locks --skip-com
 mysqldump -hlocalhost -uroot -p --no-create-db --no-create-info --skip-set-charset --skip-add-locks --skip-lock-tables --quick --complete-insert --extended-insert --compact --databases my_research --tables bas_region > db-init-data.sql
 
 导出有效shop地址
-select replace(replace(replace(replace(replace( concat( case when ( char_length(trim(o.address))>9 and substring(trim(o.address),3,1)<>'路' and substring(trim(o.address),4,1)<>'路' and left(trim(o.address), 2) in (select distinct regionname from regions where regiontype=1) ) then '' when char_length(trim(o.regionName))>0 and instr(trim(o.regionName),' ')>0 then o.regionName  when char_length(trim(o.originRegionName))>0 and instr(trim(o.originRegionName),' ')>0 then o.originRegionName  else concat(p.regionName, c.regionName, d.regionName)  end, o.address) , '\t',''), '\n', ''),'\r',''),';',''),' ','') as n
+select replace(replace(replace(replace(replace(replace( concat( case when ( char_length(trim(o.address))>9 and substring(trim(o.address),3,1)<>'路' and substring(trim(o.address),3,1)<>'街' and substring(trim(o.address),3,1)<>'道' and substring(trim(o.address),4,1)<>'路' and left(trim(o.address), 2)<>left(p.regionName,2) and left(trim(o.address), 2) in (select distinct regionname from regions where regiontype=1) ) then '' when char_length(trim(o.regionName))>0 and instr(trim(o.regionName),' ')>0 then o.regionName  when char_length(trim(o.originRegionName))>0 and instr(trim(o.originRegionName),' ')>0 then o.originRegionName  else concat(p.regionName, c.regionName, d.regionName)  end, o.address) , '\t',''), '\n', ''),'\r',''),';',''),' ',''),'null','') as n
 from Orders o
 inner join regions p on p.id=o.province  
 inner join regions c on c.id=o.city  
@@ -24,3 +24,6 @@ where o.isTest=0
     and ((orderStatus<>200 and orderStatus<>202) or (paymentStatus<>100) )
 into outfile '/mnt/mysql/data/tmp/addr.txt' 
 fields terminated by ';' optionally enclosed by '' lines terminated by '\n';
+
+分析解析失败情况：
+grep '\[fail\]' log/match.log|grep -v 清新县|grep -v 襄樊|grep -v 铜仁地区|grep -v 秀城区|grep -v 陵县|grep -v 杨凌区|grep -v 东燕郊经济技术开发区|grep -v 碑 林区|grep -v 其它区 |grep -v 潞西市|grep -v 东燕郊|grep -v 毕节|grep -v 茂港区|grep -v 唐海县|grep -v 翠云区|grep -v 金阳开发|grep -v 达县|grep -v 陕县|grep -v 郧县|grep -v 廛河|grep -v 楚州区|grep -v 四川绵阳绵阳市湖城区|grep -v 八道江|grep -v 乐都县|grep -v 河东区|grep -v 金川区|grep -v 江洲|grep -v 鄯善|grep -v 安西县|grep -v '黑龙'|grep -v 省直辖|grep -v 河南驻马|grep -v 河南平顶|grep -v 安徽马鞍|grep -v 贵州六盘|grep -v 内蒙|grep -v 河北秦皇|grep -v 辽宁葫芦|grep -v 河北张家|grep -v 河北石家|grep -v 黔东南州|grep -v 黔西南 州|grep -v 巴音|grep -v 湘西州|grep -v 海东地区|grep -v 新疆维吾尔自治区|grep -v null|grep 区

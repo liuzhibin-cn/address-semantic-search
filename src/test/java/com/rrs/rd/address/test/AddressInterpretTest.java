@@ -240,6 +240,9 @@ public class AddressInterpretTest extends TestBase {
 		this.extractRegion(builder, visitor, "贵州黔东南都匀市大西门州中医院食堂4楼", "大西门州中医院食堂4楼"
 				, 520000, 522700, 522701, 0, "测试-容错性-地级市错误");
 		
+		this.extractRegion(builder, visitor, "新疆维吾尔自治区吐鲁番地区鄯善县经济贸易委员会", "经济贸易委员会"
+				, 650000, 652100, 652122, 0, "测试-容错性");
+		
 		//测试 直辖市3级表示的情况
 		this.extractRegion(builder, visitor, "上海上海崇明县横沙乡", "", 310000, 310100, 310230, 310230203, "测试-直辖市-3级地址表示法");
 		//测试 直辖市2级表示的情况
