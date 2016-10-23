@@ -310,7 +310,7 @@ public class AddressInterpreter {
 		return null;
 	}
 	
-	private void addTown(Map<Long, List<String>> all, String town, RegionEntity district, String text){
+	private void addTown(Map<Long, List<String>> all, String town, RegionEntity district, String text1, String text2){
 		if(all==null || town==null || town.isEmpty() || district==null) return;
 		List<String> towns = all.get(district.getId());
 		if(towns!=null && towns.contains(town)) return; //已经添加
@@ -332,7 +332,7 @@ public class AddressInterpreter {
 			all.put(district.getId(), towns);
 		}
 		towns.add(town);
-		if(TOWM_LOG.isDebugEnabled()) TOWM_LOG.debug(district.getId() + " " + town + " < " + text);
+		if(TOWM_LOG.isDebugEnabled()) TOWM_LOG.debug(district.getId() + " " + town + " < " + text2 + " (" + text1 + ")");
 	}
 	private void extractTownAndVillage(AddressEntity addr, Map<Long, List<String>> towns){
 		if(addr.getText().length()<=0 || !addr.hasDistrict()) return;
@@ -341,22 +341,22 @@ public class AddressInterpreter {
 			String z=matcher.group("z"), x=matcher.group("x"), c = matcher.group("c");
 			String text = addr.getText();
 			if(z!=null && z.length()>0){ //镇
-				addTown(towns, z, addr.getDistrict(), addr.getRawText());
+				addTown(towns, z, addr.getDistrict(), addr.getRawText(), addr.getText());
 				addr.setText(StringUtil.substring(text, matcher.end("z")));
 			}
 			if(x!=null && x.length()>0){ //乡
-				addTown(towns, x, addr.getDistrict(), addr.getRawText());
+				addTown(towns, x, addr.getDistrict(), addr.getRawText(), addr.getText());
 				addr.setText(StringUtil.substring(text, matcher.end("x")));
 			}
 			if(c!=null && c.length()>0){ //村
 				
 				if(addr.getText().length()<=c.length()){
-					addTown(towns, c, addr.getDistrict(), addr.getRawText());
+					addTown(towns, c, addr.getDistrict(), addr.getRawText(), addr.getText());
 					addr.setText("");
 				}else{
 					String leftString = StringUtil.substring(text, matcher.end("c"));
 					if(!c.endsWith("农村")){
-						addTown(towns, c, addr.getDistrict(), addr.getRawText());
+						addTown(towns, c, addr.getDistrict(), addr.getRawText(), addr.getText());
 						if(leftString.length()<=0) addr.setText("");
 						else if(leftString.charAt(0)=='委' || leftString.startsWith("民委员")) 
 							addr.setText("村" + leftString);
