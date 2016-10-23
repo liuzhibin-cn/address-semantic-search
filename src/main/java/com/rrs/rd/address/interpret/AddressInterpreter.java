@@ -298,7 +298,7 @@ public class AddressInterpreter {
 	private void addTown(Map<Integer, List<String>> all, String town, RegionEntity district){
 		if(all==null || town==null || town.isEmpty() || district==null) return;
 		List<String> towns = all.get(district.getId());
-		if(towns!=null && towns.contains(towns)) return; //已经添加
+		if(towns!=null && towns.contains(town)) return; //已经添加
 		
 		//已加入bas_region表，不再添加
 		List<TermIndexItem> items = termIndex.fullMatch(town);
