@@ -1,7 +1,9 @@
 package com.rrs.rd.address.utils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
@@ -218,6 +220,71 @@ public final class StringUtil {
 			if(!( (c>='a' && c<='z') || (c>='A' && c<='Z'))) return false;
 		}
 		return true;
+	}
+	
+	/**
+	 * 求两个字符串的公共子串。
+	 * 
+	 * <a href="http://blog.csdn.net/earbao/article/details/50424948">动态规划算法求lcs(最长公共子串)之Java代码实现</a>
+	 * @param str1
+	 * @param str2
+	 * @return
+	 */
+	public static List<String> lcs(char[] str1, char[] str2){
+		int i, j;  
+        int len1, len2;  
+        len1 = str1.length;  
+        len2 = str2.length;  
+        int maxLen = len1 > len2 ? len1 : len2;  
+        int[] max = new int[maxLen];  
+        int[] maxIndex = new int[maxLen];  
+        int[] c = new int[maxLen];  
+        List<String> list = new ArrayList<>();  
+  
+        for (i = 0; i < len2; i++) {  
+            for (j = len1 - 1; j >= 0; j--) {  
+                if (str2[i] == str1[j]) {  
+                    if ((i == 0) || (j == 0))  
+                        c[j] = 1;  
+                    else  
+                        c[j] = c[j - 1] + 1;  
+                } else {  
+                    c[j] = 0;  
+                }  
+  
+                if (c[j] > max[0]) {   //如果是大于那暂时只有一个是最长的,而且要把后面的清0;  
+                    max[0] = c[j];  
+                    maxIndex[0] = j;  
+  
+                    for (int k = 1; k < maxLen; k++) {  
+                        max[k] = 0;  
+                        maxIndex[k] = 0;  
+                    }  
+                } else if (c[j] == max[0]) {   //有多个是相同长度的子串  
+                    for (int k = 1; k < maxLen; k++) {  
+                        if (max[k] == 0) {  
+                            max[k] = c[j];  
+                            maxIndex[k] = j;  
+                            break;  //在后面加一个就要退出循环了  
+                        }  
+  
+                    }  
+                }  
+            }  
+        }  
+  
+        for (j = 0; j < maxLen; j++) {  
+            if (max[j] > 0) {  
+  
+                StringBuffer sb = new StringBuffer();  
+                for (i = maxIndex[j] - max[j] + 1; i <= maxIndex[j]; i++) {  
+                    sb.append(str1[i]);  
+                }  
+                String lcs = sb.toString();  
+                list.add(lcs);  
+            }  
+        }  
+        return list; 
 	}
 	
 	private static Set<Character> getReplaceCharsSet(char[] chars){

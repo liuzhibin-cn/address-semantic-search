@@ -124,7 +124,7 @@ public class AddressPersister implements ApplicationContextAware {
 					this.timeDb += System.currentTimeMillis() - dbStart;
 					
 					if(count % 40000 == 0 && LOG.isInfoEnabled())
-						LOG.info("[addr-imp] [perf] " + imported + " imported, " + duplicate + " duplicate, elapsed " + timeDb/1000.0);
+						LOG.info("[addr-imp] [perf] " + addresses.size() + " total: " + imported + " imported, " + duplicate + " duplicated, elapsed " + timeDb/1000.0);
 				}
 			}catch(Exception ex){
 				LOG.error("[addr-imp] [error] " + address.getRawText() + ": " + ex.getMessage(), ex);
@@ -139,7 +139,7 @@ public class AddressPersister implements ApplicationContextAware {
 		}
 		
 		if(LOG.isInfoEnabled())
-			LOG.info("[addr-imp] [perf] " + imported + " imported, elapsed " + timeDb/1000.0);
+			LOG.info("[addr-imp] [perf] " + addresses.size() + " total: " + imported + " imported, " + duplicate + " duplicated, elapsed " + timeDb/1000.0);
 		
 		return imported;
 	}
