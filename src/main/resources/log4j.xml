@@ -14,8 +14,8 @@
             <param name="ConversionPattern" value="%m%n" />
         </layout>
     </appender>
-    <appender name="sql" class="org.apache.log4j.RollingFileAppender">
-        <param name="File" value="log/sql.log" />
+    <appender name="regression" class="org.apache.log4j.RollingFileAppender">
+        <param name="File" value="log/regression.log" />
         <param name="Append" value="true" />
         <param name="MaxBackupIndex" value="10" />
         <layout class="org.apache.log4j.PatternLayout">
@@ -23,7 +23,7 @@
         </layout>
     </appender>
     <appender name="regression" class="org.apache.log4j.RollingFileAppender">
-        <param name="File" value="log/regression.log" />
+        <param name="ex-town" value="log/extract-town.log" />
         <param name="Append" value="true" />
         <param name="MaxBackupIndex" value="10" />
         <layout class="org.apache.log4j.PatternLayout">
@@ -55,5 +55,9 @@
     <logger name="com.rrs.rd.address.test" additivity="false">
         <level value="debug"/>
         <appender-ref ref="console"/>
+    </logger>
+    <logger name="com.rrs.rd.address.extract-town" additivity="false">
+        <level value="debug"/>
+        <appender-ref ref="ex-town"/>
     </logger>
 </log4j:configuration>

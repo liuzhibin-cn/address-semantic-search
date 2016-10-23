@@ -6,7 +6,6 @@ import java.util.Map;
 import com.rrs.rd.address.TermType;
 import com.rrs.rd.address.persist.AddressPersister;
 import com.rrs.rd.address.persist.RegionEntity;
-import com.rrs.rd.address.persist.RegionType;
 
 /**
  * 
@@ -34,15 +33,7 @@ public class TermIndexBuilder {
 		if(regions==null) return;
 		for(RegionEntity region : regions){
 			for(String name : region.orderedNameAndAlias()) {
-				index.buildIndex(name, 0, convertRegionType(region.getType()), region);
-//				switch(region.getName().charAt(region.getName().length()-1)){
-//					case '省':
-//					case '市':
-//					case '县':
-//					case '区':
-//					case '镇':
-//					case '乡':
-//				}
+				index.buildIndex(name, 0, convertRegionType(region), region);
 			}
 			if(region.getChildren()!=null)
 				this.indexRegions(region.getChildren(), index);
@@ -59,20 +50,22 @@ public class TermIndexBuilder {
 			this.indexRoot.buildIndex(str, 0, TermType.Ignore, null);
 		return this;
 	}
-	private TermType convertRegionType(RegionType type){
-		switch(type){
+	private TermType convertRegionType(RegionEntity region){
+		switch(region.getType()){
 			case Province:
 			case ProvinceLevelCity1:
 				return TermType.Province;
 			case City:
 			case ProvinceLevelCity2:
 				return TermType.City;
-			case County: 
-			case CityLevelCounty:
-				return TermType.County;
-			case Street: return TermType.Street;
+			case District: 
+			case CityLevelDistrict:
+				return TermType.District;
+			case PlatformL4: return TermType.Street;
 			case Town: return TermType.Town;
-			case SpecialDistrict: return TermType.SpecialTown;
+			case Village: return TermType.Village;
+			case Street: 
+				return region.isTown() ? TermType.Town : TermType.Street;
 			default:
 		}
 		return TermType.Undefined;
@@ -103,4 +96,16 @@ public class TermIndexBuilder {
 		}
 	}
 	
+	public List<TermIndexItem> fullMatch(String text) {
+		if(text==null || text.isEmpty()) return null;
+		return fullMatch(text, 0, indexRoot.getChildren());
+	}
+	private List<TermIndexItem> fullMatch(String text, int pos, Map<Character, TermIndexEntry> entries){
+		if(entries==null) return null;
+		char c = text.charAt(pos);
+		TermIndexEntry entry = entries.get(c);
+		if(entry==null) return null;
+		if(pos==text.length()-1) return entry.getItems();
+		return fullMatch(text, pos+1, entry.getChildren());
+	}
 }

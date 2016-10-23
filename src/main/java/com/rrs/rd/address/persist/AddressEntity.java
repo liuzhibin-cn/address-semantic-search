@@ -1,9 +1,7 @@
 package com.rrs.rd.address.persist;
 
 import java.io.Serializable;
-import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 import com.rrs.rd.address.Division;
 
@@ -38,8 +36,6 @@ public class AddressEntity extends Division implements Serializable {
 
     private int id;
     private String text = "";
-    private List<String> towns = null;
-    private String village = "";
     private String road = "";
     private String roadNum = "";
     private String buildingNum = "";
@@ -58,21 +54,6 @@ public class AddressEntity extends Division implements Serializable {
     	this.setRawText(text);
     }
     
-    /**
-     * 添加新的乡镇。
-     * @param value
-     * @return 返回true表示新添加的乡镇是是有效的，返回false则表示是无效的。
-     */
-    public boolean addTown(String value){
-    	if(value==null || value.trim().length()<=0) return false;
-    	if(getProvince()!=null && value.trim().startsWith(getProvince().getName().substring(0, 2))) return false;
-    	if(getCity()!=null && value.trim().startsWith(getCity().getName().substring(0, 2))) return false;
-    	if(this.towns==null) this.towns = new ArrayList<String>(3);
-    	if(this.towns.contains(value.trim())) return true;
-    	this.towns.add(value.trim());
-    	return true;
-    }
-	
     /**
      * 获取 地址ID。
      */
@@ -113,52 +94,16 @@ public class AddressEntity extends Division implements Serializable {
     	if(hasProvince()) sb.append(getProvince().getName());
     	if(hasCity()) sb.append(getCity().getName());
     	if(hasDistrict()) sb.append(getDistrict().getName());
-    	if(getTowns()!=null){
-    		for(String town : getTowns())
-    			sb.append(town);
-    	}
-    	sb.append(getVillage())
-    		.append(getRoad())
+    	if(hasStreet()) sb.append(getDistrict().getName());
+    	if(hasTown() && !getTown().equals(getStreet()))
+    		sb.append(getTown().getName());
+    	if(hasVillage()) sb.append(getVillage().getName());
+    	sb.append(getRoad())
     		.append(getRoadNum())
     		.append(getText());
     	return sb.toString();
     }
     
-    /**
-     * 获取 乡镇。
-     */
-    public List<String> getTowns(){
-    	return this.towns;
-    }
-    
-    /**
-     * 设置 乡镇。
-     *
-     * @param value 属性值
-     */
-    public void setTowns(List<String> value){
-    	this.towns = value;
-    }
-    
-    /**
-     * 获取 村。
-     */
-    public String getVillage() {
-        return this.village;
-    }
-
-    /**
-     * 设置 村。
-     *
-     * @param value 属性值
-     */
-    public void setVillage(String value) {
-    	if(value==null)
-    		this.village = "";
-    	else
-    		this.village = value.trim();
-    }
-
     /**
      * 获取 道路。
      */
@@ -292,8 +237,6 @@ public class AddressEntity extends Division implements Serializable {
     	sb.append('{')
     		.append(getId())
     		.append('-').append(super.toString())
-    		.append('-').append(getTowns()==null ? "" : getTowns().toString())
-    		.append('-').append(getVillage())
     		.append('-').append(getRoad())
     		.append('-').append(getRoadNum())
     		.append('-').append(getText())

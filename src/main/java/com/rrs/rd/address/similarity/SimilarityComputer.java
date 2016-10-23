@@ -119,29 +119,12 @@ public class SimilarityComputer {
 		List<Term> terms = new ArrayList<Term>(tokens.size()+4);
 		
 		//2. 生成term
-		String residentDistrict = null, town = null;
-		for(int i=0; addr.getTowns()!=null && i<addr.getTowns().size(); i++){
-			if(addr.getTowns().get(i).endsWith("街道")) {
-				residentDistrict = addr.getTowns().get(i);
-				if(town==null) continue;
-				else break;
-			}
-			if(addr.getTowns().get(i).endsWith("镇") || addr.getTowns().get(i).endsWith("乡")){
-				town = StringUtil.rtrim(addr.getTowns().get(i), '镇', '乡');
-				if(residentDistrict==null) continue;
-				else break;
-			}
-		}
-		if(addr.hasStreet()){
-			doc.setTown(new Term(TermType.Town, addr.getStreet().getName()));
+		if(addr.hasTown()) {
+			doc.setTown(new Term(TermType.Town, addr.getTown().getName()));
 			terms.add(doc.getTown());
 		}
-		else if(town!=null){
-			doc.setTown(new Term(TermType.Town, town));
-			terms.add(doc.getTown());
-		}
-		if(!addr.getVillage().isEmpty()) {
-			doc.setVillage(new Term(TermType.Village, addr.getVillage()));
+		if(addr.hasVillage()){
+			doc.setVillage(new Term(TermType.Village, addr.getVillage().getName()));
 			terms.add(doc.getVillage());
 		}
 		if(!addr.getRoad().isEmpty()) {
@@ -221,7 +204,7 @@ public class SimilarityComputer {
 		switch(type){
 			case Province:
 			case City:
-			case County:
+			case District:
 				value = BOOST_XL; //省市区、道路出现频次高，IDF值较低，但重要程度最高，因此给予比较高的加权权重
 				break;
 			case Street: //一般人对于城市街道范围概念不强，在地址中随意选择街道的可能性较高，因此降权处理
@@ -429,7 +412,7 @@ public class SimilarityComputer {
 		List<Document> allDocs = loadDocunentsFromCache(queryAddr);
 		if(allDocs.isEmpty()) {
 			String message = queryAddr.getProvince().getName() + queryAddr.getCity().getName();
-			if(!(RegionType.CityLevelCounty==queryAddr.getDistrict().getType()))
+			if(!(RegionType.CityLevelDistrict==queryAddr.getDistrict().getType()))
 				message = message + queryAddr.getDistrict().getName();
 			throw new NoHistoryDataException(message);
 		}

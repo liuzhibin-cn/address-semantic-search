@@ -5,6 +5,7 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.slf4j.Logger;
@@ -104,8 +105,6 @@ public class AddressPersister implements ApplicationContextAware {
 				
 				if(address.getText().length()>100)
 					address.setText(StringUtil.head(address.getText(), 100));
-				if(address.getVillage().length()>5)
-					address.setVillage(StringUtil.head(address.getVillage(), 5));
 				if(address.getRoad().length()>8)
 					address.setRoad(StringUtil.head(address.getRoad(), 8));
 				if(address.getRoadNum().length()>10)
@@ -158,68 +157,45 @@ public class AddressPersister implements ApplicationContextAware {
 		if(REGION_TREE==null) throw new IllegalStateException("Region data not initialized");
 		return REGION_CACHE.get(id);
 	}
-	/**
-	 * 初始化导入全国标准行政区域数据。
-	 * @param china 最顶层区域对象-中国，其他全部区域对象必须通过children设置好
-	 * @return 成功导入的区域对象数量
-	 */
-	public int importRegions(RegionEntity china){
-		if(china==null || !china.getName().equals("中国")) return 0;
-		
-		int importedCount = 0;
-		china.setParentId(0);
-		china.setType(RegionType.Country);
-		this.regionDao.create(china);
-		importedCount++;
-		
-		if(china.getChildren()==null) return importedCount;
-		for(RegionEntity province : china.getChildren()){
-			province.setParentId(china.getId());
-			if(PROVINCE_LEVEL_CITIES.contains(province.getName()))
-				province.setType(RegionType.ProvinceLevelCity1);
-			else
-				province.setType(RegionType.Province);
-			
-			this.regionDao.create(province);
-			importedCount++;
-			
-			if(province.getChildren()==null) continue;
-			for(RegionEntity city : province.getChildren()){
-				if(city.getName().startsWith("其它") || city.getName().startsWith("其他")) continue;
-				
-				city.setParentId(province.getId());
-				if(PROVINCE_LEVEL_CITIES.contains(city.getName()))
-					city.setType(RegionType.ProvinceLevelCity2);
-				else if(city.getChildren()!=null && city.getChildren().size()>0)
-					city.setType(RegionType.City);
-				else
-					city.setType(RegionType.CityLevelCounty);
-				
-				this.regionDao.create(city);
-				importedCount++;
-				
-				if(city.getChildren()==null) continue;
-				for(RegionEntity county : city.getChildren()){
-					if(county.getName().startsWith("其它") || county.getName().startsWith("其他")) continue;
-					
-					county.setParentId(city.getId());
-					county.setType(RegionType.County);
-					
-					this.regionDao.create(county);
-					importedCount++;
-				}
-			}
-		}
-		
-		REGION_TREE = china;
-		
-		return importedCount;
-	}
+	
 	public void createRegion(RegionEntity region){
 		this.regionDao.create(region);
 	}
 	public RegionEntity findRegion(int parentId, String name){
 		return this.regionDao.findByParentAndName(parentId, name);
+	}
+	
+	public void addTowns(Map<Integer, List<String>> towns){
+		if(towns==null) return;
+		for(Map.Entry<Integer, List<String>> entry : towns.entrySet()){
+			if(entry.getKey()==null || entry.getValue()==null || entry.getValue().isEmpty()) continue;
+			RegionEntity parent = this.getRegion(entry.getKey().intValue());
+			if(parent==null) continue;
+			
+			int id = initializeRegionId(parent);
+			for(String town : entry.getValue()) {
+				RegionEntity region = new RegionEntity();
+				region.setId(id);
+				region.setName(town);
+				region.setParentId(parent.getId());
+				char c = town.charAt(town.length()-1);
+				if(c=='镇' || c=='乡') region.setType(RegionType.Town);
+				else if(c=='村') region.setType(RegionType.Village);
+				else continue;
+				this.regionDao.create(region);
+				id++;
+			}
+		}
+	}
+	public int initializeRegionId(RegionEntity parent){
+		if(parent.getChildren()==null) return parent.getId() * 1000 + 500;
+		int maxId = parent.getId() * 1000 + 500;
+		for(RegionEntity child : parent.getChildren()) {
+			if(child.getId() < maxId) continue;
+			if(child.getId() >= parent.getId() * 1000 + 700) continue;
+			if(child.getId()>=maxId) maxId = child.getId() + 1;
+		}
+		return maxId;
 	}
 	
 	public List<AddressEntity> loadAddresses(int provinceId, int cityId, int countyId){
@@ -278,8 +254,8 @@ public class AddressPersister implements ApplicationContextAware {
 	
 	private void loadRegionChildren(RegionEntity parent){
 		//已经到最底层，结束
-		if(parent==null || parent.getType()==RegionType.Town || parent.getType()==RegionType.Street 
-				|| parent.getType()==RegionType.SpecialDistrict) 
+		if(parent==null || parent.getType()==RegionType.Street || parent.getType()==RegionType.Village 
+				|| parent.getType()==RegionType.PlatformL4 || parent.getType()==RegionType.Town) 
 			return;
 		//递归加载下一级
 		List<RegionEntity> children = this.regionDao.findByParent(parent.getId());

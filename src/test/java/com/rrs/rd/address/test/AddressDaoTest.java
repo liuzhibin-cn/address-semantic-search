@@ -22,8 +22,6 @@ public class AddressDaoTest extends TestBase {
 		address.setProvince(service.getRegion(440000));
 		address.setCity(service.getRegion(440100));
 		address.setDistrict(service.getRegion(440184));
-		address.addTown("xx街道");
-		address.addTown("xx镇");
 		address.setCreateTime(new Date());
 		dao.create(address);
 		

@@ -24,16 +24,15 @@ public enum TermType {
 	/**
 	 * 区县
 	 */
-	County('3'),
+	District('3'),
 	/**
 	 * 街道
 	 */
-	Street('S'),
+	Street('4'),
 	/**
 	 * 乡镇
 	 */
 	Town('T'),
-	SpecialTown('D'),
 	/**
 	 * 村
 	 */

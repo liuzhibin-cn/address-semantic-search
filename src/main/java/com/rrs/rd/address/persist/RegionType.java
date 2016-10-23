@@ -34,23 +34,27 @@ public enum RegionType implements IntegerEnum<RegionType> {
     /**
      * 省直辖县级市
      */
-    CityLevelCounty(250),
+    CityLevelDistrict(250),
     /**
      * 县、区
      */
-    County(300),
+    District(300),
     /**
-     * 街道
+     * 街道乡镇一级
      */
-    Street(400),
+    Street(450),
     /**
-     * 乡镇
+     * 特定平台的4级地址
      */
-    Town(410),
+    PlatformL4(460),
     /**
-     * 特殊乡镇及乡镇一级行政区
+     * 附加：乡镇
      */
-    SpecialDistrict(420);
+    Town(400),
+    /**
+     * 附加：村
+     */
+    Village(410);
 
     private int value;
 

@@ -22,7 +22,7 @@ public class Term {
 		switch(type){
 			case Province:
 			case City:
-			case County:
+			case District:
 			case Street:
 			case Town:
 			case Ignore:
@@ -52,7 +52,7 @@ public class Term {
 		switch(this.type){
 			case Province:
 			case City:
-			case County:
+			case District:
 				return 0;
 			case Street:
 				return 1;

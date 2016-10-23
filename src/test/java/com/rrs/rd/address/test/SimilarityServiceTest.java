@@ -60,7 +60,7 @@ public class SimilarityServiceTest extends TestBase {
 		List<Term> terms = new ArrayList<Term>();
 		terms.add(new Term(TermType.Province, "山东省"));
 		terms.add(new Term(TermType.City, "青岛市"));
-		terms.add(new Term(TermType.County, "李沧区"));
+		terms.add(new Term(TermType.District, "李沧区"));
 		terms.add(new Term(TermType.Street, "李沧街道"));
 		terms.add(new Term(TermType.Road, "北崂路"));
 		doc.setTerms(terms);

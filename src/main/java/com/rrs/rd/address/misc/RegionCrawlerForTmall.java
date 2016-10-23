@@ -61,7 +61,7 @@ public class RegionCrawlerForTmall {
 		if(regions==null) return;
 		for(RegionEntity region : regions){
 			if(region.getChildren()!=null) findRegion(region.getChildren());
-			if(region.getType()!=RegionType.County && region.getType()!=RegionType.CityLevelCounty) 
+			if(region.getType()!=RegionType.District && region.getType()!=RegionType.CityLevelDistrict) 
 				continue;
 			String json = null;
 			try {
@@ -106,7 +106,7 @@ public class RegionCrawlerForTmall {
 			else if(name.endsWith("镇") || name.endsWith("乡"))
 				region.setType(RegionType.Town);
 			else
-				region.setType(RegionType.SpecialDistrict);
+				region.setType(RegionType.Village);
 			persister.createRegion(region);
 			LOG.debug(">    " + name + ": done");
 		}

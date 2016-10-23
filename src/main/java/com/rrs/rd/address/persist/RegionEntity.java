@@ -11,6 +11,10 @@ import java.util.List;
  * <li>直辖市：采用【北京 -&gt; 北京市 -&gt; 下属区县】、【天津 -&gt; 天津市 -&gt; 下属区县】形式表示；</li>
  * <li>省直辖县级行政区划：例如【湖北省 -&gt; 潜江市】，parent_id为湖北省，其下没有区县数据。
  * 在匹配地址时需注意，有的地址库会采用【湖北省 -&gt; 潜江 -&gt; 潜江市】方式表示，不做特殊处理将无法匹配上。</li>
+ * <li>街道乡镇：所有的街道乡镇都使用{@link RegionType#Street}存储，父级ID为区县，包括街道、乡镇，以及各种特殊的街道一级行政区域。</li>
+ * <li>附加乡镇：不在标准行政区域体系中，由历史地址数据中通过文本匹配出来的乡镇，都使用{@link RegionType#Town}存储，父级ID为区县。</li>
+ * <li>附加村庄：不在标准行政区域体系中，由历史地址数据中通过文本匹配出来的村庄，都使用{@link RegionType#Town}存储，父级ID为区县。</li>
+ * <li>平台相关的特殊区域划分：主要纳入了京东的特殊4级地址，例如【三环内】，都使用{@link RegionType#PlatformL4}存储，父级ID为区县。</li>
  * </ul>
  *
  * <p>
@@ -34,6 +38,25 @@ public class RegionEntity implements Serializable {
     private static final long serialVersionUID = -111163973997033386L;
 
     private int id = 0;
+    private int parentId = 0;
+    private String name = "";
+    private String alias = "";
+    private RegionType type = RegionType.Undefined;
+    private String zip = "";
+    private List<RegionEntity> children;
+    private List<String> orderedNames;
+    
+    public boolean isTown(){
+    	switch(this.type){
+    		case Town: return true;
+    		case Street:
+    			if(this.name==null || this.name.isEmpty()) return false;
+    			return this.name.length()<=4 && 
+    					(this.name.charAt(this.name.length()-1)=='镇' || this.name.charAt(this.name.length()-1)=='乡'); 
+    		default:
+    	}
+    	return false;
+    }
 
     public int getId() {
         return this.id;
@@ -43,8 +66,6 @@ public class RegionEntity implements Serializable {
         this.id = value;
     }
 
-    private int parentId = 0;
-
     public int getParentId() {
         return this.parentId;
     }
@@ -52,8 +73,6 @@ public class RegionEntity implements Serializable {
     public void setParentId(int value) {
         this.parentId = value;
     }
-
-    private String name = "";
 
     public String getName() {
         return this.name;
@@ -63,8 +82,6 @@ public class RegionEntity implements Serializable {
     	if(value==null) this.name = null;
     	else this.name = value.intern();
     }
-    
-    private String alias = "";
     
     public String getAlias(){
     	return this.alias;
@@ -77,8 +94,6 @@ public class RegionEntity implements Serializable {
     		this.alias = value.trim();
     }
 
-    private RegionType type = RegionType.Undefined;
-
     public RegionType getType() {
         return this.type;
     }
@@ -86,8 +101,6 @@ public class RegionEntity implements Serializable {
     public void setType(RegionType value) {
         this.type = value;
     }
-
-    private String zip = "";
 
     public String getZip() {
         return this.zip;
@@ -97,8 +110,6 @@ public class RegionEntity implements Serializable {
         this.zip = value;
     }
     
-    private List<RegionEntity> children;
-    
     public List<RegionEntity> getChildren(){
     	return this.children;
     }
@@ -106,7 +117,6 @@ public class RegionEntity implements Serializable {
     	this.children=value;
     }
     
-    private List<String> orderedNames;
     /**
      * 获取所有名称和别名列表，按字符长度倒排序。
      * @return

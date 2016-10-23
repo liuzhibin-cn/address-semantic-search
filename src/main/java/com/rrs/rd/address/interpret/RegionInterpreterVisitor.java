@@ -24,7 +24,7 @@ import com.rrs.rd.address.persist.RegionType;
  * <p><strong>搜索匹配说明</strong><br />
  * 1. 在倒排索引中匹配上有效词条数量最多的结果作为最终结果。<br />
  *  　有效词条包括以下几种类型：{@link TermType#Province Province}、
- *    {@link TermType#City City}、{@link TermType#County County}、{@link TermType#Undefined Undefined}。<br />
+ *    {@link TermType#City City}、{@link TermType#District County}、{@link TermType#Undefined Undefined}。<br />
  * 2. 匹配结果符合标准行政区域从属关系。<br />
  *  　假如当前已经匹配上【北京】，接下来出现【徐汇区】，则【徐汇区】不是可接受的匹配项，因为【徐汇区】隶属于【上海】，而不是【北京】。<br />
  * 3. 匹配过程为某些常见错误进行了容错处理。<br />
@@ -138,45 +138,56 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 		
 		this.checkDeepMost();
 		
+		//当前访问的索引对象出栈
 		TermIndexItem tii = stack.pop();
+		//恢复当前位置指针
 		currentPos = pos - entry.getKey().length();
 		RegionEntity region = (RegionEntity)tii.getValue();
-		if(region!=null && entry.getKey().equals(region.getName()))
-			fullMatchCount++;
+		//更新全名匹配的数量
+		if(region!=null && entry.getKey().equals(region.getName())) fullMatchCount++;
+		//如果是忽略项，无需更新当前已匹配的省市区状态
 		if(tii.getType()==TermType.Ignore) return;
 		
-		RegionEntity least = null;
+		//扫描一遍stack，找出街道street、乡镇town、村庄village，以及省市区中级别最低的一个least
+		RegionEntity least = null, street=null, town=null, village=null;
 		for(int i=0; i<stack.size(); i++) {
 			tii = stack.get(i);
 			if(tii.getType()==TermType.Ignore) continue;
 			RegionEntity r = (RegionEntity)tii.getValue();
-			if(least==null) {
-				least = r;
-				continue;
+			switch(r.getType()){
+				case Street:
+				case PlatformL4: street = r; continue;
+				case Town: town = r; continue;
+				case Village: village = r; continue;
+				default:
 			}
-			if(r.getType().toValue() > least.getType().toValue())
-				least = r;
+			if(least==null) { least = r; continue; }
+			if(r.getType().toValue() > least.getType().toValue()) least = r;
 		}
 		
-		if(least==null) return;
-		switch(least.getType()){
-			case Province:
-			case ProvinceLevelCity1:
-				curDivision.setCity(null);
-				curDivision.setDistrict(null);
-				curDivision.setStreet(null);
-				break;
-			case City:
-			case ProvinceLevelCity2:
-			case CityLevelCounty:
-				curDivision.setDistrict(null);
-				curDivision.setStreet(null);
-				break;
-			case County:
-				curDivision.setStreet(null);
-				break;
-			default:
+		if(street==null) curDivision.setStreet(null); //剩余匹配项中没有街道了
+		if(town==null) curDivision.setTown(null); //剩余匹配项中没有乡镇了
+		if(village==null) curDivision.setVillage(null); //剩余匹配项中没有村庄了
+		//只有街道、乡镇、村庄都没有时，才开始清空省市区
+		if(curDivision.hasStreet() || curDivision.hasTown() || curDivision.hasVillage()) return;
+		if(least!=null){
+			switch(least.getType()){
+				case Province:
+				case ProvinceLevelCity1:
+					curDivision.setCity(null);
+					curDivision.setDistrict(null);
+					return;
+				case City:
+				case ProvinceLevelCity2:
+					curDivision.setDistrict(null);
+					return;
+				default: return;
+			}
 		}
+		//least为null，说明stack中什么都不剩了
+		curDivision.setProvince(null);
+		curDivision.setCity(null);
+		curDivision.setDistrict(null);
 	}
 	/**
 	 * 检查是否达到最大匹配。
@@ -237,11 +248,21 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 				acceptableItem = item;
 				break;
 			}
-			//2. 中间缺一级的情况。已经匹配上省份，则中间缺一级只可能是缺地级市或者区县（使用了4级地址，因此可能缺区县）。
-			//缺地级市，region为街道乡镇的情况最后考虑
-			if((mostPriority==-1 || mostPriority>2) && region.getType()==RegionType.County && !curDivision.hasCity()) {
-				RegionEntity city = persister.getRegion(region.getParentId());
-				if(city.getParentId() == curDivision.getProvince().getId()) {
+			//2. 中间缺一级的情况。
+			if(mostPriority==-1 || mostPriority>2) {
+				RegionEntity parent = persister.getRegion(region.getParentId());
+				//2.1 缺地级市
+				if(!curDivision.hasCity() && curDivision.hasProvince() && region.getType()==RegionType.District 
+						&& curDivision.getProvince().getId()==parent.getParentId()){
+					mostPriority = 2;
+					acceptableItem = item;
+					continue;
+				}
+				//2.2 缺区县
+				if(!curDivision.hasDistrict() && curDivision.hasCity()
+						&& (region.getType()==RegionType.Street || region.getType()==RegionType.Town 
+							|| region.getType()==RegionType.PlatformL4 || region.getType()==RegionType.Village)
+						&& curDivision.getCity().getId()==parent.getParentId()){
 					mostPriority = 2;
 					acceptableItem = item;
 					continue;
@@ -250,13 +271,17 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 			//3. 地址中省市区重复出现的情况
 			if(mostPriority==-1 || mostPriority>3) {
 				if(
-						(curDivision.hasProvince() && curDivision.getProvince().equals(region))
+						(curDivision.hasProvince() && curDivision.getProvince().getId()==region.getId())
 						||
-						(curDivision.hasCity() && curDivision.getCity().equals(region))
+						(curDivision.hasCity() && curDivision.getCity().getId()==region.getId())
 						||
-						(curDivision.hasDistrict() && curDivision.getDistrict().equals(region))
+						(curDivision.hasDistrict() && curDivision.getDistrict().getId()==region.getId())
 						||
-						(curDivision.hasStreet() && curDivision.getStreet().equals(region))
+						(curDivision.hasStreet() && curDivision.getStreet().getId()==region.getId())
+						||
+						(curDivision.hasTown() && curDivision.getTown().getId()==region.getId())
+						||
+						(curDivision.hasVillage() && curDivision.getVillage().getId()==region.getId())
 					) {
 					mostPriority = 3;
 					acceptableItem = item;
@@ -274,14 +299,15 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 				//新疆->阿拉尔市
 				//错误匹配方式：新疆 阿克苏地区 阿拉尔市，会导致在【阿克苏地区】下面无法匹配到【阿拉尔市】
 				//正确匹配结果：新疆 阿拉尔市
-				if(region.getType()==RegionType.CityLevelCounty 
+				if(region.getType()==RegionType.CityLevelDistrict 
 						&& curDivision.hasProvince() && curDivision.getProvince().getId()==region.getParentId()){
 					mostPriority = 4;
 					acceptableItem = item;
 					continue;
 				}
 				//4.2 地级市-区县从属关系错误，但区县对应的省份正确，则将使用区县的地级市覆盖已匹配的地级市
-				if(region.getType()==RegionType.County 
+				//主要是地级市的管辖范围有调整，或者由于外部系统地级市与区县对应关系有调整导致
+				if(region.getType()==RegionType.District 
 						&& curDivision.hasCity() && curDivision.hasProvince() 
 						&& curDivision.getCity().getId()!=region.getParentId()) {
 					RegionEntity city = persister.getRegion(region.getParentId()); //区县的地级市
@@ -293,12 +319,17 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 				}
 			}
 			//5. 街道、乡镇，且不符合上述情况
-			if(region.getType()==RegionType.Street || region.getType()==RegionType.Town || region.getType()==RegionType.SpecialDistrict){
+			if(region.getType()==RegionType.Street || region.getType()==RegionType.Town 
+					|| region.getType()==RegionType.Village || region.getType()==RegionType.PlatformL4){
 				if(!curDivision.hasDistrict()){
-					//TODO，需要哪些检查？如果街道不属于已匹配的区县需要容错？
-					mostPriority = 5;
-					acceptableItem = item;
-					continue;
+					RegionEntity parent = persister.getRegion(region.getParentId()); //parent为区县
+					parent = persister.getRegion(parent.getParentId()); //parent为地级市
+					if(curDivision.hasCity() && curDivision.getCity().getId()==parent.getId()){
+						//TODO，需要哪些检查？如果街道不属于已匹配的区县需要容错？
+						mostPriority = 5;
+						acceptableItem = item;
+						continue;
+					}
 				}
 			}
 		}
@@ -313,10 +344,10 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 		switch(type){
 			case Province:
 			case City:
-			case County:
+			case District:
 			case Street:
 			case Town:
-			case SpecialTown:
+			case Village:
 			case Ignore:
 				return true;
 			default:
@@ -331,7 +362,8 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 		if(region==null) return ;
 		//region为重复项，无需更新状态
 		if(region.equals(curDivision.getProvince()) || region.equals(curDivision.getCity()) 
-				|| region.equals(curDivision.getDistrict()) || region.equals(curDivision.getStreet()))
+				|| region.equals(curDivision.getDistrict()) || region.equals(curDivision.getStreet())
+				|| region.equals(curDivision.getTown()) || region.equals(curDivision.getVillage()))
 			return;
 		
 		switch(region.getType()){
@@ -339,22 +371,20 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 			case ProvinceLevelCity1:
 				curDivision.setProvince(region);
 				curDivision.setCity(null);
-				curDivision.setDistrict(null);
 				break;
 			case City:
 			case ProvinceLevelCity2:
 				curDivision.setCity(region);
 				if(!curDivision.hasProvince())
 					curDivision.setProvince(persister.getRegion(region.getParentId()));
-				curDivision.setDistrict(null);
 				break;
-			case CityLevelCounty:
+			case CityLevelDistrict:
 				curDivision.setCity(region);
 				curDivision.setDistrict(region);
 				if(!curDivision.hasProvince())
 					curDivision.setProvince(persister.getRegion(region.getParentId()));
 				break;
-			case County:
+			case District:
 				curDivision.setDistrict(region);
 				//成功匹配了区县，则强制更新地级市
 				curDivision.setCity(persister.getRegion(curDivision.getDistrict().getParentId()));
@@ -362,15 +392,17 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 					curDivision.setProvince(persister.getRegion(curDivision.getCity().getParentId()));
 				break;
 			case Street:
-			case Town:
-			case SpecialDistrict:
+			case PlatformL4:
 				curDivision.setStreet(region);
-				if(!curDivision.hasDistrict())
-					curDivision.setDistrict(persister.getRegion(curDivision.getStreet().getParentId()));
-				if(!curDivision.hasCity())
-					curDivision.setCity(persister.getRegion(curDivision.getDistrict().getParentId()));
-				if(!curDivision.hasProvince())
-					curDivision.setProvince(persister.getRegion(curDivision.getCity().getParentId()));
+				if(!curDivision.hasDistrict()) curDivision.setDistrict(persister.getRegion(region.getParentId()));
+				break;
+			case Town:
+				curDivision.setTown(region);
+				if(!curDivision.hasDistrict()) curDivision.setDistrict(persister.getRegion(region.getParentId()));
+				break;
+			case Village:
+				curDivision.setVillage(region);
+				if(!curDivision.hasDistrict()) curDivision.setDistrict(persister.getRegion(region.getParentId()));
 				break;
 			default:
 		}
@@ -384,6 +416,8 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 			deepMostDivision.setCity(curDivision.getCity());
 			deepMostDivision.setDistrict(curDivision.getDistrict());
 			deepMostDivision.setStreet(curDivision.getStreet());
+			deepMostDivision.setTown(curDivision.getTown());
+			deepMostDivision.setVillage(curDivision.getVillage());
 		}
 	}
 	
@@ -450,9 +484,13 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 		deepMostDivision.setCity(null);
 		deepMostDivision.setDistrict(null);
 		deepMostDivision.setStreet(null);
+		deepMostDivision.setTown(null);
+		deepMostDivision.setVillage(null);
 		curDivision.setProvince(null);
 		curDivision.setCity(null);
 		curDivision.setDistrict(null);
 		curDivision.setStreet(null);
+		curDivision.setTown(null);
+		curDivision.setVillage(null);
 	}
 }
