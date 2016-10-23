@@ -58,7 +58,7 @@ public class AddressInterpreter {
 	/**
 	 * 匹配镇、乡、街道的模式
 	 */
-	private static final Pattern P_TOWN = Pattern.compile("^(镇|乡|街道|街|村)?((?<z>[\u4e00-\u9fa5]{1,3}镇(?!(省|市|州|区|县|乡|镇|村|街道|委会|公路|大街|大道|路|街)))*(?<x>[\u4e00-\u9fa5]{1,3}乡(?!(省|市|州|区|县|乡|镇|村|街道|委会|公路|大街|大道|路|街)))*(?<c>[\u4e00-\u9fa5]{1,3}村(?!(省|市|州|区|县|乡|镇|村|街道|委|公路|大街|大道|路|街)))*)");
+	private static final Pattern P_TOWN = Pattern.compile("^(镇|乡|村|街道|街|县|市)?((?<z>[\u4e00-\u9fa5]{1,3}镇(?!(省|市|州|区|县|乡|镇|村|街道|委会|公路|大街|大道|路|街)))*(?<x>[\u4e00-\u9fa5]{1,3}乡(?!(省|市|州|区|县|乡|镇|村|街道|委会|公路|大街|大道|路|街)))*(?<c>[\u4e00-\u9fa5]{1,3}村(?!(省|市|州|区|县|乡|镇|村|街道|委|公路|大街|大道|路|街)))*)");
 	private static final Pattern P_ROAD = Pattern.compile("^(?<road>([\u4e00-\u9fa5]{2,4}(路|街坊|街|道|大街|大道)))(?<ex>[甲乙丙丁])?(?<roadnum>[0-9０１２３４５６７８９一二三四五六七八九十]+(号院|号楼|号大院|号|號|巷|弄|院|区|条|\\#院|\\#))?");
 	
 	static{
@@ -312,6 +312,7 @@ public class AddressInterpreter {
 	
 	private void addTown(Map<Long, List<String>> all, String town, RegionEntity district, String text1, String text2){
 		if(all==null || town==null || town.isEmpty() || district==null) return;
+		if(invalidateTown.contains(town)) return;
 		List<String> towns = all.get(district.getId());
 		if(towns!=null && towns.contains(town)) return; //已经添加
 		
@@ -332,7 +333,7 @@ public class AddressInterpreter {
 			all.put(district.getId(), towns);
 		}
 		towns.add(town);
-		if(TOWM_LOG.isDebugEnabled()) TOWM_LOG.debug(district.getId() + " " + town + " < " + text2 + " (" + text1 + ")");
+		if(TOWM_LOG.isDebugEnabled()) TOWM_LOG.debug(district.getId() + " " + town + " << " + text2 + " << " + text1);
 	}
 	private void extractTownAndVillage(AddressEntity addr, Map<Long, List<String>> towns){
 		if(addr.getText().length()<=0 || !addr.hasDistrict()) return;
@@ -349,21 +350,17 @@ public class AddressInterpreter {
 				addr.setText(StringUtil.substring(text, matcher.end("x")));
 			}
 			if(c!=null && c.length()>0){ //村
-				
-				if(addr.getText().length()<=c.length()){
-					addTown(towns, c, addr.getDistrict(), addr.getRawText(), addr.getText());
-					addr.setText("");
-				}else{
-					String leftString = StringUtil.substring(text, matcher.end("c"));
-					if(!c.endsWith("农村")){
-						addTown(towns, c, addr.getDistrict(), addr.getRawText(), addr.getText());
-						if(leftString.length()<=0) addr.setText("");
-						else if(leftString.charAt(0)=='委' || leftString.startsWith("民委员")) 
-							addr.setText("村" + leftString);
-						else
-							addr.setText(leftString);
-					}
+				if(c.endsWith("农村")) return;
+				String leftString = StringUtil.substring(text, matcher.end("c"));
+				if(c.endsWith("村村")) {
+					c = StringUtil.head(c, c.length()-1);
+					leftString = "村" + leftString;
 				}
+				if(leftString.startsWith("委") || leftString.startsWith("民委员")){
+					leftString = "村" + leftString;
+				}
+				addTown(towns, c, addr.getDistrict(), addr.getRawText(), addr.getText());
+				addr.setText(leftString);
 			}
 		}
 		return;
