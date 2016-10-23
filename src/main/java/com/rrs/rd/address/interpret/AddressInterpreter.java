@@ -24,7 +24,7 @@ import com.rrs.rd.address.utils.StringUtil;
  */
 public class AddressInterpreter {
 	private final static Logger LOG = LoggerFactory.getLogger(AddressInterpreter.class);
-	private final static Logger TOWM_LOG = LoggerFactory.getLogger("com.rrs.rd.address.extract-town");
+	private final static Logger TOWM_LOG = LoggerFactory.getLogger("com.rrs.rd.address.ExtractTown");
 	
 	private TermIndexBuilder termIndex = null;
 	private AddressPersister persister;

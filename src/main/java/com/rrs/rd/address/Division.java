@@ -151,32 +151,32 @@ public class Division {
     	StringBuilder sb = new StringBuilder();
     	if(hasProvince()) {
     		sb.append('{');
-    		sb.append(province.getId()).append(province.getName());
+    		sb.append(getProvince().getId()).append(getProvince().getName());
     	}
     	if(hasCity()){
     		if(sb.length()>0) sb.append("-");
     		else sb.append('{');
-    		sb.append(city.getId()).append(city.getName());
+    		sb.append(getCity().getId()).append(getCity().getName());
     	}
     	if(hasDistrict()){
     		if(sb.length()>0) sb.append("-");
     		else sb.setLength('{');
-    		sb.append(district.getId()).append(district.getName());
+    		sb.append(getDistrict().getId()).append(getDistrict().getName());
     	}
     	if(hasStreet()){
     		if(sb.length()>0) sb.append("-");
     		else sb.setLength('{');
-    		sb.append(street.getId()).append(street.getName());
+    		sb.append(getStreet().getId()).append(getStreet().getName());
     	}
     	if(hasTown()){
     		if(sb.length()>0) sb.append("-");
     		else sb.setLength('{');
-    		sb.append(town.getId()).append(town.getName());
+    		sb.append(getTown().getId()).append(getTown().getName());
     	}
     	if(hasVillage()){
     		if(sb.length()>0) sb.append("-");
     		else sb.setLength('{');
-    		sb.append(village.getId()).append(village.getName());
+    		sb.append(getVillage().getId()).append(getVillage().getName());
     	}
     	if(sb.length()>0) sb.append('}');
     	return sb.toString();
