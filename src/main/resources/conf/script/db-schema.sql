@@ -52,15 +52,16 @@ DROP TABLE IF EXISTS `bas_region`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!40101 SET character_set_client = utf8 */;
 CREATE TABLE `bas_region` (
-  `id` int(11) NOT NULL DEFAULT '0',
-  `parent_id` int(11) NOT NULL DEFAULT '0',
-  `type` int(11) NOT NULL DEFAULT '0',
+  `id` int(11) unsigned NOT NULL DEFAULT '0',
+  `parent_id` int(11) unsigned NOT NULL DEFAULT '0',
+  `type` int(11) unsigned NOT NULL DEFAULT '420',
   `name` varchar(25) NOT NULL DEFAULT '',
   `alias` varchar(25) NOT NULL DEFAULT '',
   `zip` varchar(8) NOT NULL DEFAULT '',
-  `source` varchar(5) NOT NULL DEFAULT 'TB' COMMENT '来源',
+  `source` varchar(5) NOT NULL DEFAULT 'JD' COMMENT '来源',
+  `created` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),
-  KEY `ix_parentid` (`parent_id`)
+  UNIQUE KEY `ix_parentid` (`parent_id`,`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
