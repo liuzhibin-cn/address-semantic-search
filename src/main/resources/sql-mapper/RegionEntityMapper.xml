@@ -12,7 +12,7 @@
 	<select id="findRoot" resultMap="RegionEntityResult">
 select `id`,`parent_id`,`name`,`alias`,`type`,`zip` from `bas_region` where id=1
 	</select>
-	<select id="findByParent" parameterType="Integer" resultMap="RegionEntityResult">
+	<select id="findByParent" parameterType="Long" resultMap="RegionEntityResult">
 select `id`,`parent_id`,`name`,`alias`,`type`,`zip`
 from `bas_region`
 where parent_id=#{pid}
@@ -33,7 +33,7 @@ update bas_region set parent_id=#{parentId}, `name`=#{name}, `type`=#{type}
 where `id`=#{id}
 	</update>
 
-	<select id="get" parameterType="Integer" resultMap="RegionEntityResult">
+	<select id="get" parameterType="Long" resultMap="RegionEntityResult">
 select `id`,`parent_id`,`name`,`alias`,`type`,`zip`
 from `bas_region`
 where id=#{id}
