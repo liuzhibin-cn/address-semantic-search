@@ -88,7 +88,7 @@ public class ExtractTown {
 		System.out.println("> 开始提取乡镇村庄");
 		
 		RegionInterpreterVisitor visitor = new RegionInterpreterVisitor(persister);
-		Map<Integer, List<String>> towns = new HashMap<Integer, List<String>>();
+		Map<Long, List<String>> towns = new HashMap<Long, List<String>>();
 		
 		try{
             while((line = br.readLine()) != null){

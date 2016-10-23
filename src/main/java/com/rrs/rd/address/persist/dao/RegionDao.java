@@ -12,12 +12,12 @@ import com.rrs.rd.address.persist.RegionEntity;
  *
  */
 public interface RegionDao {
-	List<RegionEntity> findByParent(int pid);
-	RegionEntity findByParentAndName(@Param("pid") int pid, @Param("name") String name);
+	List<RegionEntity> findByParent(long pid);
+	RegionEntity findByParentAndName(@Param("pid") long pid, @Param("name") String name);
 	RegionEntity findRoot();
 	int create(RegionEntity entity);
 	int update(RegionEntity entity);
 	
-	RegionEntity get(int id);
-	int delete(int id);
+	RegionEntity get(long id);
+	int delete(long id);
 }

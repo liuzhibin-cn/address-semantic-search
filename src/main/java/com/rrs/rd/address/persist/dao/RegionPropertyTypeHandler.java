@@ -26,16 +26,16 @@ import org.apache.ibatis.type.MappedTypes;
  * @author Richie 刘志斌 yudi@sina.com
  * 2016年9月11日
  */
-@MappedJdbcTypes(value = { JdbcType.INTEGER })
+@MappedJdbcTypes(value = { JdbcType.BIGINT })
 @MappedTypes(value = { RegionEntity.class })
 public class RegionPropertyTypeHandler extends BaseTypeHandler<RegionEntity> {
 	@Override
 	public void setParameter(PreparedStatement ps, int i, RegionEntity parameter, JdbcType jdbcType) throws SQLException {
 		if(parameter==null) {
-			ps.setInt(i, 0);
+			ps.setLong(i, 0);
 			return;
 		}
-		ps.setInt(i, parameter.getId());
+		ps.setLong(i, parameter.getId());
 	};
 
 	@Override
@@ -45,21 +45,21 @@ public class RegionPropertyTypeHandler extends BaseTypeHandler<RegionEntity> {
 
 	@Override
 	public RegionEntity getNullableResult(ResultSet rs, String columnName) throws SQLException {
-		int value = rs.getInt(columnName);
+		long value = rs.getLong(columnName);
 		if(value<=0) return null;
 		return AddressPersister.instance().getRegion(value);
 	}
 
 	@Override
 	public RegionEntity getNullableResult(ResultSet rs, int columnIndex) throws SQLException {
-		int value = rs.getInt(columnIndex);
+		long value = rs.getLong(columnIndex);
 		if(value<=0) return null;
 		return AddressPersister.instance().getRegion(value);
 	}
 
 	@Override
 	public RegionEntity getNullableResult(CallableStatement cs, int columnIndex) throws SQLException {
-		int value = cs.getInt(columnIndex);
+		long value = cs.getLong(columnIndex);
 		if(value<=0) return null;
 		return AddressPersister.instance().getRegion(value);
 	}

@@ -40,7 +40,7 @@ public class AddressPersister implements ApplicationContextAware {
 	/**
 	 * 按区域ID缓存的全部区域对象。
 	 */
-	private static HashMap<Integer, RegionEntity> REGION_CACHE = null;
+	private static HashMap<Long, RegionEntity> REGION_CACHE = null;
 	private static boolean REGION_LOADED = false;
 	
 	private static Set<Integer> ADDRESS_INDEX_BY_HASH = null;
@@ -152,7 +152,7 @@ public class AddressPersister implements ApplicationContextAware {
 		if(REGION_TREE==null) throw new IllegalStateException("Region data not initialized");
 		return REGION_TREE;
 	}
-	public RegionEntity getRegion(int id){
+	public RegionEntity getRegion(long id){
 		if(!REGION_LOADED) this.loadRegions();
 		if(REGION_TREE==null) throw new IllegalStateException("Region data not initialized");
 		return REGION_CACHE.get(id);
@@ -161,18 +161,18 @@ public class AddressPersister implements ApplicationContextAware {
 	public void createRegion(RegionEntity region){
 		this.regionDao.create(region);
 	}
-	public RegionEntity findRegion(int parentId, String name){
+	public RegionEntity findRegion(long parentId, String name){
 		return this.regionDao.findByParentAndName(parentId, name);
 	}
 	
-	public void addTowns(Map<Integer, List<String>> towns){
+	public void addTowns(Map<Long, List<String>> towns){
 		if(towns==null) return;
-		for(Map.Entry<Integer, List<String>> entry : towns.entrySet()){
+		for(Map.Entry<Long, List<String>> entry : towns.entrySet()){
 			if(entry.getKey()==null || entry.getValue()==null || entry.getValue().isEmpty()) continue;
-			RegionEntity parent = this.getRegion(entry.getKey().intValue());
+			RegionEntity parent = this.getRegion(entry.getKey());
 			if(parent==null) continue;
 			
-			int id = initializeRegionId(parent);
+			long id = initializeRegionId(parent);
 			for(String town : entry.getValue()) {
 				RegionEntity region = new RegionEntity();
 				region.setId(id);
@@ -182,23 +182,22 @@ public class AddressPersister implements ApplicationContextAware {
 				if(c=='镇' || c=='乡') region.setType(RegionType.Town);
 				else if(c=='村') region.setType(RegionType.Village);
 				else continue;
-				this.regionDao.create(region);
+				//this.regionDao.create(region);
 				id++;
 			}
 		}
 	}
-	public int initializeRegionId(RegionEntity parent){
-		if(parent.getChildren()==null) return parent.getId() * 1000 + 500;
-		int maxId = parent.getId() * 1000 + 500;
+	public long initializeRegionId(RegionEntity parent){
+		if(parent.getChildren()==null) return parent.getId() * 10000;
+		long maxId = parent.getId() * 10000;
 		for(RegionEntity child : parent.getChildren()) {
 			if(child.getId() < maxId) continue;
-			if(child.getId() >= parent.getId() * 1000 + 700) continue;
 			if(child.getId()>=maxId) maxId = child.getId() + 1;
 		}
 		return maxId;
 	}
 	
-	public List<AddressEntity> loadAddresses(int provinceId, int cityId, int countyId){
+	public List<AddressEntity> loadAddresses(long provinceId, long cityId, long countyId){
 		return this.addressDao.find(provinceId, cityId, countyId);
 	}
 	
@@ -241,7 +240,7 @@ public class AddressPersister implements ApplicationContextAware {
 		Date start = new Date();
 		
 		REGION_TREE = this.regionDao.findRoot();
-		REGION_CACHE = new HashMap<Integer, RegionEntity>();
+		REGION_CACHE = new HashMap<Long, RegionEntity>();
 		REGION_CACHE.put(REGION_TREE.getId(), REGION_TREE);
 		this.loadRegionChildren(REGION_TREE);
 		REGION_LOADED = true;

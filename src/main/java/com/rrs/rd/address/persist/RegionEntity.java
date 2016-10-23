@@ -37,8 +37,8 @@ import java.util.List;
 public class RegionEntity implements Serializable {
     private static final long serialVersionUID = -111163973997033386L;
 
-    private int id = 0;
-    private int parentId = 0;
+    private long id = 0;
+    private long parentId = 0;
     private String name = "";
     private String alias = "";
     private RegionType type = RegionType.Undefined;
@@ -58,19 +58,19 @@ public class RegionEntity implements Serializable {
     	return false;
     }
 
-    public int getId() {
+    public long getId() {
         return this.id;
     }
 
-    public void setId(int value) {
+    public void setId(long value) {
         this.id = value;
     }
 
-    public int getParentId() {
+    public long getParentId() {
         return this.parentId;
     }
 
-    public void setParentId(int value) {
+    public void setParentId(long value) {
         this.parentId = value;
     }
 
@@ -172,6 +172,6 @@ public class RegionEntity implements Serializable {
     
     @Override
     public int hashCode(){
-    	return this.id;
+    	return new Long(this.id).hashCode();
     }
 }

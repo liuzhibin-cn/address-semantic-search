@@ -112,7 +112,7 @@ public class RegionCrawlerForTmall {
 		}
 	}
 	
-	private static String httpGet(int id) throws ClientProtocolException, IOException{
+	private static String httpGet(long id) throws ClientProtocolException, IOException{
 		HttpGet get = new HttpGet("https://lsp.wuliu.taobao.com/locationservice/addr/output_address_town.do?l3=" + id);
 		CloseableHttpResponse rsp = null;
 		HttpEntity entity = null;
