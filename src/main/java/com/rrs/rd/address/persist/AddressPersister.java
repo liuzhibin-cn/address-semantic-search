@@ -87,7 +87,7 @@ public class AddressPersister implements ApplicationContextAware {
 	 * @throws RuntimeException
 	 */
 	public int importAddresses(List<AddressEntity> addresses) throws IllegalStateException, RuntimeException {
-		int batchSize = 1000, imported = 0, duplicate = 0;
+		int batchSize = 2000, count=0, imported = 0, duplicate = 0;
 		List<AddressEntity> batch = new ArrayList<AddressEntity>(batchSize);
 		for(AddressEntity address : addresses){
 			try{
@@ -116,14 +116,14 @@ public class AddressPersister implements ApplicationContextAware {
 					address.setRawText(StringUtil.head(address.getRawText(), 150));
 				batch.add(address);
 				
-				imported++;
-				if(imported % batchSize == 0) {
+				count++;
+				if(count % batchSize == 0) {
 					long dbStart = System.currentTimeMillis();
-					this.addressDao.batchCreate(batch);
+					imported += this.addressDao.batchCreate(batch);
 					batch = new ArrayList<AddressEntity>(batchSize);
 					this.timeDb += System.currentTimeMillis() - dbStart;
 					
-					if(imported % 40000 == 0 && LOG.isInfoEnabled())
+					if(count % 40000 == 0 && LOG.isInfoEnabled())
 						LOG.info("[addr-imp] [perf] " + imported + " imported, " + duplicate + " duplicate, elapsed " + timeDb/1000.0);
 				}
 			}catch(Exception ex){
@@ -133,7 +133,7 @@ public class AddressPersister implements ApplicationContextAware {
 		
 		if(!batch.isEmpty()){
 			long dbStart = System.currentTimeMillis();
-			this.addressDao.batchCreate(batch);
+			imported += this.addressDao.batchCreate(batch);
 			batch = null;
 			this.timeDb += System.currentTimeMillis() - dbStart;
 		}

@@ -15,7 +15,6 @@ import com.rrs.rd.address.index.TermIndexItem;
 import com.rrs.rd.address.persist.AddressPersister;
 import com.rrs.rd.address.persist.RegionEntity;
 import com.rrs.rd.address.persist.RegionType;
-import com.rrs.rd.address.utils.StringUtil;
 
 /**
  * 基于倒排索引搜索匹配省市区行政区划的访问者。
