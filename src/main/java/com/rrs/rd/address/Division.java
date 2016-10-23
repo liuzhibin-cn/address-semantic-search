@@ -33,12 +33,12 @@ public class Division {
 	 * @return
 	 */
 	public RegionEntity leastRegion(){
-		if(hasVillage()) return this.village;
-		if(hasTown()) return this.town;
-		if(hasStreet()) return this.street;
-		if(hasDistrict()) return this.district;
-		if(hasCity()) return this.city;
-		return this.province;
+		if(hasVillage()) return getVillage();
+		if(hasTown()) return getTown();
+		if(hasStreet()) return getStreet();
+		if(hasDistrict()) return getDistrict();
+		if(hasCity()) return getCity();
+		return getProvince();
 	}
 	
     /**
