@@ -2,11 +2,11 @@ package com.rrs.rd.address;
 
 import com.rrs.rd.address.persist.RegionEntity;
 
-public class StdDivision {
+public class Division {
 	protected RegionEntity province = null;
 	protected RegionEntity city = null;
-	protected RegionEntity county = null;
-	protected RegionEntity town = null;
+	protected RegionEntity district = null;
+	protected RegionEntity street = null;
     
 	public boolean hasProvince(){
 		return this.province!=null;
@@ -14,19 +14,19 @@ public class StdDivision {
 	public boolean hasCity(){
 		return this.city!=null;
 	}
-	public boolean hasCounty(){
-		return this.county!=null;
+	public boolean hasDistrict(){
+		return this.district!=null;
 	}
-	public boolean hasTown(){
-		return this.town!=null;
+	public boolean hasStreet(){
+		return this.street!=null;
 	}
 	/**
 	 * 获取最小一级有效行政区域对象。
 	 * @return
 	 */
 	public RegionEntity leastRegion(){
-		if(this.town!=null) return this.town;
-		if(this.county!=null) return this.county;
+		if(this.street!=null) return this.street;
+		if(this.district!=null) return this.district;
 		if(this.city!=null) return this.city;
 		return this.province;
 	}
@@ -48,14 +48,14 @@ public class StdDivision {
     }
     
     /**
-     * 获取 城市。
+     * 获取 地级市。
      */
     public RegionEntity getCity() {
         return this.city;
     }
 
     /**
-     * 设置 城市。
+     * 设置 地级市。
      *
      * @param value 属性值
      */
@@ -66,8 +66,8 @@ public class StdDivision {
     /**
      * 获取 区县。
      */
-    public RegionEntity getCounty() {
-        return this.county;
+    public RegionEntity getDistrict() {
+        return this.district;
     }
 
     /**
@@ -75,24 +75,24 @@ public class StdDivision {
      *
      * @param value 属性值
      */
-    public void setCounty(RegionEntity value) {
-        this.county = value;
+    public void setDistrict(RegionEntity value) {
+        this.district = value;
     }
     
     /**
-     * 获取 街道、乡镇。
+     * 获取 街道乡镇。
      */
-    public RegionEntity getTown() {
-        return this.town;
+    public RegionEntity getStreet() {
+        return this.street;
     }
 
     /**
-     * 设置 街道、乡镇。
+     * 设置 街道乡镇。
      *
      * @param value 属性值
      */
-    public void setTown(RegionEntity value) {
-        this.town = value;
+    public void setStreet(RegionEntity value) {
+        this.street = value;
     }
     
     @Override
@@ -107,15 +107,15 @@ public class StdDivision {
     		else sb.append('{');
     		sb.append(city.getId()).append(city.getName());
     	}
-    	if(hasCounty()){
+    	if(hasDistrict()){
     		if(sb.length()>0) sb.append("-");
     		else sb.setLength('{');
-    		sb.append(county.getId()).append(county.getName());
+    		sb.append(district.getId()).append(district.getName());
     	}
-    	if(hasTown()){
+    	if(hasStreet()){
     		if(sb.length()>0) sb.append("-");
     		else sb.setLength('{');
-    		sb.append(town.getId()).append(town.getName());
+    		sb.append(street.getId()).append(street.getName());
     	}
     	if(sb.length()>0) sb.append('}');
     	return sb.toString();

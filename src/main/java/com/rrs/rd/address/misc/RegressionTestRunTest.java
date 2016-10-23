@@ -110,7 +110,7 @@ public class RegressionTestRunTest {
     			ex.printStackTrace(System.out);
     			continue;
     		}
-    		if(addr==null || !addr.hasProvince() || !addr.hasCity() || !addr.hasCounty()){
+    		if(addr==null || !addr.hasProvince() || !addr.hasCity() || !addr.hasDistrict()){
     			interpretFail++;
     			LOG.info("[inter-fail] " + lineNum + ":" + tokens[1]+tokens[2]+tokens[3]+tokens[4]);
     			continue;

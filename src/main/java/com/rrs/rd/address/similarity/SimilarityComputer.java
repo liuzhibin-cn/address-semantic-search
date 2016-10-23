@@ -132,8 +132,8 @@ public class SimilarityComputer {
 				else break;
 			}
 		}
-		if(addr.hasTown()){
-			doc.setTown(new Term(TermType.Town, addr.getTown().getName()));
+		if(addr.hasStreet()){
+			doc.setTown(new Term(TermType.Town, addr.getStreet().getName()));
 			terms.add(doc.getTown());
 		}
 		else if(town!=null){
@@ -416,11 +416,11 @@ public class SimilarityComputer {
 			LOG.warn("[addr] [find-similar] [addr-err] null << " + addressText);
 			throw new RuntimeException("Can't interpret address!");
 		}
-		if(!queryAddr.hasProvince() || !queryAddr.hasCity() || !queryAddr.hasCounty()){
+		if(!queryAddr.hasProvince() || !queryAddr.hasCity() || !queryAddr.hasDistrict()){
 			LOG.warn("[addr] [find-similar] [addr-err] "
 					+ (queryAddr.hasProvince() ? queryAddr.getProvince().getName() : "X") + "-"
 					+ (queryAddr.hasCity() ? queryAddr.getCity().getName() : "X") + "-"
-					+ (queryAddr.hasCounty() ? queryAddr.getCounty().getName() : "X")
+					+ (queryAddr.hasDistrict() ? queryAddr.getDistrict().getName() : "X")
 					+ " << " + addressText);
 			throw new RuntimeException("Can't interpret address, invalid province, city or county name!");
 		}
@@ -429,8 +429,8 @@ public class SimilarityComputer {
 		List<Document> allDocs = loadDocunentsFromCache(queryAddr);
 		if(allDocs.isEmpty()) {
 			String message = queryAddr.getProvince().getName() + queryAddr.getCity().getName();
-			if(!(RegionType.CityLevelCounty==queryAddr.getCounty().getType()))
-				message = message + queryAddr.getCounty().getName();
+			if(!(RegionType.CityLevelCounty==queryAddr.getDistrict().getType()))
+				message = message + queryAddr.getDistrict().getName();
 			throw new NoHistoryDataException(message);
 		}
 		
@@ -638,7 +638,7 @@ public class SimilarityComputer {
 		StringBuilder sb = new StringBuilder();
 		sb.append(address.getProvince().getId()).append('-').append(address.getCity().getId());
 		if(address.getCity().getChildren()!=null)
-			sb.append('-').append(address.getCounty().getId());
+			sb.append('-').append(address.getDistrict().getId());
 		return sb.toString();
 	}
 	

@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 
 import com.alibaba.dubbo.common.utils.Stack;
 import com.rrs.rd.address.index.TermIndexVisitor;
-import com.rrs.rd.address.StdDivision;
+import com.rrs.rd.address.Division;
 import com.rrs.rd.address.TermType;
 import com.rrs.rd.address.index.TermIndexEntry;
 import com.rrs.rd.address.index.TermIndexItem;
@@ -68,8 +68,8 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 	
 	private int currentLevel = 0, deepMostLevel = 0, currentPos = -1, deepMostPos = -1;
 	private int fullMatchCount = 0, deepMostFullMatchCount = 0;
-	private StdDivision deepMostDivision = new StdDivision();
-	private StdDivision curDivision = new StdDivision();
+	private Division deepMostDivision = new Division();
+	private Division curDivision = new Division();
 	private Stack<TermIndexItem> stack = new Stack<TermIndexItem>(); 
 
 	static {
@@ -163,17 +163,17 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 			case Province:
 			case ProvinceLevelCity1:
 				curDivision.setCity(null);
-				curDivision.setCounty(null);
-				curDivision.setTown(null);
+				curDivision.setDistrict(null);
+				curDivision.setStreet(null);
 				break;
 			case City:
 			case ProvinceLevelCity2:
 			case CityLevelCounty:
-				curDivision.setCounty(null);
-				curDivision.setTown(null);
+				curDivision.setDistrict(null);
+				curDivision.setStreet(null);
 				break;
 			case County:
-				curDivision.setTown(null);
+				curDivision.setStreet(null);
 				break;
 			default:
 		}
@@ -254,9 +254,9 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 						||
 						(curDivision.hasCity() && curDivision.getCity().equals(region))
 						||
-						(curDivision.hasCounty() && curDivision.getCounty().equals(region))
+						(curDivision.hasDistrict() && curDivision.getDistrict().equals(region))
 						||
-						(curDivision.hasTown() && curDivision.getTown().equals(region))
+						(curDivision.hasStreet() && curDivision.getStreet().equals(region))
 					) {
 					mostPriority = 3;
 					acceptableItem = item;
@@ -294,7 +294,7 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 			}
 			//5. 街道、乡镇，且不符合上述情况
 			if(region.getType()==RegionType.Street || region.getType()==RegionType.Town || region.getType()==RegionType.SpecialDistrict){
-				if(!curDivision.hasCounty()){
+				if(!curDivision.hasDistrict()){
 					//TODO，需要哪些检查？如果街道不属于已匹配的区县需要容错？
 					mostPriority = 5;
 					acceptableItem = item;
@@ -331,7 +331,7 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 		if(region==null) return ;
 		//region为重复项，无需更新状态
 		if(region.equals(curDivision.getProvince()) || region.equals(curDivision.getCity()) 
-				|| region.equals(curDivision.getCounty()) || region.equals(curDivision.getTown()))
+				|| region.equals(curDivision.getDistrict()) || region.equals(curDivision.getStreet()))
 			return;
 		
 		switch(region.getType()){
@@ -339,36 +339,36 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 			case ProvinceLevelCity1:
 				curDivision.setProvince(region);
 				curDivision.setCity(null);
-				curDivision.setCounty(null);
+				curDivision.setDistrict(null);
 				break;
 			case City:
 			case ProvinceLevelCity2:
 				curDivision.setCity(region);
 				if(!curDivision.hasProvince())
 					curDivision.setProvince(persister.getRegion(region.getParentId()));
-				curDivision.setCounty(null);
+				curDivision.setDistrict(null);
 				break;
 			case CityLevelCounty:
 				curDivision.setCity(region);
-				curDivision.setCounty(region);
+				curDivision.setDistrict(region);
 				if(!curDivision.hasProvince())
 					curDivision.setProvince(persister.getRegion(region.getParentId()));
 				break;
 			case County:
-				curDivision.setCounty(region);
+				curDivision.setDistrict(region);
 				//成功匹配了区县，则强制更新地级市
-				curDivision.setCity(persister.getRegion(curDivision.getCounty().getParentId()));
+				curDivision.setCity(persister.getRegion(curDivision.getDistrict().getParentId()));
 				if(!curDivision.hasProvince())
 					curDivision.setProvince(persister.getRegion(curDivision.getCity().getParentId()));
 				break;
 			case Street:
 			case Town:
 			case SpecialDistrict:
-				curDivision.setTown(region);
-				if(!curDivision.hasCounty())
-					curDivision.setCounty(persister.getRegion(curDivision.getTown().getParentId()));
+				curDivision.setStreet(region);
+				if(!curDivision.hasDistrict())
+					curDivision.setDistrict(persister.getRegion(curDivision.getStreet().getParentId()));
 				if(!curDivision.hasCity())
-					curDivision.setCity(persister.getRegion(curDivision.getCounty().getParentId()));
+					curDivision.setCity(persister.getRegion(curDivision.getDistrict().getParentId()));
 				if(!curDivision.hasProvince())
 					curDivision.setProvince(persister.getRegion(curDivision.getCity().getParentId()));
 				break;
@@ -382,8 +382,8 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 			deepMostFullMatchCount = fullMatchCount;
 			deepMostDivision.setProvince(curDivision.getProvince());
 			deepMostDivision.setCity(curDivision.getCity());
-			deepMostDivision.setCounty(curDivision.getCounty());
-			deepMostDivision.setTown(curDivision.getTown());
+			deepMostDivision.setDistrict(curDivision.getDistrict());
+			deepMostDivision.setStreet(curDivision.getStreet());
 		}
 	}
 	
@@ -406,7 +406,7 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 	 * @return
 	 */
 	public boolean hasResult(){
-		return deepMostPos>0 && deepMostDivision.hasCounty();
+		return deepMostPos>0 && deepMostDivision.hasDistrict();
 	}
 	/**
 	 * 获取最终匹配结果的终止位置。
@@ -433,7 +433,7 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 	 * 获取行政区域最终匹配结果。
 	 * @return
 	 */
-	public StdDivision resultDivision(){
+	public Division resultDivision(){
 		return deepMostDivision;
 	}
 	/**
@@ -448,11 +448,11 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 		deepMostFullMatchCount = 0;
 		deepMostDivision.setProvince(null);
 		deepMostDivision.setCity(null);
-		deepMostDivision.setCounty(null);
-		deepMostDivision.setTown(null);
+		deepMostDivision.setDistrict(null);
+		deepMostDivision.setStreet(null);
 		curDivision.setProvince(null);
 		curDivision.setCity(null);
-		curDivision.setCounty(null);
-		curDivision.setTown(null);
+		curDivision.setDistrict(null);
+		curDivision.setStreet(null);
 	}
 }

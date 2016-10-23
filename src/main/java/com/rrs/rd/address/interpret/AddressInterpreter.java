@@ -85,7 +85,7 @@ public class AddressInterpreter {
 			try{
 				if(addrText==null || addrText.trim().isEmpty()) continue;
 				AddressEntity address = interpret(addrText, visitor);
-				if(address==null || !address.hasCity() || !address.hasCounty()) {
+				if(address==null || !address.hasCity() || !address.hasDistrict()) {
 					numFail++;
 					LOG.error("[addr-inter] [fail] " + addrText + " > " 
 							+ (address==null ? "null" : address.toString()));
@@ -115,8 +115,8 @@ public class AddressInterpreter {
 	 * <p>进行如下处理：
 	 * <ul style="margin:-10 0 0 10;">
 	 * <li>提取省市区。通过返回结果{@link AddressEntity}对象的{@link AddressEntity#getProvince() getPid()}、
-	 * {@link AddressEntity#getCity() getCid()}、{@link AddressEntity#getCounty() getDid()}获取省市区ID。</li>
-	 * <li>提取街道、镇、乡、村、建筑编号。通过返回结果{@link AddressEntity}对象的{@link AddressEntity#getTown() getTown()}获取
+	 * {@link AddressEntity#getCity() getCid()}、{@link AddressEntity#getDistrict() getDid()}获取省市区ID。</li>
+	 * <li>提取街道、镇、乡、村、建筑编号。通过返回结果{@link AddressEntity}对象的{@link AddressEntity#getStreet() getTown()}获取
 	 * 街道、镇、乡，{@link AddressEntity#getVillage() getVillage()}获取村，{@link AddressEntity#getBuildingNum() getBuildingNum()}
 	 * 获取建筑编号。</li>
 	 * <li>地址中使用括号（包括中英文）括起来的备注说明部分，会移动到地址的最后面。</li>
@@ -190,8 +190,8 @@ public class AddressInterpreter {
 		if(!visitor.hasResult()) return false;
 		addr.setProvince(visitor.resultDivision().getProvince());
 		addr.setCity(visitor.resultDivision().getCity());
-		addr.setCounty(visitor.resultDivision().getCounty());
-		addr.setTown(visitor.resultDivision().getTown());
+		addr.setDistrict(visitor.resultDivision().getDistrict());
+		addr.setStreet(visitor.resultDivision().getStreet());
 		addr.setText(StringUtil.substring(addr.getText(), visitor.resultEndPosition() + 1));
 		return true;
 	}

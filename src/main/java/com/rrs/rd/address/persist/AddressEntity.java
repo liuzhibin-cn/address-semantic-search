@@ -5,7 +5,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
-import com.rrs.rd.address.StdDivision;
+import com.rrs.rd.address.Division;
 
 /**
  * 地址库地址实体。
@@ -33,7 +33,7 @@ import com.rrs.rd.address.StdDivision;
  * @author Richie 刘志斌 yudi@sina.com
  * @since 2016/9/4 1:22:41
  */
-public class AddressEntity extends StdDivision implements Serializable {
+public class AddressEntity extends Division implements Serializable {
     private static final long serialVersionUID = 111198101809627685L;
 
     private int id;
@@ -112,7 +112,7 @@ public class AddressEntity extends StdDivision implements Serializable {
     	StringBuilder sb = new StringBuilder();
     	if(hasProvince()) sb.append(getProvince().getName());
     	if(hasCity()) sb.append(getCity().getName());
-    	if(hasCounty()) sb.append(getCounty().getName());
+    	if(hasDistrict()) sb.append(getDistrict().getName());
     	if(getTowns()!=null){
     		for(String town : getTowns())
     			sb.append(town);

@@ -107,7 +107,7 @@ public class RegressionTestImportWLData {
             			System.out.println("> [inter-error] " + lineNum + " - " + line);
             			continue;
             		}
-            		if(!addr.hasProvince() || !addr.hasCity() || !addr.hasCounty()){
+            		if(!addr.hasProvince() || !addr.hasCity() || !addr.hasDistrict()){
             			System.out.println("> [region-error] " + lineNum + " - " + line);
             			continue;
             		}

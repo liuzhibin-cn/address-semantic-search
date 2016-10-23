@@ -16,19 +16,19 @@ public class Term {
 	public Term(TermType type, String text){
 		this.type = type;
 		if(text==null) {
-			text = null;
+			this.text = null;
 			return;
 		}
 		switch(type){
-		case Province:
-		case City:
-		case County:
-		case Street:
-		case Town:
-		case Ignore:
-			this.text = text.intern();
-		default:
-			this.text = text;
+			case Province:
+			case City:
+			case County:
+			case Street:
+			case Town:
+			case Ignore:
+				this.text = text.intern();
+			default:
+				this.text = text;
 		}
 	}
 	
