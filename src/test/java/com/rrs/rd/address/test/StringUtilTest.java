@@ -39,18 +39,33 @@ public class StringUtilTest extends TestCase {
 	
 	@Test
 	public void testLcs(){
-	   String str1 = new String("adbba12345");  
-        String str2 = new String("adbbf1234sa");  
-        List<String> list = StringUtil.lcs(str1.toCharArray(), str2.toCharArray());  
-        for (int i = 0; i < list.size(); i++) {  
-            System.out.println("第" + (i + 1) + "个公共子串:" + list.get(i));  
-        }  
-  
-        str1 = new String("adbab123");  
-        str2 = new String("adbbf123");  
-        list = StringUtil.lcs(str1.toCharArray(), str2.toCharArray());  
-        for (int i = 0; i < list.size(); i++) {  
-            System.out.println("第" + (i + 1) + "个公共子串:" + list.get(i));  
-        }  
+		String str1 = "翠微西里";  
+		String str2 = "翠微西里";  
+		List<String> list = StringUtil.lcs(str1.toCharArray(), str2.toCharArray());  
+		assertNotNull(list);
+		assertEquals(1, list.size());
+		assertEquals("翠微西里", list.get(0));
+		
+		str1 = "翠微西里";  
+		str2 = "翠微西里36号院";  
+		list = StringUtil.lcs(str1.toCharArray(), str2.toCharArray());  
+		assertNotNull(list);
+		assertEquals(1, list.size());
+		assertEquals("翠微西里", list.get(0));
+		
+		str1 = "翠微西里甲36号院";  
+		str2 = "翠微西里36号院";  
+		list = StringUtil.lcs(str1.toCharArray(), str2.toCharArray());  
+		assertNotNull(list);
+		assertEquals(2, list.size());
+		assertEquals("翠微西里", list.get(0));
+		assertEquals("36号院", list.get(1));
+		
+		str1 = "a翠微西里b";  
+		str2 = "c翠微西里d";  
+		list = StringUtil.lcs(str1.toCharArray(), str2.toCharArray());  
+		assertNotNull(list);
+		assertEquals(1, list.size());
+		assertEquals("翠微西里", list.get(0));
 	}
 }
