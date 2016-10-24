@@ -58,7 +58,7 @@ public class AddressInterpreter {
 	/**
 	 * 匹配镇、乡、街道的模式
 	 */
-	private static final Pattern P_TOWN = Pattern.compile("^(镇|乡|村|街道|街|县|市)?((?<z>[\u4e00-\u9fa5]{1,3}镇(?!(省|市|州|区|县|乡|镇|村|街道|委会|公路|大街|大道|路|街)))*(?<x>[\u4e00-\u9fa5]{1,3}乡(?!(省|市|州|区|县|乡|镇|村|街道|委会|公路|大街|大道|路|街)))*(?<c>[\u4e00-\u9fa5]{1,3}村(?!(省|市|州|区|县|乡|镇|村|街道|委|公路|大街|大道|路|街)))*)");
+	private static final Pattern P_TOWN = Pattern.compile("^(镇|乡|村|街道|街办|街|县|市)?((?<z>[\u4e00-\u9fa5]{1,3}镇(?!(省|市|州|区|县|乡|镇|村|街道|委会|公路|大街|大道|路|街)))?(?<x>[\u4e00-\u9fa5]{1,3}乡(?!(省|市|州|区|县|乡|镇|村|街道|委会|公路|大街|大道|路|街)))?(?<c>[\u4e00-\u9fa5]{1,3}村(?!(省|市|州|区|县|乡|镇|村|街道|委|公路|大街|大道|路|街)))?)");
 	private static final Pattern P_ROAD = Pattern.compile("^(?<road>([\u4e00-\u9fa5]{2,4}(路|街坊|街|道|大街|大道)))(?<ex>[甲乙丙丁])?(?<roadnum>[0-9０１２３４５６７８９一二三四五六七八九十]+(号院|号楼|号大院|号|號|巷|弄|院|区|条|\\#院|\\#))?");
 	
 	static{
@@ -66,8 +66,21 @@ public class AddressInterpreter {
 		invalidateTown.add("新村");
 		invalidateTown.add("外村");
 		invalidateTown.add("大村");
+		invalidateTown.add("后村");
+		invalidateTown.add("东村");
 		invalidateTown.add("南村");
+		invalidateTown.add("北村");
+		invalidateTown.add("西村");
+		invalidateTown.add("上村");
+		invalidateTown.add("下村");
+		invalidateTown.add("一村");
+		invalidateTown.add("二村");
+		invalidateTown.add("三村");
+		invalidateTown.add("四村");
 		
+		invalidateTown.add("城乡");
+		
+		invalidateTown.add("古镇");
 		invalidateTown.add("小镇");
 		invalidateTown.add("街镇");
 		invalidateTown.add("城镇");

@@ -18,7 +18,7 @@ public class TermIndexEntry {
 	private List<TermIndexItem> items;
 	private Map<Character, TermIndexEntry> children;
 	
-	public void buildIndex(String text, int pos, TermType type, Object value){
+	public void buildIndex(String text, int pos, TermIndexItem item){
 		if(text==null || text.isEmpty() || pos<0 || pos>=text.length()) return;
 		
 		char c = text.charAt(pos);
@@ -32,11 +32,11 @@ public class TermIndexEntry {
 		}
 		
 		if(pos==text.length()-1) {
-			entry.addItem(type, value);
+			entry.addItem(item);
 			return;
 		}
 		
-		entry.buildIndex(text, pos + 1, type, value);
+		entry.buildIndex(text, pos + 1, item);
 	}
 	
 	public String getKey(){

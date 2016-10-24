@@ -6,6 +6,7 @@ import java.util.Map;
 import com.rrs.rd.address.TermType;
 import com.rrs.rd.address.persist.AddressPersister;
 import com.rrs.rd.address.persist.RegionEntity;
+import com.rrs.rd.address.persist.RegionType;
 import com.rrs.rd.address.utils.StringUtil;
 
 /**
@@ -33,24 +34,41 @@ public class TermIndexBuilder {
 	private void indexRegions(List<RegionEntity> regions, TermIndexEntry index){
 		if(regions==null) return;
 		for(RegionEntity region : regions){
+			TermIndexItem tii = new TermIndexItem(convertRegionType(region), region);
 			for(String name : region.orderedNameAndAlias()) {
-				index.buildIndex(name, 0, convertRegionType(region), region);
+				index.buildIndex(name, 0, tii);
 			}
-			String shortName = null;
-			switch(region.getType()){
-				case Town:
-				case Village:
+			
+			//1. 为xx街道，建立xx镇、xx乡的别名索引项；
+			//2. 为xx镇，建立xx乡的别名索引项；
+			//3. 为xx乡，建立xx镇的别名索引项；
+			boolean autoAlias = region.getName().length()<=5 && region.getAlias().isEmpty()
+					&& (region.isTown() || region.getName().endsWith("街道"));
+			if(autoAlias && region.getName().length()==5) {
+				switch(region.getName().charAt(2)){
+					case '路':
+					case '街':
+					case '门':
+					case '镇':
+					case '村':
+					case '区': autoAlias=false; break;
+					default:
+				}
+			}
+			if(autoAlias) {
+				String shortName = null;
+				if(region.isTown()) 
 					shortName = StringUtil.head(region.getName(), region.getName().length()-1);
-					break;
-				case Street:
-					if(region.isTown()) shortName = StringUtil.head(region.getName(), region.getName().length()-1);
-					else if(region.getName().endsWith("街道"))
-						shortName = StringUtil.head(region.getName(), region.getName().length()-2);
-					break;
-				default:
+				else
+					shortName = StringUtil.head(region.getName(), region.getName().length()-2);
+				index.buildIndex(shortName, 0, tii);
+				if(region.getName().endsWith("街道") || region.getName().endsWith("镇"))
+					index.buildIndex(shortName + "乡", 0, tii);
+				if(region.getName().endsWith("街道") || region.getName().endsWith("乡"))
+					index.buildIndex(shortName + "镇", 0, tii);
 			}
-			if(shortName!=null && !region.orderedNameAndAlias().contains(shortName))
-				index.buildIndex(shortName, 0, convertRegionType(region), region);
+			
+			//递归
 			if(region.getChildren()!=null)
 				this.indexRegions(region.getChildren(), index);
 		}
@@ -63,7 +81,7 @@ public class TermIndexBuilder {
 	public TermIndexBuilder indexIgnorings(List<String> ignoreList){
 		if(ignoreList==null || ignoreList.isEmpty()) return this;
 		for(String str : ignoreList)
-			this.indexRoot.buildIndex(str, 0, TermType.Ignore, null);
+			this.indexRoot.buildIndex(str, 0, new TermIndexItem(TermType.Ignore, null));
 		return this;
 	}
 	private TermType convertRegionType(RegionEntity region){
