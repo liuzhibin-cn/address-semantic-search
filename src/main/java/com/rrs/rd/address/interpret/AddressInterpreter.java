@@ -79,11 +79,16 @@ public class AddressInterpreter {
 		invalidateTown.add("四村");
 		
 		invalidateTown.add("城乡");
+		invalidateTown.add("县乡");
 		
 		invalidateTown.add("古镇");
 		invalidateTown.add("小镇");
 		invalidateTown.add("街镇");
 		invalidateTown.add("城镇");
+		invalidateTown.add("环镇");
+		invalidateTown.add("湾镇");
+		invalidateTown.add("岗镇");
+		invalidateTown.add("镇镇");
 	}
 	
 	//***************************************************************************************
@@ -364,6 +369,19 @@ public class AddressInterpreter {
 					char c = text.charAt(start+1);
 					if(c=='街' || c=='道') return false;
 				}
+				break;
+			case '社':
+				if(start+1<=text.length()-1 && text.charAt(start+1)=='区') return false;
+				break;
+			case '小':
+				if(start+1<=text.length()-1 && (text.charAt(start+1)=='区' || text.charAt(start+1)=='学')) return false;
+				break;
+			case '中':
+				if(start+1<=text.length()-1 && text.charAt(start+1)=='学') return false;
+				break;
+			case '医':
+				if(start+1<=text.length()-1 && text.charAt(start+1)=='院') return false;
+				break;
 			default:
 		}
 		return true;
@@ -405,6 +423,7 @@ public class AddressInterpreter {
 				}
 				if(c.length()>=4 && (c.charAt(0)=='东' || c.charAt(0)=='西' || c.charAt(0)=='南' || c.charAt(0)=='北'))
 					c = StringUtil.tail(c, c.length()-1);
+				if(c.length()==2 && !isAcceptableTownFollowingChars(leftString, 0)) return;
 				addTown(towns, c, addr.getDistrict(), addr.getRawText(), addr.getText());
 				addr.setText(leftString);
 			}

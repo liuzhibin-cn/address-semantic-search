@@ -46,6 +46,11 @@ public class AddressInterpretTest extends TestBase {
 		extractTownVillage(inter, v, towns, "北京北京海淀区温泉温泉镇温泉镇温泉服装厂对面", "服装厂对面", 110108, "温泉镇", null);
 		extractTownVillage(inter, v, towns, "广东广州白云区均和街新市镇广州市白云区均禾街长红村", "均禾街长红村", 440111, null, null);
 		extractTownVillage(inter, v, towns, "黑龙江哈尔滨道里区顾乡大街顾乡公园", "顾乡大街顾乡公园", 230102, null, null);
+		extractTownVillage(inter, v, towns, "北京北京昌平区龙乡小区", "龙乡小区", 110114, null, null);
+		extractTownVillage(inter, v, towns, "浙江省金华市婺城区中村社区", "中村社区", 330702, null, null);
+		extractTownVillage(inter, v, towns, "河南洛阳偃师市李村镇上庄村3组", "3组", 410381, "李村镇", "上庄村");
+		extractTownVillage(inter, v, towns, "河南省焦作市孟州市城关镇移民新村寺村三区", "寺村三区", 410883, "城关镇", "移民新村");
+		extractTownVillage(inter, v, towns, "湖北省黄冈市红安县红安县八里湾镇前进路205号", "前进路205号", 421122, "八里湾镇", null);
 	}
 	private void extractTownVillage(AddressInterpreter interpreter, RegionInterpreterVisitor visitor
 			, Map<Long, List<String>> towns, String addrText, String leftText, long did, String town, String village){
