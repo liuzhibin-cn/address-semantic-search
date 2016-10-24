@@ -22,6 +22,9 @@ public class AddressDaoTest extends TestBase {
 		address.setProvince(service.getRegion(440000));
 		address.setCity(service.getRegion(440100));
 		address.setDistrict(service.getRegion(440184));
+		address.setStreet(service.getRegion(440184107));
+		address.setTown(service.getRegion(440184107));
+		address.setVillage(service.getRegion(440184104));
 		address.setCreateTime(new Date());
 		dao.create(address);
 		
@@ -38,6 +41,14 @@ public class AddressDaoTest extends TestBase {
 		assertEquals("地址对象地级市错误", 440100, address.getCity().getId());
 		assertNotNull("地址对象区县为null", address.getDistrict());
 		assertEquals("地址对象区县错误", 440184, address.getDistrict().getId());
+		
+		assertNotNull("地址对象街道为null", address.getStreet());
+		assertEquals("地址对象街道错误", 440184107, address.getStreet().getId());
+		assertNotNull("地址对象乡镇为null", address.getTown());
+		assertEquals("地址对象乡镇错误", 440184107, address.getTown().getId());
+		assertNotNull("地址对象村庄为null", address.getVillage());
+		assertEquals("地址对象村庄错误", 440184104, address.getVillage().getId());
+		
 		assertEquals("地址对象详细地址错误", "xx镇xx村xx组", address.getText());
 		LOG.info("> address loaded: " + address.toString());
 		

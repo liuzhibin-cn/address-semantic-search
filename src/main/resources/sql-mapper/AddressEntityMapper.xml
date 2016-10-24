@@ -3,9 +3,12 @@
 <mapper namespace="com.rrs.rd.address.persist.dao.AddressDao">
 	<resultMap id="AddressEntityResult" type="com.rrs.rd.address.persist.AddressEntity">
 		<result property="id" column="id" />
-		<result property="province" column="province_id" typeHandler="com.rrs.rd.address.persist.dao.RegionPropertyTypeHandler" />
-		<result property="city" column="city_id" typeHandler="com.rrs.rd.address.persist.dao.RegionPropertyTypeHandler" />
-		<result property="county" column="county_id" typeHandler="com.rrs.rd.address.persist.dao.RegionPropertyTypeHandler" />
+		<result property="province" column="province" typeHandler="com.rrs.rd.address.persist.dao.RegionPropertyTypeHandler" />
+		<result property="city" column="city" typeHandler="com.rrs.rd.address.persist.dao.RegionPropertyTypeHandler" />
+		<result property="district" column="district" typeHandler="com.rrs.rd.address.persist.dao.RegionPropertyTypeHandler" />
+		<result property="street" column="street" typeHandler="com.rrs.rd.address.persist.dao.RegionPropertyTypeHandler" />
+		<result property="town" column="town" typeHandler="com.rrs.rd.address.persist.dao.RegionPropertyTypeHandler" />
+		<result property="village" column="village" typeHandler="com.rrs.rd.address.persist.dao.RegionPropertyTypeHandler" />
 		<result property="text" column="text" />
 		<result property="road" column="road" />
 		<result property="roadNum" column="road_num" />
@@ -18,29 +21,38 @@
 	</resultMap>
 	<insert id="create" parameterType="com.rrs.rd.address.persist.AddressEntity">
 		<selectKey keyProperty="id" resultType="Integer">select last_insert_id()</selectKey>
-insert into addr_address(province_id,city_id,county_id,`text`,road,road_num,building_num,`hash`,raw_text,prop1,prop2,create_time)
+insert into addr_address(province,city,district,street,town,village,`text`,road,road_num,building_num,`hash`,raw_text,prop1,prop2,create_time)
 values(#{province, typeHandler=com.rrs.rd.address.persist.dao.RegionPropertyTypeHandler}
     ,#{city, typeHandler=com.rrs.rd.address.persist.dao.RegionPropertyTypeHandler}
-    ,#{county, typeHandler=com.rrs.rd.address.persist.dao.RegionPropertyTypeHandler},#{text},#{road},#{roadNum},#{buildingNum},#{hash}, #{rawText},#{prop1},#{prop2},#{createTime})
+    ,#{district, typeHandler=com.rrs.rd.address.persist.dao.RegionPropertyTypeHandler}
+    ,#{street, typeHandler=com.rrs.rd.address.persist.dao.RegionPropertyTypeHandler}
+    ,#{town, typeHandler=com.rrs.rd.address.persist.dao.RegionPropertyTypeHandler}
+    ,#{village, typeHandler=com.rrs.rd.address.persist.dao.RegionPropertyTypeHandler}
+    ,#{text},#{road},#{roadNum},#{buildingNum},#{hash}, #{rawText},#{prop1},#{prop2},#{createTime})
 	</insert>
 	<insert id="batchCreate">
-insert into addr_address(province_id,city_id,county_id,`text`,road,road_num,building_num,`hash`,raw_text,prop1,prop2,create_time) values
+insert into addr_address(province,city,district,street,town,village,`text`,road,road_num,building_num,`hash`,raw_text,prop1,prop2,create_time) values
 		<foreach collection="addresses" item="addr" separator=",">
-(#{addr.province, typeHandler=com.rrs.rd.address.persist.dao.RegionPropertyTypeHandler},#{addr.city, typeHandler=com.rrs.rd.address.persist.dao.RegionPropertyTypeHandler},#{addr.county, typeHandler=com.rrs.rd.address.persist.dao.RegionPropertyTypeHandler}
+(#{addr.province, typeHandler=com.rrs.rd.address.persist.dao.RegionPropertyTypeHandler}
+,#{addr.city, typeHandler=com.rrs.rd.address.persist.dao.RegionPropertyTypeHandler}
+,#{addr.district, typeHandler=com.rrs.rd.address.persist.dao.RegionPropertyTypeHandler}
+,#{addr.street, typeHandler=com.rrs.rd.address.persist.dao.RegionPropertyTypeHandler}
+,#{addr.town, typeHandler=com.rrs.rd.address.persist.dao.RegionPropertyTypeHandler}
+,#{addr.village, typeHandler=com.rrs.rd.address.persist.dao.RegionPropertyTypeHandler}
   ,#{addr.text},#{addr.road},#{addr.roadNum},#{addr.buildingNum},#{addr.hash}, #{addr.rawText},#{addr.prop1},#{addr.prop2},#{addr.createTime})
 		</foreach>
 	</insert>
 	<select id="findAll" resultMap="AddressEntityResult">
-select `id`,`province_id`,`city_id`,`county_id`,`text`,`road`,`road_num`,`building_num`,`hash`
+select `id`,`province`,`city`,`district`,street,town,village,`text`,`road`,`road_num`,`building_num`,`hash`
 from `addr_address`
 	</select>
 	<select id="find" resultMap="AddressEntityResult">
-select `id`,`province_id`,`city_id`,`county_id`,`text`,`road`,`road_num`,`building_num`,`hash`
-from `addr_address` where province_id=#{provinceId} and city_id=#{cityId} <if test="countyId&gt;0">and county_id=#{countyId}</if>
+select `id`,`province`,`city`,`district`,street,town,village,`text`,`road`,`road_num`,`building_num`,`hash`
+from `addr_address` where province=#{provinceId} and city=#{cityId} <if test="countyId&gt;0">and district=#{countyId}</if>
 	</select>
 	
 	<select id="get" parameterType="Integer" resultMap="AddressEntityResult">
-select `id`,`province_id`,`city_id`,`county_id`,`text`,`road`,`road_num`,`building_num`,`hash`, raw_text,prop1,prop2,create_time
+select `id`,`province`,`city`,`district`,street,town,village,`text`,`road`,`road_num`,`building_num`,`hash`, raw_text,prop1,prop2,create_time
 from `addr_address`
 where id=#{id}
 	</select>
