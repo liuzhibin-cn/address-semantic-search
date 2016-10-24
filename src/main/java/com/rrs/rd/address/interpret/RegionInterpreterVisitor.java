@@ -202,6 +202,7 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 	
 	
 	private int positioning(RegionEntity acceptedRegion, TermIndexEntry entry, String text, int pos) {
+		if(acceptedRegion==null) return pos;
 		//需要调整指针的情况
 		//1. 山东泰安肥城市桃园镇桃园镇山东省泰安市肥城县桃园镇东伏村
 		//   错误匹配方式：提取省市区时，将【肥城县】中的字符【肥城】匹配成【肥城市】，剩下一个【县】
