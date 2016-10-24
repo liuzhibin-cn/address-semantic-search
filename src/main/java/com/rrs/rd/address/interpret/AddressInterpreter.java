@@ -447,27 +447,33 @@ public class AddressInterpreter {
 		if(addr.getText().length()<=0 || !addr.hasDistrict()) return;
 		Matcher matcher = addr.hasTown() ? P_TOWN2.matcher(addr.getText()) : P_TOWN1.matcher(addr.getText());
 		if(matcher.find()) {
-			String z=matcher.group("z"), x=matcher.group("x"), c = matcher.group("c");
-			int iz=matcher.end("z"), ix=matcher.end("x"), ic=matcher.end("c");
 			String text = addr.getText();
-			if(z!=null && z.length()>0){ //镇
-				if(z.length()==2 && text.startsWith("村", z.length())){
-					c=z+"村";
-					ic=iz+1;
-				}else if(isAcceptableTownFollowingChars(text, z.length())){
-					addTown(towns, z, addr.getDistrict(), addr.getRawText(), addr.getText());
-					addr.setText(StringUtil.substring(text, matcher.end("z")));
+			String c = matcher.group("c");
+			int ic=matcher.end("c");
+			
+			if(!addr.hasTown()){
+				String z=matcher.group("z"), x=matcher.group("x");
+				int iz=matcher.end("z"), ix=matcher.end("x");
+				if(z!=null && z.length()>0){ //镇
+					if(z.length()==2 && text.startsWith("村", z.length())){
+						c=z+"村";
+						ic=iz+1;
+					}else if(isAcceptableTownFollowingChars(text, z.length())){
+						addTown(towns, z, addr.getDistrict(), addr.getRawText(), addr.getText());
+						addr.setText(StringUtil.substring(text, matcher.end("z")));
+					}
+				}
+				if(x!=null && x.length()>0){ //乡
+					if(x.length()==2 && text.startsWith("村", x.length()-1)){
+						c=x+"村";
+						ic=ix+1;
+					}else if(isAcceptableTownFollowingChars(text, x.length())){
+						addTown(towns, x, addr.getDistrict(), addr.getRawText(), addr.getText());
+						addr.setText(StringUtil.substring(text, matcher.end("x")));
+					}
 				}
 			}
-			if(x!=null && x.length()>0){ //乡
-				if(x.length()==2 && text.startsWith("村", x.length()-1)){
-					c=x+"村";
-					ic=ix+1;
-				}else if(isAcceptableTownFollowingChars(text, x.length())){
-					addTown(towns, x, addr.getDistrict(), addr.getRawText(), addr.getText());
-					addr.setText(StringUtil.substring(text, matcher.end("x")));
-				}
-			}
+			
 			if(c!=null && c.length()>0){ //村
 				if(c.endsWith("农村")) return;
 				String leftString = StringUtil.substring(text, ic);
