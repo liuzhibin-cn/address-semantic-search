@@ -1,7 +1,9 @@
 package com.rrs.rd.address.interpret;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -62,7 +64,7 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 	private final static Logger LOG = LoggerFactory.getLogger(RegionInterpreterVisitor.class);
 	
 	private static boolean isDebug = false;
-	private static List<String> ambiguousChars = null;
+	private static Set<Character> ambiguousChars = null;
 	
 	private AddressPersister persister = null;
 	
@@ -71,13 +73,15 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 	private Division deepMostDivision = new Division();
 	private Division curDivision = new Division();
 	private Stack<TermIndexItem> stack = new Stack<TermIndexItem>(); 
+	
 
 	static {
-		ambiguousChars = new ArrayList<String>();
-		ambiguousChars.add("路");
-		ambiguousChars.add("街道");
-		ambiguousChars.add("大街");
-		ambiguousChars.add("大道");
+		ambiguousChars = new HashSet<Character>();
+		ambiguousChars.add('市');
+		ambiguousChars.add('县');
+		ambiguousChars.add('区');
+		ambiguousChars.add('镇');
+		ambiguousChars.add('乡');
 	}
 
 	public RegionInterpreterVisitor(AddressPersister persister){
@@ -206,10 +210,18 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 		//需要调整指针的情况
 		//1. 山东泰安肥城市桃园镇桃园镇山东省泰安市肥城县桃园镇东伏村
 		//   错误匹配方式：提取省市区时，将【肥城县】中的字符【肥城】匹配成【肥城市】，剩下一个【县】
-		if( (acceptedRegion.getType()==RegionType.City || acceptedRegion.getType()==RegionType.District)
-				&& !isFullMatch(entry, acceptedRegion) && pos+1<=text.length()-1
-				&& (text.charAt(pos+1)=='县' || text.charAt(pos+1)=='市' || text.charAt(pos+1)=='区')) {
-			return pos+1;
+		if( (acceptedRegion.getType()==RegionType.City || acceptedRegion.getType()==RegionType.District
+				|| acceptedRegion.getType()==RegionType.Street)
+				&& !isFullMatch(entry, acceptedRegion) && pos+1<=text.length()-1 ) {
+			char c = text.charAt(pos+1);
+			if(ambiguousChars.contains(c)) { //后续跟着特殊字符
+				if(acceptedRegion.getChildren()!=null) {
+					for(RegionEntity child : acceptedRegion.getChildren()) {
+						if(child.getName().charAt(0)==c) return pos;
+					}
+				}
+				return pos+1;	
+			}
 		}
 		return pos;
 	}

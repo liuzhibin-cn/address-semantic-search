@@ -121,6 +121,7 @@ public class AddressInterpreter {
 		invalidTown.add("乙村");
 		invalidTown.add("丙村");
 		invalidTown.add("邻村");
+		invalidTown.add("乡村");
 		invalidTown.add("村二村");
 		invalidTown.add("中关村");
 		
@@ -395,8 +396,8 @@ public class AddressInterpreter {
 		if(addressText==null || addressText.trim().length()<=0) return;
 		AddressEntity addr = new AddressEntity(addressText);
 		removeSpecialChars(addr);
-		extractRegion(addr, visitor);
 		extractBrackets(addr);
+		extractRegion(addr, visitor);
 		removeRedundancy(addr, visitor);
 		extractTownVillage(addr, towns);
 	}
