@@ -50,7 +50,10 @@ public class AddressInterpretTest extends TestBase {
 		extractTownVillage(inter, v, towns, "浙江省金华市婺城区中村社区", "中村社区", 330702, null, null);
 		extractTownVillage(inter, v, towns, "河南洛阳偃师市李村镇上庄村3组", "3组", 410381, "李村镇", "上庄村");
 		extractTownVillage(inter, v, towns, "河南省焦作市孟州市城关镇移民新村寺村三区", "寺村三区", 410883, "城关镇", "移民新村");
-		extractTownVillage(inter, v, towns, "湖北省黄冈市红安县红安县八里湾镇前进路205号", "前进路205号", 421122, "八里湾镇", null);
+		extractTownVillage(inter, v, towns, "湖北省黄冈市红安县红安县八里湾镇前进路205号", "湾镇前进路205号", 421122, null, null);
+		extractTownVillage(inter, v, towns, "河南鹤壁浚县新镇镇孟庄村48号", "48号", 410621, "新镇镇", "孟庄村");
+		extractTownVillage(inter, v, towns, "安徽滁州天长市新街镇李坡村郑兴队14号", "郑兴队14号", 341181, "新街镇", "李坡村");
+		extractTownVillage(inter, v, towns, "江苏南通海门市万年镇镇兴村18组8号", "18组8号", 320684, "万年镇", "镇兴村");
 	}
 	private void extractTownVillage(AddressInterpreter interpreter, RegionInterpreterVisitor visitor
 			, Map<Long, List<String>> towns, String addrText, String leftText, long did, String town, String village){
@@ -60,7 +63,7 @@ public class AddressInterpretTest extends TestBase {
 		assertTrue(addr.hasDistrict());
 		assertEquals(did, addr.getDistrict().getId());
 		interpreter.removeRedundancy(addr, visitor);
-		interpreter.extractTownAndVillage(addr, towns);
+		interpreter.extractTownVillage(addr, towns);
 		
 		LOG.info(addrText + " >> " + addr +
 				(towns.containsKey(did) ? " + " + towns.get(did).toString() : "") 

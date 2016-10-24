@@ -33,8 +33,8 @@ public class AddressInterpreter {
 	
 	private static char[] specialChars1 = " \r\n\t,，。·.．;；:：、！@$%*^`~=+&'\"|_-\\/".toCharArray();
 	private static char[] specialChars2 = "{}【】〈〉<>[]「」“”".toCharArray();
-	private static Set<String> invalidateTown = null;
-	private static Set<String> invalidateTownFollowings = null;
+	private static Set<String> invalidTown = null;
+	private static Set<String> invalidTownFollowings = null;
 	
 	private static Pattern BRACKET_PATTERN = Pattern.compile("(?<bracket>([\\(（\\{\\<〈\\[【「][^\\)）\\}\\>〉\\]】」]*[\\)）\\}\\>〉\\]】」]))");
 	
@@ -56,109 +56,116 @@ public class AddressInterpreter {
 	 * 匹配building的模式：10组21号，农村地址
 	 */
 	private static final Pattern P_BUILDING_NUM3 = Pattern.compile("[0-9]+组[0-9\\-一]+号?");
-	/**
-	 * 匹配镇、乡、街道的模式
-	 */
-	private static final Pattern P_TOWN1 = Pattern.compile("^((?<z>[\u4e00-\u9fa5]{1,3}镇)?(?<x>[\u4e00-\u9fa5]{1,3}乡)?(?<c>[\u4e00-\u9fa5]{1,3}村(?!(村|委|公路|(东|西|南|北)?(大街|大道|路|街))))?)");
-	private static final Pattern P_TOWN2 = Pattern.compile("^(?<c>[\u4e00-\u9fa5]{1,3}村(?!(村|委|公路|(东|西|南|北)?(大街|大道|路|街))))?");
+	
+	private static final Pattern P_TOWN1 = Pattern.compile("^((?<z>[\u4e00-\u9fa5]{2,2}(镇|乡))(?<c>[\u4e00-\u9fa5]{1,3}村)?)");
+	private static final Pattern P_TOWN2 = Pattern.compile("^((?<z>[\u4e00-\u9fa5]{1,3}镇)?(?<x>[\u4e00-\u9fa5]{1,3}乡)?(?<c>[\u4e00-\u9fa5]{1,3}村(?!(村|委|公路|(东|西|南|北)?(大街|大道|路|街))))?)");
+	private static final Pattern P_TOWN3 = Pattern.compile("^(?<c>[\u4e00-\u9fa5]{1,3}村(?!(村|委|公路|(东|西|南|北)?(大街|大道|路|街))))?");
 	private static final Pattern P_ROAD = Pattern.compile("^(?<road>([\u4e00-\u9fa5]{2,4}(路|街坊|街|道|大街|大道)))(?<ex>[甲乙丙丁])?(?<roadnum>[0-9０１２３４５６７８９一二三四五六七八九十]+(号院|号楼|号大院|号|號|巷|弄|院|区|条|\\#院|\\#))?");
 	
 	static{
-		invalidateTownFollowings = new HashSet<String>();
-		invalidateTownFollowings.add("政府");
-		invalidateTownFollowings.add("大街");
-		invalidateTownFollowings.add("大道");
-		invalidateTownFollowings.add("社区");
-		invalidateTownFollowings.add("小区");
-		invalidateTownFollowings.add("小学");
-		invalidateTownFollowings.add("中学");
-		invalidateTownFollowings.add("医院");
-		invalidateTownFollowings.add("银行");
-		invalidateTownFollowings.add("中心");
-		invalidateTownFollowings.add("卫生");
-		invalidateTownFollowings.add("一小");
+		invalidTownFollowings = new HashSet<String>();
+		invalidTownFollowings.add("政府");
+		invalidTownFollowings.add("大街");
+		invalidTownFollowings.add("大道");
+		invalidTownFollowings.add("社区");
+		invalidTownFollowings.add("小区");
+		invalidTownFollowings.add("小学");
+		invalidTownFollowings.add("中学");
+		invalidTownFollowings.add("医院");
+		invalidTownFollowings.add("银行");
+		invalidTownFollowings.add("中心");
+		invalidTownFollowings.add("卫生");
+		invalidTownFollowings.add("一小");
+		invalidTownFollowings.add("一中");
+		invalidTownFollowings.add("政局");
+		invalidTownFollowings.add("企局");
 		
-		invalidateTown = new HashSet<String>();
-		invalidateTown.add("新村");
-		invalidateTown.add("外村");
-		invalidateTown.add("大村");
-		invalidateTown.add("后村");
-		invalidateTown.add("东村");
-		invalidateTown.add("南村");
-		invalidateTown.add("北村");
-		invalidateTown.add("西村");
-		invalidateTown.add("上村");
-		invalidateTown.add("下村");
-		invalidateTown.add("一村");
-		invalidateTown.add("二村");
-		invalidateTown.add("三村");
-		invalidateTown.add("四村");
-		invalidateTown.add("五村");
-		invalidateTown.add("六村");
-		invalidateTown.add("七村");
-		invalidateTown.add("八村");
-		invalidateTown.add("九村");
-		invalidateTown.add("十村");
-		invalidateTown.add("中村");
-		invalidateTown.add("街村");
-		invalidateTown.add("头村");
-		invalidateTown.add("店村");
-		invalidateTown.add("桥村");
-		invalidateTown.add("楼村");
-		invalidateTown.add("老村");
-		invalidateTown.add("户村");
-		invalidateTown.add("山村");
-		invalidateTown.add("才村");
-		invalidateTown.add("子村");
-		invalidateTown.add("旧村");
-		invalidateTown.add("文村");
-		invalidateTown.add("全村");
-		invalidateTown.add("和村");
-		invalidateTown.add("湖村");
-		invalidateTown.add("甲村");
-		invalidateTown.add("乙村");
-		invalidateTown.add("丙村");
-		invalidateTown.add("邻村");
-		invalidateTown.add("村二村");
+		invalidTown = new HashSet<String>();
+		invalidTown.add("新村");
+		invalidTown.add("外村");
+		invalidTown.add("大村");
+		invalidTown.add("后村");
+		invalidTown.add("东村");
+		invalidTown.add("南村");
+		invalidTown.add("北村");
+		invalidTown.add("西村");
+		invalidTown.add("上村");
+		invalidTown.add("下村");
+		invalidTown.add("一村");
+		invalidTown.add("二村");
+		invalidTown.add("三村");
+		invalidTown.add("四村");
+		invalidTown.add("五村");
+		invalidTown.add("六村");
+		invalidTown.add("七村");
+		invalidTown.add("八村");
+		invalidTown.add("九村");
+		invalidTown.add("十村");
+		invalidTown.add("中村");
+		invalidTown.add("街村");
+		invalidTown.add("头村");
+		invalidTown.add("店村");
+		invalidTown.add("桥村");
+		invalidTown.add("楼村");
+		invalidTown.add("老村");
+		invalidTown.add("户村");
+		invalidTown.add("山村");
+		invalidTown.add("才村");
+		invalidTown.add("子村");
+		invalidTown.add("旧村");
+		invalidTown.add("文村");
+		invalidTown.add("全村");
+		invalidTown.add("和村");
+		invalidTown.add("湖村");
+		invalidTown.add("甲村");
+		invalidTown.add("乙村");
+		invalidTown.add("丙村");
+		invalidTown.add("邻村");
+		invalidTown.add("村二村");
+		invalidTown.add("中关村");
 		
-		invalidateTown.add("城乡");
-		invalidateTown.add("县乡");
-		invalidateTown.add("头乡");
-		invalidateTown.add("牌乡");
-		invalidateTown.add("茶乡");
-		invalidateTown.add("水乡");
-		invalidateTown.add("港乡");
-		invalidateTown.add("巷乡");
-		invalidateTown.add("七乡");
-		invalidateTown.add("站乡");
-		invalidateTown.add("西乡");
-		invalidateTown.add("宝乡");
-		invalidateTown.add("还乡");
+		invalidTown.add("城乡");
+		invalidTown.add("县乡");
+		invalidTown.add("头乡");
+		invalidTown.add("牌乡");
+		invalidTown.add("茶乡");
+		invalidTown.add("水乡");
+		invalidTown.add("港乡");
+		invalidTown.add("巷乡");
+		invalidTown.add("七乡");
+		invalidTown.add("站乡");
+		invalidTown.add("西乡");
+		invalidTown.add("宝乡");
+		invalidTown.add("还乡");
 		
-		invalidateTown.add("古镇");
-		invalidateTown.add("小镇");
-		invalidateTown.add("街镇");
-		invalidateTown.add("城镇");
-		invalidateTown.add("环镇");
-		invalidateTown.add("湾镇");
-		invalidateTown.add("岗镇");
-		invalidateTown.add("镇镇");
-		invalidateTown.add("场镇");
-		invalidateTown.add("新镇");
-		invalidateTown.add("乡镇");
-		invalidateTown.add("屯镇");
-		invalidateTown.add("大镇");
-		invalidateTown.add("南镇");
-		invalidateTown.add("店镇");
-		invalidateTown.add("铺镇");
-		invalidateTown.add("关镇");
-		invalidateTown.add("口镇");
-		invalidateTown.add("和镇");
-		invalidateTown.add("建镇");
-		invalidateTown.add("集镇");
-		invalidateTown.add("庙镇");
-		invalidateTown.add("河镇");
-		invalidateTown.add("村镇");
+		invalidTown.add("古镇");
+		invalidTown.add("小镇");
+		invalidTown.add("街镇");
+		invalidTown.add("城镇");
+		invalidTown.add("环镇");
+		invalidTown.add("湾镇");
+		invalidTown.add("岗镇");
+		invalidTown.add("镇镇");
+		invalidTown.add("场镇");
+		invalidTown.add("新镇");
+		invalidTown.add("乡镇");
+		invalidTown.add("屯镇");
+		invalidTown.add("大镇");
+		invalidTown.add("南镇");
+		invalidTown.add("店镇");
+		invalidTown.add("铺镇");
+		invalidTown.add("关镇");
+		invalidTown.add("口镇");
+		invalidTown.add("和镇");
+		invalidTown.add("建镇");
+		invalidTown.add("集镇");
+		invalidTown.add("庙镇");
+		invalidTown.add("河镇");
+		invalidTown.add("村镇");
+		
+		invalidTown.add("");
+		invalidTown.add("");
+		invalidTown.add("");
 	}
 	
 	//***************************************************************************************
@@ -242,17 +249,6 @@ public class AddressInterpreter {
 		return interpret(addressText, visitor);
 	}
 
-	public void extractTownVillage(String addressText, RegionInterpreterVisitor visitor, Map<Long, List<String>> towns) {
-		if(addressText==null || addressText.trim().length()<=0) return;
-		AddressEntity addr = new AddressEntity(addressText);
-		removeSpecialChars(addr);
-		extractRegion(addr, visitor);
-		extractBrackets(addr);
-		removeRedundancy(addr, visitor);
-		extractTownAndVillage(addr, towns);
-	}
-	
-	
 	//***************************************************************************************
 	// 私有方法，出于单元测试目的部分方法设置为了public
 	//***************************************************************************************
@@ -395,87 +391,74 @@ public class AddressInterpreter {
 		return null;
 	}
 	
-	private void addTown(Map<Long, List<String>> all, String town, RegionEntity district, String text1, String text2){
-		if(all==null || town==null || town.isEmpty() || district==null) return;
-		if(invalidateTown.contains(town)) return;
-		List<String> towns = all.get(district.getId());
-		if(towns!=null && towns.contains(town)) return; //已经添加
-		
-		//已加入bas_region表，不再添加
-		List<TermIndexItem> items = termIndex.fullMatch(town);
-		if(items!=null) {
-			for(TermIndexItem item : items){
-				if(item.getType()!=TermType.Town && item.getType()!=TermType.Street && item.getType()!=TermType.Village) 
-					continue;
-				RegionEntity region = (RegionEntity)item.getValue();
-				if(region.getParentId()==district.getId()) return;
-			}
-		}
-		
-		//需要添加
-		if(towns==null){
-			towns = new ArrayList<String>();
-			all.put(district.getId(), towns);
-		}
-		towns.add(town);
-		if(TOWM_LOG.isDebugEnabled()) TOWM_LOG.debug(district.getId() + " " + town + " << " + text2 + " << " + text1);
+	public void extractTownVillage(String addressText, RegionInterpreterVisitor visitor, Map<Long, List<String>> towns) {
+		if(addressText==null || addressText.trim().length()<=0) return;
+		AddressEntity addr = new AddressEntity(addressText);
+		removeSpecialChars(addr);
+		extractRegion(addr, visitor);
+		extractBrackets(addr);
+		removeRedundancy(addr, visitor);
+		extractTownVillage(addr, towns);
 	}
-	private boolean isAcceptableTownFollowingChars(String text, int start){
-		if(text==null || start>=text.length()) return true;
-		switch(text.charAt(start)) {
-			case '区':
-			case '县':
-			case '乡':
-			case '镇':
-			case '村':
-			case '街':
-			case '路':
-			case '东':
-			case '西':
-			case '南':
-			case '北':
-				return false;
-			default:
-		}
-		String s1 = StringUtil.substring(text, start, start+1);
-		if(invalidateTownFollowings.contains(s1)) return false;
-		s1 = StringUtil.substring(text, start, start+2);
-		if(invalidateTownFollowings.contains(s1)) return false;
-		return true;
+	public void extractTownVillage(AddressEntity addr, Map<Long, List<String>> towns){
+		if( extractTownVillage(addr, towns, P_TOWN1, "z", null, "c") >=0 ) return;
+		if(addr.hasTown())
+			extractTownVillage(addr, towns, P_TOWN3, null, null, "c");
+		else
+			extractTownVillage(addr, towns, P_TOWN2, "z", "x", "c");
 	}
-	public void extractTownAndVillage(AddressEntity addr, Map<Long, List<String>> towns){
-		if(addr.getText().length()<=0 || !addr.hasDistrict()) return;
-		Matcher matcher = addr.hasTown() ? P_TOWN2.matcher(addr.getText()) : P_TOWN1.matcher(addr.getText());
+	/**
+	 * @return 1 匹配成功，0 未执行匹配，-1 未匹配上。
+	 */
+	//返回值：
+	// 1: 执行了匹配操作，匹配成功
+	//-1: 执行了匹配操作，未匹配上
+	// 0: 未执行匹配操作
+	private int extractTownVillage(AddressEntity addr, Map<Long, List<String>> towns, Pattern pattern, String gz, String gx, String gc){
+		if(addr.getText().length()<=0 || !addr.hasDistrict()) return 0;
+		
+		int result = -1;
+		Matcher matcher = pattern.matcher(addr.getText());
+		
 		if(matcher.find()) {
 			String text = addr.getText();
-			String c = matcher.group("c");
-			int ic=matcher.end("c");
+			String c = gc == null ? null : matcher.group("c");
+			int ic = gc == null ? -1 : matcher.end("c");
 			
-			if(!addr.hasTown()){
-				String z=matcher.group("z"), x=matcher.group("x");
-				int iz=matcher.end("z"), ix=matcher.end("x");
+			if(gz!=null) {
+				String z=matcher.group(gz);
+				int iz=matcher.end(gz);
 				if(z!=null && z.length()>0){ //镇
 					if(z.length()==2 && text.startsWith("村", z.length())){
 						c=z+"村";
 						ic=iz+1;
-					}else if(isAcceptableTownFollowingChars(text, z.length())){
-						addTown(towns, z, addr.getDistrict(), addr.getRawText(), addr.getText());
-						addr.setText(StringUtil.substring(text, matcher.end("z")));
+					}else if(isAcceptableTownFollowingChars(z, text, z.length())){
+						if(acceptTown(towns, z, addr.getDistrict(), addr.getRawText(), addr.getText())>=0) {
+							addr.setText(StringUtil.substring(text, iz));
+							result = 1;
+						}
 					}
 				}
-				if(x!=null && x.length()>0){ //乡
-					if(x.length()==2 && text.startsWith("村", x.length()-1)){
+			}
+			
+			if(gx!=null) {
+				String x=matcher.group(gx);
+				int ix=matcher.end(gx);
+				if(x!=null && x.length()>0){ //镇
+					if(x.length()==2 && text.startsWith("村", x.length())){
 						c=x+"村";
 						ic=ix+1;
-					}else if(isAcceptableTownFollowingChars(text, x.length())){
-						addTown(towns, x, addr.getDistrict(), addr.getRawText(), addr.getText());
-						addr.setText(StringUtil.substring(text, matcher.end("x")));
+					}else if(isAcceptableTownFollowingChars(x, text, x.length())){
+						if(acceptTown(towns, x, addr.getDistrict(), addr.getRawText(), addr.getText())>=0) {
+							addr.setText(StringUtil.substring(text, ix));
+							result = 1;
+						}
 					}
 				}
 			}
 			
 			if(c!=null && c.length()>0){ //村
-				if(c.endsWith("农村")) return;
+				if(c.endsWith("农村")) return result;
 				String leftString = StringUtil.substring(text, ic);
 				if(c.endsWith("村村")) {
 					c = StringUtil.head(c, c.length()-1);
@@ -486,12 +469,70 @@ public class AddressInterpreter {
 				}
 				if(c.length()>=4 && (c.charAt(0)=='东' || c.charAt(0)=='西' || c.charAt(0)=='南' || c.charAt(0)=='北'))
 					c = StringUtil.tail(c, c.length()-1);
-				if(c.length()==2 && !isAcceptableTownFollowingChars(leftString, 0)) return;
-				addTown(towns, c, addr.getDistrict(), addr.getRawText(), addr.getText());
-				addr.setText(leftString);
+				if(c.length()==2 && !isAcceptableTownFollowingChars(c, leftString, 0)) return ic;
+				if(acceptTown(towns, c, addr.getDistrict(), addr.getRawText(), addr.getText())>=0) {
+					addr.setText(leftString);
+					result = 1;
+				}
 			}
 		}
-		return;
+		
+		return result;
+	}
+	//返回值：
+	// -1: 无效的匹配
+	//  0: 有效的匹配，无需执行添加操作
+	//  1: 有效的匹配，已经执行添加操作
+	private int acceptTown(Map<Long, List<String>> all, String town, RegionEntity district, String text1, String text2){
+		if(all==null || town==null || town.isEmpty() || district==null) return -1;
+		if(invalidTown.contains(town)) return -1;
+		
+		List<String> towns = all.get(district.getId());
+		if(towns!=null && towns.contains(town)) return 0; //已经添加
+		
+		//已加入bas_region表，不再添加
+		List<TermIndexItem> items = termIndex.fullMatch(town);
+		if(items!=null) {
+			for(TermIndexItem item : items){
+				if(item.getType()!=TermType.Town && item.getType()!=TermType.Street && item.getType()!=TermType.Village) 
+					continue;
+				RegionEntity region = (RegionEntity)item.getValue();
+				if(region.getParentId()==district.getId()) return 0;
+			}
+		}
+		
+		//排除一些特殊情况：草滩街镇、西乡街镇等
+		if(town.length()==4 && town.charAt(2)=='街') return -1;
+		
+		//需要添加
+		if(towns==null){
+			towns = new ArrayList<String>();
+			all.put(district.getId(), towns);
+		}
+		towns.add(town);
+		if(TOWM_LOG.isDebugEnabled()) TOWM_LOG.debug(district.getId() + " " + town + " << " + text2 + " << " + text1);
+		return 1;
+	}
+	private boolean isAcceptableTownFollowingChars(String matched, String text, int start){
+		if(text==null || start>=text.length()) return true;
+		if(matched.length()==4) {
+			switch(text.charAt(start)) {
+				case '区':
+				case '县':
+				case '乡':
+				case '镇':
+				case '村':
+				case '街':
+				case '路':
+					return false;
+				default:
+			}
+		}
+		String s1 = StringUtil.substring(text, start, start+1);
+		if(invalidTownFollowings.contains(s1)) return false;
+		s1 = StringUtil.substring(text, start, start+2);
+		if(invalidTownFollowings.contains(s1)) return false;
+		return true;
 	}
 	
 	private boolean extractRoad(AddressEntity addr){
