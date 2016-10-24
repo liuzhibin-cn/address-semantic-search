@@ -182,7 +182,7 @@ public class AddressPersister implements ApplicationContextAware {
 				if(c=='镇' || c=='乡') region.setType(RegionType.Town);
 				else if(c=='村') region.setType(RegionType.Village);
 				else continue;
-				//this.regionDao.create(region);
+				this.regionDao.create(region);
 				id++;
 			}
 		}

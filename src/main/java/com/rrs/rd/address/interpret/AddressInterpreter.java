@@ -77,9 +77,47 @@ public class AddressInterpreter {
 		invalidateTown.add("二村");
 		invalidateTown.add("三村");
 		invalidateTown.add("四村");
+		invalidateTown.add("五村");
+		invalidateTown.add("六村");
+		invalidateTown.add("七村");
+		invalidateTown.add("八村");
+		invalidateTown.add("九村");
+		invalidateTown.add("十村");
+		invalidateTown.add("中村");
+		invalidateTown.add("街村");
+		invalidateTown.add("头村");
+		invalidateTown.add("店村");
+		invalidateTown.add("桥村");
+		invalidateTown.add("楼村");
+		invalidateTown.add("老村");
+		invalidateTown.add("户村");
+		invalidateTown.add("山村");
+		invalidateTown.add("才村");
+		invalidateTown.add("子村");
+		invalidateTown.add("旧村");
+		invalidateTown.add("文村");
+		invalidateTown.add("全村");
+		invalidateTown.add("和村");
+		invalidateTown.add("湖村");
+		invalidateTown.add("甲村");
+		invalidateTown.add("乙村");
+		invalidateTown.add("丙村");
+		invalidateTown.add("邻村");
+		invalidateTown.add("村二村");
 		
 		invalidateTown.add("城乡");
 		invalidateTown.add("县乡");
+		invalidateTown.add("头乡");
+		invalidateTown.add("牌乡");
+		invalidateTown.add("茶乡");
+		invalidateTown.add("水乡");
+		invalidateTown.add("港乡");
+		invalidateTown.add("巷乡");
+		invalidateTown.add("七乡");
+		invalidateTown.add("站乡");
+		invalidateTown.add("西乡");
+		invalidateTown.add("宝乡");
+		invalidateTown.add("还乡");
 		
 		invalidateTown.add("古镇");
 		invalidateTown.add("小镇");
@@ -89,6 +127,21 @@ public class AddressInterpreter {
 		invalidateTown.add("湾镇");
 		invalidateTown.add("岗镇");
 		invalidateTown.add("镇镇");
+		invalidateTown.add("场镇");
+		invalidateTown.add("新镇");
+		invalidateTown.add("乡镇");
+		invalidateTown.add("屯镇");
+		invalidateTown.add("大镇");
+		invalidateTown.add("南镇");
+		invalidateTown.add("店镇");
+		invalidateTown.add("铺镇");
+		invalidateTown.add("关镇");
+		invalidateTown.add("口镇");
+		invalidateTown.add("和镇");
+		invalidateTown.add("建镇");
+		invalidateTown.add("集镇");
+		invalidateTown.add("庙镇");
+		invalidateTown.add("河镇");
 	}
 	
 	//***************************************************************************************
