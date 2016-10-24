@@ -6,7 +6,6 @@ import java.util.Map;
 import com.rrs.rd.address.TermType;
 import com.rrs.rd.address.persist.AddressPersister;
 import com.rrs.rd.address.persist.RegionEntity;
-import com.rrs.rd.address.persist.RegionType;
 import com.rrs.rd.address.utils.StringUtil;
 
 /**
@@ -123,6 +122,7 @@ public class TermIndexBuilder {
 			deepFirstQueryRound(text, pos + 1, entry.getChildren(), visitor);
 		if(entry.hasItem()) {
 			if(visitor.visit(entry, text, pos)) {
+				pos = visitor.positionAfterAcceptItem(); //给访问者一个调整当前指针的机会
 				if(pos+1 <= text.length()-1) 
 					deepMostQuery(text, pos + 1, visitor);
 				visitor.endVisit(entry, text, pos);

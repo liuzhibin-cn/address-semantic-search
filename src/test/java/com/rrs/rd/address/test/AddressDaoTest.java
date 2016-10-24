@@ -63,7 +63,7 @@ public class AddressDaoTest extends TestBase {
 		
 		LOG.info("> region created: " + region.toString());
 		
-		int regionId = region.getId();
+		long regionId = region.getId();
 		try{
 			region = dao.get(region.getId());
 			assertNotNull("无法从数据库获取区域对象", region);

@@ -116,12 +116,15 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 		
 		//更新当前状态
 		stack.push(acceptableItem); //匹配项压栈
-		if(region!=null && entry.getKey().equals(region.getName()))
-			fullMatchCount++; //使用全名匹配的词条数
-		currentPos = pos; //当前结束的位置
+		if(isFullMatch(entry, region)) fullMatchCount++; //使用全名匹配的词条数
+		currentPos = positioning(region, entry, text, pos); //当前结束的位置
 		updateCurrentDivisionState(region); //刷新当前已经匹配上的省市区
 		
 		return true;
+	}
+	@Override
+	public int positionAfterAcceptItem(){
+		return this.currentPos;
 	}
 	/**
 	 * 职责：<br />
@@ -138,15 +141,11 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 		
 		this.checkDeepMost();
 		
-		//当前访问的索引对象出栈
-		TermIndexItem tii = stack.pop();
-		//恢复当前位置指针
-		currentPos = pos - entry.getKey().length();
+		TermIndexItem tii = stack.pop(); //当前访问的索引对象出栈
+		currentPos = pos - entry.getKey().length(); //恢复当前位置指针
 		RegionEntity region = (RegionEntity)tii.getValue();
-		//更新全名匹配的数量
-		if(region!=null && entry.getKey().equals(region.getName())) fullMatchCount++;
-		//如果是忽略项，无需更新当前已匹配的省市区状态
-		if(tii.getType()==TermType.Ignore) return;
+		if(isFullMatch(entry, region)) fullMatchCount++; //更新全名匹配的数量
+		if(tii.getType()==TermType.Ignore) return; //如果是忽略项，无需更新当前已匹配的省市区状态
 		
 		//扫描一遍stack，找出街道street、乡镇town、村庄village，以及省市区中级别最低的一个least
 		RegionEntity least = null, street=null, town=null, village=null;
@@ -202,6 +201,17 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 	}
 	
 	
+	private int positioning(RegionEntity acceptedRegion, TermIndexEntry entry, String text, int pos) {
+		//需要调整指针的情况
+		//1. 山东泰安肥城市桃园镇桃园镇山东省泰安市肥城县桃园镇东伏村
+		//   错误匹配方式：提取省市区时，将【肥城县】中的字符【肥城】匹配成【肥城市】，剩下一个【县】
+		if( (acceptedRegion.getType()==RegionType.City || acceptedRegion.getType()==RegionType.District)
+				&& !isFullMatch(entry, acceptedRegion) && pos+1<=text.length()-1
+				&& (text.charAt(pos+1)=='县' || text.charAt(pos+1)=='市' || text.charAt(pos+1)=='区')) {
+			return pos+1;
+		}
+		return pos;
+	}
 	/**
 	 * 从索引条目中找出最匹配的索引对象，如果索引对象都无法匹配，则返回null。
 	 * <p>因为省市区同名或者部分前缀字符相同的原因，倒排索引中同一个索引条目下面可能存在多个索引对象。</p>
@@ -242,6 +252,16 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 			}
 			
 			//已经匹配上部分省市区，按下面规则判断最匹配项
+			
+			//高优先级的排除情况
+			if(!isFullMatch(entry, region) && pos+1<=text.length()-1 ) { //使用别名匹配，并且后面还有一个字符
+				//1. 湖南益阳沅江市万子湖乡万子湖村
+				//   错误匹配方式：提取省市区时，将【万子湖村】中的字符【万子湖】匹配成【万子湖乡】，剩下一个【村】。
+				if( (region.getType()==RegionType.Street || region.getType()==RegionType.Town) //街道、乡镇
+					&& text.charAt(pos+1)=='村') {
+					continue;
+				}
+			}
 			
 			//1. 匹配度最高的情况，正好是下一级行政区域
 			if(region.getParentId() == curDivision.leastRegion().getId()) { 
@@ -307,8 +327,9 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 				}
 				//4.2 地级市-区县从属关系错误，但区县对应的省份正确，则将使用区县的地级市覆盖已匹配的地级市
 				//主要是地级市的管辖范围有调整，或者由于外部系统地级市与区县对应关系有调整导致
-				if(region.getType()==RegionType.District 
+				if(region.getType()==RegionType.District //必须是普通区县
 						&& curDivision.hasCity() && curDivision.hasProvince() 
+						&& isFullMatch(entry, region) //使用的全名匹配
 						&& curDivision.getCity().getId()!=region.getParentId()) {
 					RegionEntity city = persister.getRegion(region.getParentId()); //区县的地级市
 					if(city.getParentId()==curDivision.getProvince().getId()) {
@@ -333,7 +354,17 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 				}
 			}
 		}
+		
 		return acceptableItem;
+	}
+	private boolean isFullMatch(TermIndexEntry entry, RegionEntity region){
+		if(region==null) return false;
+		if(entry.getKey().length() == region.getName().length()) return true;
+		if(region.getType()==RegionType.Street && region.getName().endsWith("街道")
+				&& region.getName().length() == entry.getKey().length()+1)
+			//xx街道，使用别名xx镇、xx乡匹配上的，认为是全名匹配
+			return true;
+		return false;
 	}
 	/**
 	 * 索引对象是否是可接受的省市区等类型。

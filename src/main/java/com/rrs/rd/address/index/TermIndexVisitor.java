@@ -59,6 +59,11 @@ public interface TermIndexVisitor {
 	 */
 	boolean visit(TermIndexEntry entry, String text, int pos);
 	/**
+	 * 如果visit时接受了某个索引项，该方法会返回接受索引项之后当前匹配的指针。
+	 * @return
+	 */
+	int positionAfterAcceptItem();
+	/**
 	 * 结束索引条目的访问。
 	 * @param entry 当前索引条目。
 	 * @param pos 当前匹配位置

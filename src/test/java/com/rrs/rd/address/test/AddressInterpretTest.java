@@ -5,6 +5,9 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import org.junit.Test;
 
@@ -17,6 +20,61 @@ import com.rrs.rd.address.persist.AddressPersister;
 import com.rrs.rd.address.utils.StringUtil;
 
 public class AddressInterpretTest extends TestBase {
+	@Test
+	public void testExtractTown(){
+		AddressPersister pt = context.getBean(AddressPersister.class);
+		AddressInterpreter inter = context.getBean(AddressInterpreter.class);
+		RegionInterpreterVisitor v = new RegionInterpreterVisitor(pt);
+		
+		Map<Long, List<String>> towns = new HashMap<Long, List<String>>();
+		
+		extractTownVillage(inter, v, towns, "山东青岛平度市中庄镇西中庄村青岛平度中庄镇西中庄村", "", 370283, "中庄镇", "中庄村");
+		extractTownVillage(inter, v, towns, "湖南益阳沅江市万子湖乡万子湖乡万子湖村新四村民组", "新四村民组", 430981, null, "万子湖村");
+		extractTownVillage(inter, v, towns, "山东泰安肥城市桃园镇桃园镇山东省泰安市肥城县桃园镇东伏村", "", 370983, null, "东伏村");
+	}
+	private void extractTownVillage(AddressInterpreter interpreter, RegionInterpreterVisitor visitor
+			, Map<Long, List<String>> towns, String addrText, String leftText, long did, String town, String village){
+		towns.clear();
+		AddressEntity addr = new AddressEntity(addrText);
+		interpreter.extractRegion(addr, visitor);
+		assertTrue(addr.hasDistrict());
+		assertEquals(did, addr.getDistrict().getId());
+		interpreter.removeRedundancy(addr, visitor);
+		interpreter.extractTownAndVillage(addr, towns);
+		
+		LOG.info(addrText + " >> " + addr +
+				(towns.containsKey(did) ? " + " + towns.get(did).toString() : "") 
+				);
+		
+		assertEquals(leftText, addr.getText());
+		
+		String actual = null;
+		if(town!=null){
+			if(towns.containsKey(did)) {
+				List<String> strs = towns.get(did);
+				for(String s : strs) {
+					if(s.equals(town)) {
+						actual = s;
+						break;
+					}
+				}
+			}
+			assertTrue( (addr.hasTown() && addr.getTown().getName().equals(town)) || town.equals(actual) );
+		}
+		if(village!=null){
+			if(towns.containsKey(did)) {
+				List<String> strs = towns.get(did);
+				for(String s : strs) {
+					if(s.equals(village)) {
+						actual = s;
+						break;
+					}
+				}
+			}
+			assertTrue( (addr.hasVillage() && addr.getVillage().getName().equals(village)) || village.equals(actual) );
+		}
+	}
+	
 	@Test
 	public void testInterpretAddress(){
 		AddressInterpreter interpreter = context.getBean(AddressInterpreter.class);
@@ -358,6 +416,7 @@ public class AddressInterpretTest extends TestBase {
 		interpreter.removeSpecialChars(addr);
 		assertEquals("四川成都武侯区武侯大道铁佛段千盛百货对面200米金履三路288号绿地圣路易名邸", addr.getText());
 	}
+	
 	
 	@Test
 	public void testExtractBracket(){

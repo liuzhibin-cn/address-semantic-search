@@ -58,7 +58,7 @@ public class AddressInterpreter {
 	/**
 	 * 匹配镇、乡、街道的模式
 	 */
-	private static final Pattern P_TOWN = Pattern.compile("^((?<z>[\u4e00-\u9fa5]{1,3}镇)?(?<x>[\u4e00-\u9fa5]{1,3}乡)?([东西南北])?(?<c>[\u4e00-\u9fa5]{1,3}村(?!(村|委|公路|大街|大道|路|街)))?)");
+	private static final Pattern P_TOWN = Pattern.compile("^((?<z>[\u4e00-\u9fa5]{1,3}镇)?(?<x>[\u4e00-\u9fa5]{1,3}乡)?(?<c>[\u4e00-\u9fa5]{1,3}村(?!(村|委|公路|大街|大道|路|街)))?)");
 	private static final Pattern P_ROAD = Pattern.compile("^(?<road>([\u4e00-\u9fa5]{2,4}(路|街坊|街|道|大街|大道)))(?<ex>[甲乙丙丁])?(?<roadnum>[0-9０１２３４５６７８９一二三四五六七八九十]+(号院|号楼|号大院|号|號|巷|弄|院|区|条|\\#院|\\#))?");
 	
 	static{
@@ -348,7 +348,7 @@ public class AddressInterpreter {
 		towns.add(town);
 		if(TOWM_LOG.isDebugEnabled()) TOWM_LOG.debug(district.getId() + " " + town + " << " + text2 + " << " + text1);
 	}
-	private void extractTownAndVillage(AddressEntity addr, Map<Long, List<String>> towns){
+	public void extractTownAndVillage(AddressEntity addr, Map<Long, List<String>> towns){
 		if(addr.getText().length()<=0 || !addr.hasDistrict()) return;
 		Matcher matcher = P_TOWN.matcher(addr.getText());
 		if(matcher.find()) {
@@ -372,6 +372,8 @@ public class AddressInterpreter {
 				if(leftString.startsWith("委") || leftString.startsWith("民委员")){
 					leftString = "村" + leftString;
 				}
+				if(c.length()>=4 && (c.charAt(0)=='东' || c.charAt(0)=='西' || c.charAt(0)=='南' || c.charAt(0)=='北'))
+					c = StringUtil.tail(c, c.length()-1);
 				addTown(towns, c, addr.getDistrict(), addr.getRawText(), addr.getText());
 				addr.setText(leftString);
 			}
