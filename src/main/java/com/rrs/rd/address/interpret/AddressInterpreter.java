@@ -348,6 +348,26 @@ public class AddressInterpreter {
 		towns.add(town);
 		if(TOWM_LOG.isDebugEnabled()) TOWM_LOG.debug(district.getId() + " " + town + " << " + text2 + " << " + text1);
 	}
+	private boolean isAcceptableTownFollowingChars(String text, int start){
+		if(text==null || start>=text.length()) return true;
+		switch(text.charAt(start)) {
+			case '区':
+			case '县':
+			case '乡':
+			case '镇':
+			case '村':
+			case '街':
+			case '路':
+				return false;
+			case '大':
+				if(start+1<=text.length()-1) {
+					char c = text.charAt(start+1);
+					if(c=='街' || c=='道') return false;
+				}
+			default:
+		}
+		return true;
+	}
 	public void extractTownAndVillage(AddressEntity addr, Map<Long, List<String>> towns){
 		if(addr.getText().length()<=0 || !addr.hasDistrict()) return;
 		Matcher matcher = P_TOWN.matcher(addr.getText());
@@ -356,19 +376,19 @@ public class AddressInterpreter {
 			int iz=matcher.end("z"), ix=matcher.end("x"), ic=matcher.end("c");
 			String text = addr.getText();
 			if(z!=null && z.length()>0){ //镇
-				if(z.length()==2 && text.startsWith(z+"村")){
+				if(z.length()==2 && text.startsWith("村", z.length())){
 					c=z+"村";
 					ic=iz+1;
-				}else{
+				}else if(isAcceptableTownFollowingChars(text, z.length())){
 					addTown(towns, z, addr.getDistrict(), addr.getRawText(), addr.getText());
 					addr.setText(StringUtil.substring(text, matcher.end("z")));
 				}
 			}
 			if(x!=null && x.length()>0){ //乡
-				if(x.length()==2 && text.startsWith(x+"村")){
+				if(x.length()==2 && text.startsWith("村", x.length()-1)){
 					c=x+"村";
 					ic=ix+1;
-				}else{
+				}else if(isAcceptableTownFollowingChars(text, x.length())){
 					addTown(towns, x, addr.getDistrict(), addr.getRawText(), addr.getText());
 					addr.setText(StringUtil.substring(text, matcher.end("x")));
 				}

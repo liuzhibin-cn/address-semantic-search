@@ -262,14 +262,19 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 				//   白云区下面有均和街道，街道、乡镇使用别名匹配时，后续字符不能是某些行政区域和道路关键字符
 				if( (region.getType()==RegionType.Street || region.getType()==RegionType.Town)) { //街道、乡镇
 					switch(text.charAt(pos+1)) {
-						case '村':
-						case '街':
-						case '路':
 						case '区':
 						case '县':
 						case '乡':
 						case '镇':
+						case '村':
+						case '街':
+						case '路':
 							continue;
+						case '大':
+							if(pos+2<=text.length()-1) {
+								char c = text.charAt(pos+2);
+								if(c=='街' || c=='道') continue;
+							}
 						default:
 					}
 				}
