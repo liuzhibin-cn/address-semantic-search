@@ -28,6 +28,10 @@ order by id
 insert into `bas_region`(`id`,`parent_id`,`name`,`type`,`zip`,`alias`)
 values(#{id},#{parentId},#{name},#{type},#{zip},#{alias})
 	</insert>
+	<insert id="batchCreate">
+insert into bas_region(`id`,`parent_id`,`name`,`type`) values
+		<foreach collection="regions" item="r" separator=",">(#{r.id},#{r.parentId},#{r.name},#{r.type})</foreach>
+	</insert>
 	<update id="update" parameterType="com.rrs.rd.address.persist.RegionEntity">
 update bas_region set parent_id=#{parentId}, `name`=#{name}, `type`=#{type}
 where `id`=#{id}

@@ -16,6 +16,7 @@ public interface RegionDao {
 	RegionEntity findByParentAndName(@Param("pid") long pid, @Param("name") String name);
 	RegionEntity findRoot();
 	int create(RegionEntity entity);
+	int batchCreate(@Param("regions") List<RegionEntity> regions);
 	int update(RegionEntity entity);
 	
 	RegionEntity get(long id);

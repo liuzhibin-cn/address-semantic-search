@@ -34,6 +34,7 @@ public class AddressInterpreter {
 	private static char[] specialChars1 = " \r\n\t,，。·.．;；:：、！@$%*^`~=+&'\"|_-\\/".toCharArray();
 	private static char[] specialChars2 = "{}【】〈〉<>[]「」“”".toCharArray();
 	private static Set<String> invalidateTown = null;
+	private static Set<String> invalidateTownFollowings = null;
 	
 	private static Pattern BRACKET_PATTERN = Pattern.compile("(?<bracket>([\\(（\\{\\<〈\\[【「][^\\)）\\}\\>〉\\]】」]*[\\)）\\}\\>〉\\]】」]))");
 	
@@ -58,10 +59,25 @@ public class AddressInterpreter {
 	/**
 	 * 匹配镇、乡、街道的模式
 	 */
-	private static final Pattern P_TOWN = Pattern.compile("^((?<z>[\u4e00-\u9fa5]{1,3}镇)?(?<x>[\u4e00-\u9fa5]{1,3}乡)?(?<c>[\u4e00-\u9fa5]{1,3}村(?!(村|委|公路|(东|西|南|北)?(大街|大道|路|街))))?)");
+	private static final Pattern P_TOWN1 = Pattern.compile("^((?<z>[\u4e00-\u9fa5]{1,3}镇)?(?<x>[\u4e00-\u9fa5]{1,3}乡)?(?<c>[\u4e00-\u9fa5]{1,3}村(?!(村|委|公路|(东|西|南|北)?(大街|大道|路|街))))?)");
+	private static final Pattern P_TOWN2 = Pattern.compile("^(?<c>[\u4e00-\u9fa5]{1,3}村(?!(村|委|公路|(东|西|南|北)?(大街|大道|路|街))))?)");
 	private static final Pattern P_ROAD = Pattern.compile("^(?<road>([\u4e00-\u9fa5]{2,4}(路|街坊|街|道|大街|大道)))(?<ex>[甲乙丙丁])?(?<roadnum>[0-9０１２３４５６７８９一二三四五六七八九十]+(号院|号楼|号大院|号|號|巷|弄|院|区|条|\\#院|\\#))?");
 	
 	static{
+		invalidateTownFollowings = new HashSet<String>();
+		invalidateTownFollowings.add("政府");
+		invalidateTownFollowings.add("大街");
+		invalidateTownFollowings.add("大道");
+		invalidateTownFollowings.add("社区");
+		invalidateTownFollowings.add("小区");
+		invalidateTownFollowings.add("小学");
+		invalidateTownFollowings.add("中学");
+		invalidateTownFollowings.add("医院");
+		invalidateTownFollowings.add("银行");
+		invalidateTownFollowings.add("中心");
+		invalidateTownFollowings.add("卫生");
+		invalidateTownFollowings.add("一小");
+		
 		invalidateTown = new HashSet<String>();
 		invalidateTown.add("新村");
 		invalidateTown.add("外村");
@@ -142,6 +158,7 @@ public class AddressInterpreter {
 		invalidateTown.add("集镇");
 		invalidateTown.add("庙镇");
 		invalidateTown.add("河镇");
+		invalidateTown.add("村镇");
 	}
 	
 	//***************************************************************************************
@@ -228,12 +245,9 @@ public class AddressInterpreter {
 	public void extractTownVillage(String addressText, RegionInterpreterVisitor visitor, Map<Long, List<String>> towns) {
 		if(addressText==null || addressText.trim().length()<=0) return;
 		AddressEntity addr = new AddressEntity(addressText);
-		extractBuildingNum(addr);
 		removeSpecialChars(addr);
 		extractRegion(addr, visitor);
 		extractBrackets(addr);
-		removeRedundancy(addr, visitor);
-		extractTownAndVillage(addr, towns);
 		removeRedundancy(addr, visitor);
 		extractTownAndVillage(addr, towns);
 	}
@@ -416,32 +430,18 @@ public class AddressInterpreter {
 			case '村':
 			case '街':
 			case '路':
+			case '东':
+			case '西':
+			case '南':
+			case '北':
 				return false;
-			case '大':
-				if(start+1<=text.length()-1) {
-					char c = text.charAt(start+1);
-					if(c=='街' || c=='道') return false;
-				}
-				break;
-			case '社':
-				if(start+1<=text.length()-1 && text.charAt(start+1)=='区') return false;
-				break;
-			case '小':
-				if(start+1<=text.length()-1 && (text.charAt(start+1)=='区' || text.charAt(start+1)=='学')) return false;
-				break;
-			case '中':
-				if(start+1<=text.length()-1 && text.charAt(start+1)=='学') return false;
-				break;
-			case '医':
-				if(start+1<=text.length()-1 && text.charAt(start+1)=='院') return false;
-				break;
 			default:
 		}
 		return true;
 	}
 	public void extractTownAndVillage(AddressEntity addr, Map<Long, List<String>> towns){
 		if(addr.getText().length()<=0 || !addr.hasDistrict()) return;
-		Matcher matcher = P_TOWN.matcher(addr.getText());
+		Matcher matcher = addr.hasTown() ? P_TOWN2.matcher(addr.getText()) : P_TOWN1.matcher(addr.getText());
 		if(matcher.find()) {
 			String z=matcher.group("z"), x=matcher.group("x"), c = matcher.group("c");
 			int iz=matcher.end("z"), ix=matcher.end("x"), ic=matcher.end("c");

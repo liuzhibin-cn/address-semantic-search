@@ -165,8 +165,11 @@ public class AddressPersister implements ApplicationContextAware {
 		return this.regionDao.findByParentAndName(parentId, name);
 	}
 	
-	public void addTowns(Map<Long, List<String>> towns){
+	public void importRegionTowns(Map<Long, List<String>> towns){
 		if(towns==null) return;
+		
+		int batchSize = 2000;
+		List<RegionEntity> regions = new ArrayList<RegionEntity>(batchSize);
 		for(Map.Entry<Long, List<String>> entry : towns.entrySet()){
 			if(entry.getKey()==null || entry.getValue()==null || entry.getValue().isEmpty()) continue;
 			RegionEntity parent = this.getRegion(entry.getKey());
@@ -182,9 +185,16 @@ public class AddressPersister implements ApplicationContextAware {
 				if(c=='镇' || c=='乡') region.setType(RegionType.Town);
 				else if(c=='村') region.setType(RegionType.Village);
 				else continue;
-				this.regionDao.create(region);
+				regions.add(region);
+				if(regions.size()>=batchSize) {
+					this.regionDao.batchCreate(regions);
+					regions.clear();
+				}
 				id++;
 			}
+		}
+		if(regions.size()>=batchSize) {
+			this.regionDao.batchCreate(regions);
 		}
 	}
 	public long initializeRegionId(RegionEntity parent){

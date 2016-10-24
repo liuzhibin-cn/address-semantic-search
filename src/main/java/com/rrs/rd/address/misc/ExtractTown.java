@@ -99,7 +99,7 @@ public class ExtractTown {
             		ex.printStackTrace(System.out);
             	}
             }
-            persister.addTowns(towns);
+            persister.importRegionTowns(towns);
 		} catch (Exception ex) {
 			System.out.println("> [错误] 导入失败：" + ex.getMessage());
 			ex.printStackTrace(System.out);
