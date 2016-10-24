@@ -53,14 +53,14 @@ public class TermIndexBuilder {
 					case '区': autoAlias=false; break;
 					default:
 				}
-			}
+			} 
 			if(autoAlias) {
 				String shortName = null;
 				if(region.isTown()) 
 					shortName = StringUtil.head(region.getName(), region.getName().length()-1);
 				else
 					shortName = StringUtil.head(region.getName(), region.getName().length()-2);
-				index.buildIndex(shortName, 0, tii);
+				if(shortName.length()>=2) index.buildIndex(shortName, 0, tii);
 				if(region.getName().endsWith("街道") || region.getName().endsWith("镇"))
 					index.buildIndex(shortName + "乡", 0, tii);
 				if(region.getName().endsWith("街道") || region.getName().endsWith("乡"))

@@ -29,8 +29,22 @@ public class AddressInterpretTest extends TestBase {
 		Map<Long, List<String>> towns = new HashMap<Long, List<String>>();
 		
 		extractTownVillage(inter, v, towns, "山东青岛平度市中庄镇西中庄村青岛平度中庄镇西中庄村", "", 370283, "中庄镇", "中庄村");
+		//万子湖村不能将万子湖匹配城万子湖乡，留下一个村字，被匹配城【村新四村】
 		extractTownVillage(inter, v, towns, "湖南益阳沅江市万子湖乡万子湖乡万子湖村新四村民组", "新四村民组", 430981, null, "万子湖村");
+		//肥城市、肥城县都应当匹配成区县，不能匹配出【县桃源镇】来
 		extractTownVillage(inter, v, towns, "山东泰安肥城市桃园镇桃园镇山东省泰安市肥城县桃园镇东伏村", "", 370983, null, "东伏村");
+		//西乡县，不能匹配出【西乡】来
+		extractTownVillage(inter, v, towns, "陕西汉中汉台区汉白公路汉台区陕西汉中市西乡县城东三岔路口", "城东三岔路口", 610702, null, null);
+		//目前匹配不上【临湖镇】，因为是在删除冗余时才匹配上
+		extractTownVillage(inter, v, towns, "江苏苏州吴中区渡村镇农行渡村分理处江苏省苏州市吴中区临湖镇渡村前塘村村前", "前塘村村前", 320506, null, "渡村");
+		//不能匹配出【中关村】来
+		extractTownVillage(inter, v, towns, "北京北京海淀区中关村南大街九龙商务中心", "中关村南大街九龙商务中心", 110108, null, null);
+		//正确匹配【永镇村】，不能匹配成【永镇】
+		//清水镇使用的清水街道匹配，匹配出的Region并不属于镇
+		extractTownVillage(inter, v, towns, "安徽芜湖鸠江区清水镇永镇村芜湖鸠江经济开发区万春中路永镇路", "芜湖鸠江经济开发区万春中路永镇路", 340207, null, "永镇村");
+		extractTownVillage(inter, v, towns, "上海上海浦东新区川沙镇川沙镇川沙镇城南路", "城南路", 310115, "川沙镇", null);
+		extractTownVillage(inter, v, towns, "北京北京海淀区温泉温泉镇温泉镇温泉服装厂对面", "服装厂对面", 110108, "温泉镇", null);
+		extractTownVillage(inter, v, towns, "广东广州白云区均和街新市镇广州市白云区均禾街长红村", "均禾街长红村", 440111, null, null);
 	}
 	private void extractTownVillage(AddressInterpreter interpreter, RegionInterpreterVisitor visitor
 			, Map<Long, List<String>> towns, String addrText, String leftText, long did, String town, String village){
@@ -59,7 +73,7 @@ public class AddressInterpretTest extends TestBase {
 					}
 				}
 			}
-			assertTrue( (addr.hasTown() && addr.getTown().getName().equals(town)) || town.equals(actual) );
+			assertTrue( (addr.hasTown() && addr.getTown().orderedNameAndAlias().contains(town)) || town.equals(actual) );
 		}
 		if(village!=null){
 			if(towns.containsKey(did)) {
@@ -71,7 +85,13 @@ public class AddressInterpretTest extends TestBase {
 					}
 				}
 			}
-			assertTrue( (addr.hasVillage() && addr.getVillage().getName().equals(village)) || village.equals(actual) );
+			assertTrue( (addr.hasVillage() && addr.getVillage().orderedNameAndAlias().contains(village)) || village.equals(actual) );
+		}
+		
+		if(town==null && village==null) 
+			assertFalse(towns.containsKey(did));
+		else if(town==null || village==null) {
+			assertTrue(!towns.containsKey(did) || (towns.containsKey(did) && towns.get(did).size()==1));
 		}
 	}
 	

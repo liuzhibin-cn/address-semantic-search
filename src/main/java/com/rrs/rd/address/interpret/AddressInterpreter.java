@@ -58,7 +58,7 @@ public class AddressInterpreter {
 	/**
 	 * 匹配镇、乡、街道的模式
 	 */
-	private static final Pattern P_TOWN = Pattern.compile("^((?<z>[\u4e00-\u9fa5]{1,3}镇)?(?<x>[\u4e00-\u9fa5]{1,3}乡)?(?<c>[\u4e00-\u9fa5]{1,3}村(?!(村|委|公路|大街|大道|路|街)))?)");
+	private static final Pattern P_TOWN = Pattern.compile("^((?<z>[\u4e00-\u9fa5]{1,3}镇)?(?<x>[\u4e00-\u9fa5]{1,3}乡)?(?<c>[\u4e00-\u9fa5]{1,3}村(?!(村|委|公路|(东|西|南|北)?(大街|大道|路|街))))?)");
 	private static final Pattern P_ROAD = Pattern.compile("^(?<road>([\u4e00-\u9fa5]{2,4}(路|街坊|街|道|大街|大道)))(?<ex>[甲乙丙丁])?(?<roadnum>[0-9０１２３４５６７８９一二三四五六七八九十]+(号院|号楼|号大院|号|號|巷|弄|院|区|条|\\#院|\\#))?");
 	
 	static{
@@ -353,18 +353,29 @@ public class AddressInterpreter {
 		Matcher matcher = P_TOWN.matcher(addr.getText());
 		if(matcher.find()) {
 			String z=matcher.group("z"), x=matcher.group("x"), c = matcher.group("c");
+			int iz=matcher.end("z"), ix=matcher.end("x"), ic=matcher.end("c");
 			String text = addr.getText();
 			if(z!=null && z.length()>0){ //镇
-				addTown(towns, z, addr.getDistrict(), addr.getRawText(), addr.getText());
-				addr.setText(StringUtil.substring(text, matcher.end("z")));
+				if(z.length()==2 && text.startsWith(z+"村")){
+					c=z+"村";
+					ic=iz+1;
+				}else{
+					addTown(towns, z, addr.getDistrict(), addr.getRawText(), addr.getText());
+					addr.setText(StringUtil.substring(text, matcher.end("z")));
+				}
 			}
 			if(x!=null && x.length()>0){ //乡
-				addTown(towns, x, addr.getDistrict(), addr.getRawText(), addr.getText());
-				addr.setText(StringUtil.substring(text, matcher.end("x")));
+				if(x.length()==2 && text.startsWith(x+"村")){
+					c=x+"村";
+					ic=ix+1;
+				}else{
+					addTown(towns, x, addr.getDistrict(), addr.getRawText(), addr.getText());
+					addr.setText(StringUtil.substring(text, matcher.end("x")));
+				}
 			}
 			if(c!=null && c.length()>0){ //村
 				if(c.endsWith("农村")) return;
-				String leftString = StringUtil.substring(text, matcher.end("c"));
+				String leftString = StringUtil.substring(text, ic);
 				if(c.endsWith("村村")) {
 					c = StringUtil.head(c, c.length()-1);
 					leftString = "村" + leftString;

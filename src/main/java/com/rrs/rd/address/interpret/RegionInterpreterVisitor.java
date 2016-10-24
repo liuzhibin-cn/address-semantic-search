@@ -258,9 +258,20 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 			if(!isFullMatch(entry, region) && pos+1<=text.length()-1 ) { //使用别名匹配，并且后面还有一个字符
 				//1. 湖南益阳沅江市万子湖乡万子湖村
 				//   错误匹配方式：提取省市区时，将【万子湖村】中的字符【万子湖】匹配成【万子湖乡】，剩下一个【村】。
-				if( (region.getType()==RegionType.Street || region.getType()==RegionType.Town) //街道、乡镇
-					&& text.charAt(pos+1)=='村') {
-					continue;
+				//2. 广东广州白云区均和街新市镇
+				//   白云区下面有均和街道，街道、乡镇使用别名匹配时，后续字符不能是某些行政区域和道路关键字符
+				if( (region.getType()==RegionType.Street || region.getType()==RegionType.Town)) { //街道、乡镇
+					switch(text.charAt(pos+1)) {
+						case '村':
+						case '街':
+						case '路':
+						case '区':
+						case '县':
+						case '乡':
+						case '镇':
+							continue;
+						default:
+					}
 				}
 			}
 			
