@@ -269,12 +269,12 @@ public class AddressInterpreter {
 		timeRmSpec += System.currentTimeMillis() - start;
 		
 		start = System.currentTimeMillis();
-		extractRegion(addr, visitor);
-		timeRegion += System.currentTimeMillis() - start;
-		
-		start = System.currentTimeMillis();
 		String brackets = extractBrackets(addr);
 		timeBrc += System.currentTimeMillis() - start;
+		
+		start = System.currentTimeMillis();
+		extractRegion(addr, visitor);
+		timeRegion += System.currentTimeMillis() - start;
 		
 		start = System.currentTimeMillis();
 		removeRedundancy(addr, visitor);
@@ -295,7 +295,6 @@ public class AddressInterpreter {
 	public boolean extractRegion(AddressEntity addr, RegionInterpreterVisitor visitor){
 		visitor.reset();
 		termIndex.deepMostQuery(addr.getText(), visitor);
-		if(!visitor.hasResult()) return false;
 		addr.setProvince(visitor.resultDivision().getProvince());
 		addr.setCity(visitor.resultDivision().getCity());
 		addr.setDistrict(visitor.resultDivision().getDistrict());
@@ -303,6 +302,7 @@ public class AddressInterpreter {
 		addr.setTown(visitor.resultDivision().getTown());
 		addr.setVillage(visitor.resultDivision().getVillage());
 		addr.setText(StringUtil.substring(addr.getText(), visitor.resultEndPosition() + 1));
+		if(!visitor.hasResult()) return false;
 		return true;
 	}
 	
@@ -358,6 +358,25 @@ public class AddressInterpreter {
 				i++;
 				continue;
 			}
+			
+			//正确匹配，进行回馈
+			if(!addr.hasDistrict() && visitor.resultDivision().hasDistrict() 
+					&& visitor.resultDivision().getDistrict().getParentId()==addr.getCity().getId())
+				addr.setDistrict(visitor.resultDivision().getDistrict());
+			if(!addr.hasStreet() && visitor.resultDivision().hasStreet()
+					&& visitor.resultDivision().getStreet().getParentId()==addr.getDistrict().getId())
+				addr.setStreet(visitor.resultDivision().getStreet());
+			if(!addr.hasTown() && visitor.resultDivision().hasTown()
+					&& visitor.resultDivision().getTown().getParentId()==addr.getDistrict().getId())
+				addr.setTown(visitor.resultDivision().getTown());
+			else if(addr.hasTown() && visitor.resultDivision().hasTown()
+					&& !addr.getTown().equals(addr.getStreet())
+					&& visitor.resultDivision().getTown().getParentId()==addr.getDistrict().getId())
+				addr.setTown(visitor.resultDivision().getTown());
+			if(!addr.hasVillage() && visitor.resultDivision().hasVillage()
+					&& visitor.resultDivision().getVillage().getParentId()==addr.getDistrict().getId())
+				addr.setVillage(visitor.resultDivision().getVillage());
+			
 			//正确匹配上，删除
 			addr.setText(StringUtil.substring(addr.getText(), visitor.resultEndPosition()+1));
 			endIndex=addr.getText().length();

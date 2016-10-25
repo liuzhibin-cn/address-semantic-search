@@ -127,7 +127,7 @@ public class Division {
     			this.street = value;
     			return;
     		default:
-    			this.street=null;
+    			this.town=null;
     	}
     }
     
