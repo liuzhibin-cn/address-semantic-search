@@ -377,9 +377,8 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 						acceptableItem = item;
 						continue;
 					}
-				}
-				//已经匹配上区县
-				if(region.getParentId()==curDivision.getDistrict().getId()) {
+				}else if(region.getParentId()==curDivision.getDistrict().getId()) {
+					//已经匹配上区县
 					mostPriority = 5;
 					acceptableItem = item;
 					continue;
