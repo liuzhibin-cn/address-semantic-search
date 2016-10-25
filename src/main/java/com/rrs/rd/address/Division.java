@@ -158,7 +158,7 @@ public class Division {
     		else sb.append('{');
     		sb.append(getCity().getId()).append(getCity().getName());
     	}
-    	if(hasDistrict()){
+    	if(hasDistrict() && !getDistrict().equals(getCity())){
     		if(sb.length()>0) sb.append("-");
     		else sb.setLength('{');
     		sb.append(getDistrict().getId()).append(getDistrict().getName());
