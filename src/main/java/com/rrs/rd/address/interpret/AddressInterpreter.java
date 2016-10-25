@@ -11,6 +11,8 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import com.alibaba.dubbo.rpc.Result;
+import com.rrs.rd.address.Division;
 import com.rrs.rd.address.TermType;
 import com.rrs.rd.address.index.TermIndexBuilder;
 import com.rrs.rd.address.index.TermIndexItem;
@@ -363,17 +365,18 @@ public class AddressInterpreter {
 			if(!addr.hasDistrict() && visitor.resultDivision().hasDistrict() 
 					&& visitor.resultDivision().getDistrict().getParentId()==addr.getCity().getId())
 				addr.setDistrict(visitor.resultDivision().getDistrict());
-			if(!addr.hasStreet() && visitor.resultDivision().hasStreet()
+			if(addr.hasDistrict() && !addr.hasStreet() && visitor.resultDivision().hasStreet()
 					&& visitor.resultDivision().getStreet().getParentId()==addr.getDistrict().getId())
 				addr.setStreet(visitor.resultDivision().getStreet());
-			if(!addr.hasTown() && visitor.resultDivision().hasTown()
+			if(addr.hasDistrict() && !addr.hasTown() && visitor.resultDivision().hasTown()
 					&& visitor.resultDivision().getTown().getParentId()==addr.getDistrict().getId())
 				addr.setTown(visitor.resultDivision().getTown());
-			else if(addr.hasTown() && visitor.resultDivision().hasTown()
-					&& !addr.getTown().equals(addr.getStreet())
+			else if(addr.hasDistrict() && addr.hasTown() && addr.getTown().equals(addr.getStreet())
+					&& visitor.resultDivision().hasTown() 
+					&& !visitor.resultDivision().getTown().equals(visitor.resultDivision().getStreet())
 					&& visitor.resultDivision().getTown().getParentId()==addr.getDistrict().getId())
 				addr.setTown(visitor.resultDivision().getTown());
-			if(!addr.hasVillage() && visitor.resultDivision().hasVillage()
+			if(addr.hasDistrict() && !addr.hasVillage() && visitor.resultDivision().hasVillage()
 					&& visitor.resultDivision().getVillage().getParentId()==addr.getDistrict().getId())
 				addr.setVillage(visitor.resultDivision().getVillage());
 			
