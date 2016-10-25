@@ -124,6 +124,7 @@ public class Division {
     			this.town=value;
     			return;
     		case Street:
+    		case PlatformL4:
     			this.street = value;
     			return;
     		default:
@@ -148,37 +149,46 @@ public class Division {
     
     @Override
     public String toString() {
+    	return toSimpleString(true, true);
+    }
+    public String toSimpleString(boolean requireId, boolean requireBracket){
     	StringBuilder sb = new StringBuilder();
     	if(hasProvince()) {
-    		sb.append('{');
-    		sb.append(getProvince().getId()).append(getProvince().getName());
+    		if(requireBracket) sb.append('{');
+    		if(requireId) sb.append(getProvince().getId());
+    		sb.append(getProvince().getName());
     	}
     	if(hasCity()){
     		if(sb.length()>0) sb.append("-");
-    		else sb.append('{');
-    		sb.append(getCity().getId()).append(getCity().getName());
+    		else if(requireBracket) sb.append('{');
+    		if(requireId) sb.append(getCity().getId());
+    		sb.append(getCity().getName());
     	}
     	if(hasDistrict() && !getDistrict().equals(getCity())){
     		if(sb.length()>0) sb.append("-");
-    		else sb.setLength('{');
-    		sb.append(getDistrict().getId()).append(getDistrict().getName());
+    		else if(requireBracket) sb.setLength('{');
+    		if(requireId) sb.append(getDistrict().getId());
+    		sb.append(getDistrict().getName());
     	}
     	if(hasStreet()){
     		if(sb.length()>0) sb.append("-");
-    		else sb.setLength('{');
-    		sb.append(getStreet().getId()).append(getStreet().getName());
+    		else if(requireBracket) sb.setLength('{');
+    		if(requireId) sb.append(getStreet().getId());
+    		sb.append(getStreet().getName());
     	}
     	if(hasTown() && !getTown().equals(getStreet())){
     		if(sb.length()>0) sb.append("-");
-    		else sb.setLength('{');
-    		sb.append(getTown().getId()).append(getTown().getName());
+    		else if(requireBracket) sb.setLength('{');
+    		if(requireId) sb.append(getTown().getId());
+    		sb.append(getTown().getName());
     	}
     	if(hasVillage()){
     		if(sb.length()>0) sb.append("-");
-    		else sb.setLength('{');
-    		sb.append(getVillage().getId()).append(getVillage().getName());
+    		else if(requireBracket) sb.setLength('{');
+    		if(requireId) sb.append(getVillage().getId());
+    		sb.append(getVillage().getName());
     	}
-    	if(sb.length()>0) sb.append('}');
+    	if(sb.length()>0 && requireBracket) sb.append('}');
     	return sb.toString();
     }
 }

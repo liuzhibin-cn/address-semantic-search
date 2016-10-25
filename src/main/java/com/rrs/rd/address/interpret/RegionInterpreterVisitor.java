@@ -369,15 +369,20 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 			//5. 街道、乡镇，且不符合上述情况
 			if(region.getType()==RegionType.Street || region.getType()==RegionType.Town 
 					|| region.getType()==RegionType.Village || region.getType()==RegionType.PlatformL4){
-				if(!curDivision.hasDistrict()){
+				if(!curDivision.hasDistrict()) {
 					RegionEntity parent = persister.getRegion(region.getParentId()); //parent为区县
 					parent = persister.getRegion(parent.getParentId()); //parent为地级市
 					if(curDivision.hasCity() && curDivision.getCity().getId()==parent.getId()){
-						//TODO，需要哪些检查？如果街道不属于已匹配的区县需要容错？
 						mostPriority = 5;
 						acceptableItem = item;
 						continue;
 					}
+				}
+				//已经匹配上区县
+				if(region.getParentId()==curDivision.getDistrict().getId()) {
+					mostPriority = 5;
+					acceptableItem = item;
+					continue;
 				}
 			}
 		}
@@ -451,15 +456,15 @@ public class RegionInterpreterVisitor implements TermIndexVisitor {
 				break;
 			case Street:
 			case PlatformL4:
-				curDivision.setStreet(region);
+				if(!curDivision.hasStreet()) curDivision.setStreet(region);
 				if(!curDivision.hasDistrict()) curDivision.setDistrict(persister.getRegion(region.getParentId()));
 				break;
 			case Town:
-				curDivision.setTown(region);
+				if(!curDivision.hasTown()) curDivision.setTown(region);
 				if(!curDivision.hasDistrict()) curDivision.setDistrict(persister.getRegion(region.getParentId()));
 				break;
 			case Village:
-				curDivision.setVillage(region);
+				if(!curDivision.hasVillage()) curDivision.setVillage(region);
 				if(!curDivision.hasDistrict()) curDivision.setDistrict(persister.getRegion(region.getParentId()));
 				break;
 			default:

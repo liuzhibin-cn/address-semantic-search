@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.apache.velocity.util.StringUtils;
 
+import com.rrs.rd.address.Division;
+import com.rrs.rd.address.persist.AddressEntity;
 import com.rrs.rd.address.similarity.SimilarDoccument;
 import com.rrs.rd.address.similarity.Term;
 
@@ -30,6 +32,10 @@ public class VelocityUtils extends StringUtils {
 		if(precision<0) precision=0;
 		long p = Math.round(Math.pow(10, precision));
 		return "" + (Math.round(value * p) * 1.0 / p);
+	}
+	public String divisionString(AddressEntity address){
+		Division div = (Division)address;
+		return div.toSimpleString(false, false);
 	}
 	/**
 	 * 根据词条根据命中情况返回相应的CSS class。
