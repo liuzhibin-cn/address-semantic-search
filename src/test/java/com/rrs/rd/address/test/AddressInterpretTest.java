@@ -13,8 +13,8 @@ import org.junit.Test;
 
 import com.rrs.rd.address.Division;
 import com.rrs.rd.address.index.TermIndexBuilder;
-import com.rrs.rd.address.interpret.RegionInterpreterVisitor;
 import com.rrs.rd.address.interpret.AddressInterpreter;
+import com.rrs.rd.address.interpret.RegionInterpreterVisitor;
 import com.rrs.rd.address.persist.AddressEntity;
 import com.rrs.rd.address.persist.AddressPersister;
 import com.rrs.rd.address.utils.StringUtil;
@@ -106,7 +106,7 @@ public class AddressInterpretTest extends TestBase {
 	
 	@Test
 	public void testInterpretAddress(){
-		AddressInterpreter interpreter = context.getBean(AddressInterpreter.class);
+		//AddressInterpreter interpreter = context.getBean(AddressInterpreter.class);
 		
 //		//测试正常解析
 //		AddressEntity addr = interpreter.interpret("青海海西格尔木市河西街道郭镇盐桥村");

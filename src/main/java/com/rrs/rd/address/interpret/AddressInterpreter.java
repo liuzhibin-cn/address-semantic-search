@@ -11,8 +11,6 @@ import java.util.regex.Pattern;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import com.alibaba.dubbo.rpc.Result;
-import com.rrs.rd.address.Division;
 import com.rrs.rd.address.TermType;
 import com.rrs.rd.address.index.TermIndexBuilder;
 import com.rrs.rd.address.index.TermIndexItem;
@@ -34,7 +32,7 @@ public class AddressInterpreter {
 	private AddressPersister persister;
 	
 	private static char[] specialChars1 = " \r\n\t,，。·.．;；:：、！@$%*^`~=+&'\"|_-\\/".toCharArray();
-	private static char[] specialChars2 = "{}【】〈〉<>[]「」“”".toCharArray();
+	//private static char[] specialChars2 = "{}【】〈〉<>[]「」“”".toCharArray();
 	private static Set<String> invalidTown = null;
 	private static Set<String> invalidTownFollowings = null;
 	
