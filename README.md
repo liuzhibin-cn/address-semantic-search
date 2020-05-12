@@ -1,7 +1,6 @@
 ## 项目介绍
 在文本相似度算法基础上加入语义处理，从已有历史地址库中搜索匹配相似地址。
 
-
 ### 问题描述
 片区划分在物流行业中比较重要，揽收、派送、运输路径规划、配车等核心作业都不同程度依赖片区规划。
 
@@ -16,15 +15,13 @@
 3. 使用空间几何算法，计算出地址坐标位于哪个片区中。<br>
    [openlayers](http://openlayers.org/)等开源工具中包含了这些算法，也可以参考[点在多边形内算法——判断一个点是否在一个复杂多边形的内部](http://blog.csdn.net/hjh2005/article/details/9246967)、[判断一个点是否在多边形内 C++](http://blog.csdn.net/orange_xxx/article/details/7445803)自己实现。
 
-
 ### 解决方案
 物流公司在长期运营过程中积累了大量历史地址数据，其中包含了```[地址]<<-->>[片区]```对应关系，基于这些历史数据建立自己的地址匹配服务，可以降低第三方GIS的不利影响，节约费用。
 
 本项目研究使用文本相似度，并加入语义处理，基于历史地址库进行地址解析和匹配。项目处于研究验证阶段，使用500万历史地址的情况下，匹配结果准确率比较高。
 
-![使用相似度搜索匹配地址Demo Service](images/solution.png) <br>
+![使用相似度搜索匹配地址Demo Service](https://richie-leo.github.io/ydres/img/10/180/1014/solution.png) \
 先使用历史地址数据进行匹配，匹配不成功时再调用GIS服务解析。如果历史数据匹配成功率达到95%，则对GIS服务调用频率将降低到原来的5%。
-
 
 -------------------------------------------------------------------------
 ## 算法说明
@@ -38,7 +35,7 @@
 * `IDF`: `Inverse Document Frequency`，逆文档词频，`IDF = log( 文档总数 / ( 包含该词的文档数 + 1 ) )`。分母加1是为了防止分母出现0的情况。<br />
 * `TF-IDF`: 词条的特征值，`TF-IDF = TF * IDF`。 <br>
 
-两个多维空间向量的余弦相似度：![余弦相似度](images/cos-similarity.png)
+两个多维空间向量的余弦相似度：![余弦相似度](https://richie-leo.github.io/ydres/img/10/180/1014/cos-similarity.png)
 
 `TF-IDF`余弦相似度是比较通用、有效的文本相似度算法。其它文本相似度相关的算法有：[最长公共子串](https://zh.wikipedia.org/wiki/最长公共子串)、[最长公共子序列](http://baike.baidu.com/view/2020307.htm)、[编辑距离](http://baike.baidu.com/view/2020247.htm)、[汉明距离](http://baike.baidu.com/view/725269.htm)等，基于语义的有LSA/LSI、PLSA、LDA等（参考[既然LDA是一种比PLSA更高级的模型，为啥百度还在用PLSA？](http://www.zhihu.com/question/23642556/answer/38969800)、[CSDN专栏：主题模型 TopicModel](http://blog.csdn.net/column/details/topic-model.html)）。
 
@@ -46,7 +43,7 @@
 ### Lucene的评分算法
 [Elasticsearch: The Definitive Guide](https://www.elastic.co/guide/en/elasticsearch/guide/current/index.html)专门有一个章节比较详细地讲述了Lucene的评分算法：[Theory Behind Relevance Scoring](https://www.elastic.co/guide/en/elasticsearch/guide/current/scoring-theory.html)、[Lucene’s Practical Scoring Function](https://www.elastic.co/guide/en/elasticsearch/guide/current/practical-scoring-function.html)。
 
-![Lucene评分算法](images/lucene-score-function.png)
+![Lucene评分算法](https://richie-leo.github.io/ydres/img/10/180/1014/lucene-score-function.png)
 
 * **① score(q, d)** <br>
    查询文档q与文档d的相关性评分值，Lucene中的评分值是一个大于0的实数值。
@@ -153,7 +150,7 @@ bin/start.sh
 
 服务启动成功后，通过`http://localhost:8000/address/demo/find/北京海淀区丹棱街18号创富大厦1106?top=5`访问。<br>
 Demo服务运行效果如下：<br>
-![使用相似度搜索匹配地址Demo Service](images/demo-screenshot.png)
+![使用相似度搜索匹配地址Demo Service](https://richie-leo.github.io/ydres/img/10/180/1014/demo-screenshot.png)
 
 Demo服务使用的`Dubbox`的REST接口，服务启动时会监听2个端口：`8080`和`8000`。
 如果需要修改为其他端口号，请修改以下文件：
