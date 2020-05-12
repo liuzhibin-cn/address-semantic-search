@@ -167,7 +167,6 @@ echo -e "Starting the service ...\c"
 nohup java -Ddubbo.spring.config=spring-config.xml -Ddubbo.jetty.port="8080" -Ddubbo.jetty.page=log,status,system -classpath $CONF_DIR:$CONF_DIR/dic:$LIB_JARS com.alibaba.dubbo.container.Main spring jetty > $DEPLOY_DIR/log/address-service-stdout.log 2>&1 &
 ```
 
-
 -------------------------------------------------------------------------
 ## 更新日志
 * ❓行政区域StdDivision中的街道、乡镇等还未参与相似度计算。
